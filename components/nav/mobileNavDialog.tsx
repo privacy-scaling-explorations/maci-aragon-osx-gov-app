@@ -1,4 +1,5 @@
 import { Dialog, type IDialogRootProps } from "@aragon/ods";
+import Image from "next/image";
 import Link from "next/link";
 import { NavLink, type INavLink } from "./navLink";
 
@@ -24,8 +25,8 @@ export const MobileNavDialog: React.FC<IMobileNavDialogProps> = (props) => {
               className="rounded-xl outline-none focus-visible:ring focus-visible:ring-primary focus-visible:ring-offset"
             >
               <span className="flex py-2 pl-3 pr-4">
-                Governed on&nbsp;
-                <img src="/logo-aragon-text.svg" height="24" alt="Aragon" />
+                Powered by <span className="mr-1 text-primary-400">&nbsp;Aragon</span>
+                <Image src="/logo.png" width="24" height="24" alt="Aragonette" />
               </span>
             </Link>
           </div>

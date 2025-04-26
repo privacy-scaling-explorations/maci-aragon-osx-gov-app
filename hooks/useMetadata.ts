@@ -1,5 +1,5 @@
 import { fetchIpfsAsJson } from "@/utils/ipfs";
-import { JsonValue } from "@/utils/types";
+import { type JsonValue } from "@/utils/types";
 import { useQuery } from "@tanstack/react-query";
 
 export function useMetadata<T = JsonValue>(ipfsUri?: string) {
@@ -24,5 +24,3 @@ export function useMetadata<T = JsonValue>(ipfsUri?: string) {
     error,
   };
 }
-
-export const useIpfsJsonData = useMetadata;

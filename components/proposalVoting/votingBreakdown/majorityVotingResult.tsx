@@ -4,20 +4,20 @@ import classNames from "classnames";
 import { useEffect, useState } from "react";
 import { type VotingCta } from "./types";
 
-type Choice = "yes" | "no" | "abstain";
+type Choices = "yes" | "no" | "abstain";
 
 export interface IBreakdownMajorityVotingResult {
   votingScores: { option: string; voteAmount: string; votePercentage: number; tokenSymbol: string }[];
   cta?: VotingCta;
 }
 
-const choiceClassNames: Record<Choice, string> = {
+const choiceClassNames: Record<Choices, string> = {
   yes: "*:bg-success-500",
   abstain: "*:bg-neutral-400",
   no: "*:bg-critical-500",
 };
 
-const choiceTextClassNames: Record<Choice, string> = {
+const choiceTextClassNames: Record<Choices, string> = {
   yes: "text-success-800",
   abstain: "text-neutral-800",
   no: "text-critical-800",
@@ -55,12 +55,12 @@ export const BreakdownMajorityVotingResult: React.FC<IBreakdownMajorityVotingRes
               <span
                 className={classNames(
                   "capitalize leading-tight md:text-lg",
-                  choiceTextClassNames[choice.option as Choice]
+                  choiceTextClassNames[choice.option as Choices]
                 )}
               >
                 {choice.option}
               </span>
-              <Progress value={choice.votePercentage} className={choiceClassNames[choice.option as Choice]} />
+              <Progress value={choice.votePercentage} className={choiceClassNames[choice.option as Choices]} />
               <div className="flex gap-x-1">
                 <span className="text-neutral-800">{choice.voteAmount}</span>
                 <span className="text-neutral-500">{choice.tokenSymbol}</span>
@@ -98,12 +98,18 @@ export const BreakdownMajorityVotingResult: React.FC<IBreakdownMajorityVotingRes
       {/* Button group */}
       {cta && (
         <div className="flex w-full flex-col gap-y-4 md:flex-row md:gap-x-4">
-          <Button size="md" disabled={disabled} onClick={handleVoteClick} isLoading={cta.isLoading}>
+          <Button
+            size="md"
+            className="!rounded-full"
+            disabled={disabled}
+            onClick={handleVoteClick}
+            isLoading={cta.isLoading}
+          >
             {label}
           </Button>
 
           {showOptions && (
-            <Button size="md" onClick={() => setShowOptions(false)} variant="tertiary">
+            <Button size="md" className="!rounded-full" onClick={() => setShowOptions(false)} variant="tertiary">
               Cancel
             </Button>
           )}
