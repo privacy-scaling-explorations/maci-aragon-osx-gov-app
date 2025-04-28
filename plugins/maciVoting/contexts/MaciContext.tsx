@@ -1,7 +1,8 @@
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from "react";
 import { type MaciContextType } from "./types";
 import { Keypair, PrivKey } from "@maci-protocol/domainobjs";
-import { generateKeypair, signup } from "@maci-protocol/sdk";
+import { generateKeypair } from "@maci-protocol/sdk";
+import { signup } from "@maci-protocol/sdk/browser";
 import { PUB_MACI_ADDRESS } from "@/constants";
 import { useSignMessage, useWalletClient } from "wagmi";
 
@@ -57,7 +58,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
     try {
       const { stateIndex: _stateIndex } = await signup({
         maciAddress: PUB_MACI_ADDRESS,
-        maciPubKey: maciKeypair.pubKey.serialize(),
+        maciPublicKey: maciKeypair.pubKey.serialize(),
         sgData: DEFAULT_SG_DATA,
         signer: walletClient as any,
       });
