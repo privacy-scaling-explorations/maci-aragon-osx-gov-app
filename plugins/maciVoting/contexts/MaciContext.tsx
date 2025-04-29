@@ -1,10 +1,36 @@
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from "react";
 import { type MaciContextType } from "./types";
 import { Keypair, PrivKey } from "@maci-protocol/domainobjs";
-import { generateKeypair } from "@maci-protocol/sdk";
-import { signup } from "@maci-protocol/sdk/browser";
+import { signup, generateKeypair } from "@maci-protocol/sdk/browser";
 import { PUB_MACI_ADDRESS } from "@/constants";
-import { useSignMessage, useWalletClient } from "wagmi";
+import { type Config, useConnectorClient, useSignMessage, useWalletClient } from "wagmi";
+
+import { BrowserProvider, JsonRpcSigner } from "ethers";
+import type { Account, Chain, Client, Transport } from "viem";
+
+export function clientToSigner(client: Client<Transport, Chain, Account>) {
+  const { account, chain, transport } = client;
+
+  console.log(client);
+  console.log(chain.id);
+  console.log(chain.name);
+  console.log(account.address);
+
+  const network = {
+    chainId: chain.id,
+    name: chain.name,
+    ensAddress: chain.contracts?.ensRegistry?.address,
+  };
+  const provider = new BrowserProvider(transport, network);
+  const signer = new JsonRpcSigner(provider, account.address);
+  return signer;
+}
+
+/** Hook to convert a viem Wallet Client to an ethers.js Signer. */
+export function useEthersSigner({ chainId }: { chainId?: number } = {}) {
+  const { data: client } = useConnectorClient<Config>({ chainId });
+  return useMemo(() => (client ? clientToSigner(client) : undefined), [client]);
+}
 
 export const DEFAULT_SG_DATA = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -22,7 +48,9 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
   const { data: walletClient } = useWalletClient();
   const { signMessageAsync } = useSignMessage();
 
-  const getKeypair = useCallback(async () => {
+  const signer = useEthersSigner();
+
+  const createKeypair = useCallback(async () => {
     const maciPrivateKey = localStorage.getItem("maciPrivateKey");
     if (maciPrivateKey) {
       const keypair = new Keypair(PrivKey.deserialize(maciPrivateKey));
@@ -49,6 +77,12 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
+    if (!signer) {
+      setError("Signer not found");
+      setIsLoading(false);
+      return;
+    }
+
     if (!maciKeypair) {
       setError("Keypair not found");
       setIsLoading(false);
@@ -56,14 +90,19 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
+      console.log("Signing up...");
+      console.log(signer);
       const { stateIndex: _stateIndex } = await signup({
         maciAddress: PUB_MACI_ADDRESS,
         maciPublicKey: maciKeypair.pubKey.serialize(),
         sgData: DEFAULT_SG_DATA,
-        signer: walletClient as any,
+        signer,
       });
+      console.log("Signed up successfully");
       setStateIndex(_stateIndex);
     } catch (error) {
+      // eslint-disable-next-line no-console
+      console.log(error);
       setIsRegistered(false);
       setError("Error signing up");
       setIsLoading(false);
@@ -89,11 +128,11 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       isRegistered,
       maciKeypair,
       stateIndex,
-      getKeypair,
+      createKeypair,
       onSignup,
       onJoinPoll,
     }),
-    [isLoading, error, initialVoiceCredits, isRegistered, maciKeypair, stateIndex, getKeypair, onSignup, onJoinPoll]
+    [isLoading, error, initialVoiceCredits, isRegistered, maciKeypair, stateIndex, createKeypair, onSignup, onJoinPoll]
   );
 
   return <MaciContext.Provider value={value as MaciContextType}>{children}</MaciContext.Provider>;

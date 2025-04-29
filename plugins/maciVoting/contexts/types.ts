@@ -13,8 +13,8 @@ export interface MaciContextType {
   maciKeypair?: Keypair;
   //isEligibleToVote: boolean;
   stateIndex?: string;
-  getKeypair: () => Promise<Keypair>;
-  onSignup: (onError: () => void) => Promise<void>;
+  createKeypair: () => Promise<Keypair>;
+  onSignup: () => Promise<void>;
   onJoinPoll?: (pollId: bigint) => Promise<void>;
   onVote?: (
     args: IVoteArgs[],

@@ -8,8 +8,6 @@ import {
   IconType,
   IllustrationHuman,
   ProposalDataListItemSkeleton,
-  Tabs,
-  TabsList,
   type DataListState,
 } from "@aragon/ods";
 import { useCanCreateProposal } from "@/plugins/maciVoting/hooks/useCanCreateProposal";
@@ -17,8 +15,8 @@ import Link from "next/link";
 import { Else, If, Then } from "@/components/if";
 import { PUB_TOUCAN_VOTING_PLUGIN_ADDRESS, PUB_CHAIN } from "@/constants";
 
-import BridgeOFT, { BridgeToL1, BridgeToL2 } from "../components/bridge/BridgeOFT";
-import SponsoredMint from "../components/paymaster/SponsoredVote";
+import BridgeOFT from "../components/bridge/BridgeOFT";
+import SignUpSection from "../components/SignUpSection";
 
 const DEFAULT_PAGE_SIZE = 6;
 
@@ -154,9 +152,9 @@ export default function Proposals() {
               </Else>
             </If>
           </div>
-          <div className="flex min-w-[33%] flex-col gap-y-3">
+          <div className="flex w-[33%] flex-col gap-y-3">
+            <SignUpSection />
             <BridgeOFT />
-            {/* <SponsoredMint /> */}
           </div>
         </div>
       </SectionView>
