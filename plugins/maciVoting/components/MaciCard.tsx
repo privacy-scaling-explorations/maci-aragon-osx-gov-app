@@ -1,10 +1,22 @@
 import { Button, Card, Heading } from "@aragon/ods";
-import { useMaci } from "../contexts/MaciContext";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useMaci } from "../hooks/useMaci";
 
-const SignUpSection = () => {
-  const { onSignup, maciKeypair, createKeypair, error: maciError } = useMaci();
+const MaciCard = () => {
+  const { onSignup, maciKeypair, isRegistered, createKeypair, error: maciError } = useMaci();
   const [error] = useState<string | undefined>(maciError);
+
+  const buttonMessage = useMemo(() => {
+    if (isRegistered) {
+      return "Already signed up";
+    } else {
+      if (!maciKeypair) {
+        return "Generate keys";
+      } else {
+        return "Sign up";
+      }
+    }
+  }, [maciKeypair, isRegistered]);
 
   const onClick = useCallback(async () => {
     if (!maciKeypair) {
@@ -21,9 +33,11 @@ const SignUpSection = () => {
         <p>You need to sign up your locally generated public key to the main Maci contract.</p>
         <p className="text-sm text-critical-500">{error}</p>
       </div>
-      <Button onClick={onClick}>{maciKeypair ? "Sign up" : "Generate keys"}</Button>
+      <Button onClick={onClick} disabled={isRegistered}>
+        {buttonMessage}
+      </Button>
     </Card>
   );
 };
 
-export default SignUpSection;
+export default MaciCard;

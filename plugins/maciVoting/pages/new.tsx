@@ -1,4 +1,4 @@
-import { Button, IconType, Icon, InputText, TextAreaRichText } from "@aragon/ods";
+import { Button, IconType, Icon, InputText, TextAreaRichText, InputDate, InputTime } from "@aragon/ods";
 import React, { useEffect, useState } from "react";
 import { uploadToPinata } from "@/utils/ipfs";
 import { useChainId, useSwitchChain, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
@@ -27,6 +27,10 @@ export default function Create() {
   const [title, setTitle] = useState<string>("");
   const [summary, setSummary] = useState<string>("");
   const [description, setDescription] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [startTime, setStartTime] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [endTime, setEndTime] = useState<string>("");
   const [actions, setActions] = useState<Action[]>([]);
   const { addAlert } = useAlerts();
   const { writeContract: createProposalWrite, data: createTxHash, status, error } = useWriteContract();
@@ -121,6 +125,9 @@ export default function Create() {
 
     const ipfsPin = await uploadToPinata(blob);
 
+    const startDateTime = Math.floor(new Date(`${startDate}T${startTime ? startTime : "00:00:00"}`).getTime() / 1000);
+    const endDateTime = Math.floor(new Date(`${endDate}T${endTime ? endTime : "00:00:00"}`).getTime() / 1000);
+
     if (chainId !== PUB_CHAIN.id) await switchChainAsync({ chainId: PUB_CHAIN.id });
     createProposalWrite({
       chainId: PUB_CHAIN.id,
@@ -128,7 +135,7 @@ export default function Create() {
       address: PUB_MACI_VOTING_PLUGIN_ADDRESS,
       functionName: "createProposal",
       // args: _metadata, _actions, _allowFailureMap, _startDate, _endDate
-      args: [toHex(ipfsPin), actions, BigInt(0), 1840004313, 1850004313],
+      args: [toHex(ipfsPin), actions, BigInt(0), startDateTime, endDateTime],
     });
   };
 
@@ -176,6 +183,38 @@ export default function Create() {
             onChange={setDescription}
             placeholder="A description for what the proposal is all about"
           />
+        </div>
+        <div className="mb-6 flex flex-row gap-x-5">
+          <div className="flex flex-1 flex-col">
+            <InputDate
+              className="w-full"
+              label="Start date"
+              variant="default"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+            <InputTime
+              className="w-full"
+              variant="default"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-1 flex-col">
+            <InputDate
+              className="w-full"
+              label="End date"
+              variant="default"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+            <InputTime
+              className="w-full"
+              variant="default"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+            />
+          </div>
         </div>
         <div className="mb-6">
           <span className="mb-2 block text-lg font-normal text-neutral-900 ">Select the type of proposal</span>

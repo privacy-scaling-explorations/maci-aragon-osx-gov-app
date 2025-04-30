@@ -15,8 +15,8 @@ import Link from "next/link";
 import { Else, If, Then } from "@/components/if";
 import { PUB_TOUCAN_VOTING_PLUGIN_ADDRESS, PUB_CHAIN } from "@/constants";
 
-import BridgeOFT from "../components/bridge/BridgeOFT";
-import SignUpSection from "../components/SignUpSection";
+import MaciCard from "../components/MaciCard";
+import CreateProposalCard from "../components/CreateProposalCard";
 
 const DEFAULT_PAGE_SIZE = 6;
 
@@ -43,7 +43,7 @@ export default function Proposals() {
 
   useEffect(() => {
     refetch();
-  }, [blockNumber]);
+  }, [blockNumber, refetch]);
 
   const entityLabel = proposalCount === 1 ? "Proposal" : "Proposals";
 
@@ -153,8 +153,8 @@ export default function Proposals() {
             </If>
           </div>
           <div className="flex w-[33%] flex-col gap-y-3">
-            <SignUpSection />
-            <BridgeOFT />
+            <MaciCard />
+            <CreateProposalCard />
           </div>
         </div>
       </SectionView>
