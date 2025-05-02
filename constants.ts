@@ -56,7 +56,7 @@ export const PUB_PINATA_JWT = process.env.NEXT_PUBLIC_PINATA_JWT ?? "";
 export const PUB_APP_NAME = "Aragonette";
 export const PUB_APP_DESCRIPTION = "Simplified user interface for Aragon DAO's";
 
-export const PUB_PROJECT_URL = "https://aragon.org/";
+export const PUB_PROJECT_URL = process.env.NEXT_PUBLIC_PROJECT_URL ?? "https://aragon.org/";
 export const PUB_WALLET_ICON = "https://avatars.githubusercontent.com/u/37784886";
 
 export const PUB_DISCORD_URL = "https://discord.com/";

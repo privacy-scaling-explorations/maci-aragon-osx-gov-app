@@ -16,7 +16,6 @@ import { Else, If, Then } from "@/components/if";
 import { PUB_TOUCAN_VOTING_PLUGIN_ADDRESS, PUB_CHAIN } from "@/constants";
 
 import MaciCard from "../components/MaciCard";
-import CreateProposalCard from "../components/CreateProposalCard";
 
 const DEFAULT_PAGE_SIZE = 6;
 
@@ -154,7 +153,6 @@ export default function Proposals() {
           </div>
           <div className="flex w-[33%] flex-col gap-y-3">
             <MaciCard />
-            <CreateProposalCard />
           </div>
         </div>
       </SectionView>
