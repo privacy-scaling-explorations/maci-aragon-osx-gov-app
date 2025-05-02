@@ -13,7 +13,7 @@ import {
 import { useCanCreateProposal } from "@/plugins/maciVoting/hooks/useCanCreateProposal";
 import Link from "next/link";
 import { Else, If, Then } from "@/components/if";
-import { PUB_TOUCAN_VOTING_PLUGIN_ADDRESS, PUB_CHAIN } from "@/constants";
+import { PUB_MACI_VOTING_PLUGIN_ADDRESS, PUB_CHAIN } from "@/constants";
 
 import MaciCard from "../components/MaciCard";
 
@@ -32,7 +32,7 @@ export default function Proposals() {
     isFetching: isFetchingNextPage,
     refetch,
   } = useReadContract({
-    address: PUB_TOUCAN_VOTING_PLUGIN_ADDRESS,
+    address: PUB_MACI_VOTING_PLUGIN_ADDRESS,
     abi: TokenVotingAbi,
     functionName: "proposalCount",
     chainId: PUB_CHAIN.id,

@@ -1,4 +1,5 @@
 import { Button } from "@aragon/ods";
+import { useMaci } from "../../hooks/useMaci";
 
 const ABSTAIN_VALUE = 1;
 const VOTE_YES_VALUE = 2;
@@ -10,6 +11,8 @@ interface VotingModalProps {
 }
 
 const VotingModal: React.FC<VotingModalProps> = ({ onDismissModal, selectedVote }) => {
+  const { onJoinPoll, onVote, error: maciError } = useMaci();
+
   return (
     <>
       <div

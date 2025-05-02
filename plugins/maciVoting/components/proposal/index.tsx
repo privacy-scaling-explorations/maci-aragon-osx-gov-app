@@ -5,7 +5,7 @@ import { ProposalDataListItem } from "@aragon/ods";
 import { PleaseWaitSpinner } from "@/components/please-wait";
 import { useProposalStatus } from "../../hooks/useProposalVariantStatus";
 import { useAccount } from "wagmi";
-import { Tally } from "../../utils/types";
+import { type Tally } from "../../utils/types";
 import { getWinningOption } from "../../utils/proposal-status";
 
 const DEFAULT_PROPOSAL_METADATA_TITLE = "(No proposal title)";
