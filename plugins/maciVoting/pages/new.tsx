@@ -49,6 +49,7 @@ export default function Create() {
         addAlert("Transaction rejected by the user", {
           timeout: 4 * 1000,
         });
+        return;
       } else {
         // eslint-disable-next-line no-console
         console.error(error);
@@ -76,7 +77,7 @@ export default function Create() {
     setTimeout(() => {
       push("#/");
     }, 1000 * 2);
-  }, [status, createTxHash, isConfirming, isConfirmed, addAlert, error, push]);
+  }, [status, createTxHash, isConfirming, isConfirmed, error]);
 
   const submitProposal = async () => {
     // Check metadata
@@ -124,6 +125,13 @@ export default function Create() {
     });
 
     const ipfsPin = await uploadToPinata(blob);
+
+    if (!startDate || !endDate) {
+      addAlert("You need to specify the start date and end date of the voting period", {
+        timeout: 4 * 1000,
+      });
+      return;
+    }
 
     const startDateTime = Math.floor(new Date(`${startDate}T${startTime ? startTime : "00:00:00"}`).getTime() / 1000);
     const endDateTime = Math.floor(new Date(`${endDate}T${endTime ? endTime : "00:00:00"}`).getTime() / 1000);
