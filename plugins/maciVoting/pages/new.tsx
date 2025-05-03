@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { uploadToPinata } from "@/utils/ipfs";
 import { useChainId, useSwitchChain, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { toHex } from "viem";
-import MaciVotingArtifact from "@/plugins/maciVoting/artifacts/MaciVoting.json";
+import { MaciVotingAbi } from "../artifacts/MaciVoting.sol";
 import { useAlerts } from "@/context/Alerts";
 import WithdrawalInput from "@/components/input/withdrawal";
 import { FunctionCallForm } from "@/components/input/function-call-form";
@@ -139,11 +139,11 @@ export default function Create() {
     if (chainId !== PUB_CHAIN.id) await switchChainAsync({ chainId: PUB_CHAIN.id });
     createProposalWrite({
       chainId: PUB_CHAIN.id,
-      abi: MaciVotingArtifact.abi,
+      abi: MaciVotingAbi,
       address: PUB_MACI_VOTING_PLUGIN_ADDRESS,
       functionName: "createProposal",
       // args: _metadata, _actions, _allowFailureMap, _startDate, _endDate
-      args: [toHex(ipfsPin), actions, BigInt(0), startDateTime, endDateTime],
+      args: [toHex(ipfsPin), actions, BigInt(0), BigInt(startDateTime), BigInt(endDateTime)],
     });
   };
 

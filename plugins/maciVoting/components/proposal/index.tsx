@@ -1,12 +1,11 @@
-import { useProposalVoting } from "@/plugins/maciVoting/hooks/useProposalVoting";
 import { useRouter } from "next/router";
 import { Card } from "@aragon/ods";
 import { ProposalDataListItem } from "@aragon/ods";
 import { PleaseWaitSpinner } from "@/components/please-wait";
 import { useProposalStatus } from "../../hooks/useProposalVariantStatus";
-import { useAccount } from "wagmi";
 import { type Tally } from "../../utils/types";
 import { getWinningOption } from "../../utils/proposal-status";
+import { useProposal } from "../../hooks/useProposal";
 
 const DEFAULT_PROPOSAL_METADATA_TITLE = "(No proposal title)";
 const DEFAULT_PROPOSAL_METADATA_SUMMARY = "(The metadata of the proposal is not available)";
@@ -44,12 +43,11 @@ const LinkAsDiv = ({
 };
 
 export default function ProposalCard(props: ProposalInputs) {
-  const { address } = useAccount();
-  const { proposal, proposalFetchStatus, votes } = useProposalVoting(props.proposalId.toString());
+  const { proposal, status } = useProposal(props.proposalId.toString());
 
   const proposalVariant = useProposalStatus(proposal!);
-  const showLoading = getShowProposalLoading(proposal, proposalFetchStatus);
-  const hasVoted = votes?.some(({ voter }) => voter === address);
+  const showLoading = getShowProposalLoading(proposal, status);
+  const hasVoted = false;
   const winningOption = getWinningOption(proposal?.tally as Tally);
 
   if (!proposal && showLoading) {
@@ -73,7 +71,7 @@ export default function ProposalCard(props: ProposalInputs) {
         </Card>
       </LinkAsDiv>
     );
-  } else if (proposalFetchStatus.metadataReady && !proposal?.title) {
+  } else if (status.metadataReady && !proposal?.title) {
     return (
       <LinkAsDiv href={`#/proposals/${props.proposalId}`} className="mb-4 w-full">
         <Card className="p-4">
@@ -108,8 +106,8 @@ export default function ProposalCard(props: ProposalInputs) {
 }
 
 function getShowProposalLoading(
-  proposal: ReturnType<typeof useProposalVoting>["proposal"],
-  status: ReturnType<typeof useProposalVoting>["proposalFetchStatus"]
+  proposal: ReturnType<typeof useProposal>["proposal"],
+  status: ReturnType<typeof useProposal>["status"]
 ) {
   if (!proposal || status.proposalLoading) return true;
   else if (status.metadataLoading && !status.metadataError) return true;

@@ -13,12 +13,9 @@ export enum VotingMode {
 }
 
 export type ProposalParameters = {
-  votingMode: VotingMode;
-  supportThreshold: number;
   startDate: bigint;
   endDate: bigint;
   snapshotBlock: bigint;
-  snapshotTimestamp: bigint;
   minVotingPower: bigint;
 };
 

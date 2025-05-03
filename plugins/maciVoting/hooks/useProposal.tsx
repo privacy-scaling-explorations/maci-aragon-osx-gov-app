@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useBlockNumber, usePublicClient, useReadContract } from "wagmi";
-import { Hex, fromHex, getAbiItem } from "viem";
-import { TokenVotingAbi } from "@/plugins/maciVoting/artifacts/TokenVoting.sol";
-import { Action } from "@/utils/types";
-import { Proposal, ProposalMetadata, ProposalParameters, Tally } from "@/plugins/maciVoting/utils/types";
-import { PUB_CHAIN, PUB_TOUCAN_VOTING_PLUGIN_ADDRESS } from "@/constants";
+import { fromHex, getAbiItem, type Hex } from "viem";
+import { MaciVotingAbi } from "../artifacts/MaciVoting.sol";
+import { type Action } from "@/utils/types";
+import { type Proposal, type ProposalMetadata } from "@/plugins/maciVoting/utils/types";
+import { PUB_CHAIN, PUB_MACI_VOTING_PLUGIN_ADDRESS } from "@/constants";
 import { useMetadata } from "@/hooks/useMetadata";
 
 type ProposalCreatedLogResponse = {
@@ -20,7 +20,7 @@ type ProposalCreatedLogResponse = {
 };
 
 const ProposalCreatedEvent = getAbiItem({
-  abi: TokenVotingAbi,
+  abi: MaciVotingAbi,
   name: "ProposalCreated",
 });
 
@@ -32,49 +32,48 @@ export function useProposal(proposalId: string, autoRefresh = false) {
 
   // Proposal on-chain data
   const {
-    data: proposalResult,
+    data: proposalData,
     error: proposalError,
     fetchStatus: proposalFetchStatus,
     refetch: proposalRefetch,
     queryKey: proposalQueryKey,
   } = useReadContract({
     chainId: PUB_CHAIN.id,
-    address: PUB_TOUCAN_VOTING_PLUGIN_ADDRESS,
-    abi: TokenVotingAbi,
+    address: PUB_MACI_VOTING_PLUGIN_ADDRESS,
+    abi: MaciVotingAbi,
     functionName: "getProposal",
     args: [BigInt(proposalId)],
   });
-  const proposalData = decodeProposalResultData(proposalResult as any);
 
   useEffect(() => {
     if (autoRefresh) proposalRefetch();
-  }, [blockNumber]);
+  }, [autoRefresh, blockNumber, proposalRefetch]);
 
   // Creation event
   useEffect(() => {
-    if (!proposalData || !publicClient) return;
+    (async () => {
+      if (!proposalData || !publicClient) return;
 
-    publicClient
-      .getLogs({
-        address: PUB_TOUCAN_VOTING_PLUGIN_ADDRESS,
-        event: ProposalCreatedEvent as any,
-        args: {
-          proposalId: proposalId,
-        } as any,
-        fromBlock: BigInt(proposalData.parameters.snapshotBlock),
-        toBlock: "latest",
-      })
-      .then((logs) => {
+      try {
+        const logs = await publicClient.getLogs({
+          address: PUB_MACI_VOTING_PLUGIN_ADDRESS,
+          event: ProposalCreatedEvent as any,
+          fromBlock: BigInt(proposalData.parameters.snapshotBlock),
+          toBlock: "latest",
+        });
+
         if (!logs || !logs.length) throw new Error("No creation logs");
 
         const log: ProposalCreatedLogResponse = logs[0] as any;
+
         setProposalCreationEvent(log.args);
         setMetadata(fromHex(log.args.metadata as Hex, "string"));
-      })
-      .catch((err) => {
-        console.error("Could not fetch the proposal details", err);
-      });
-  }, [proposalData?.tally.yes, proposalData?.tally.no, proposalData?.tally.abstain, !!publicClient]);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("Could not fetch the proposal details", error);
+      }
+    })();
+  }, [proposalData, publicClient]);
 
   // JSON metadata
   const {
@@ -82,6 +81,35 @@ export function useProposal(proposalId: string, autoRefresh = false) {
     isLoading: metadataLoading,
     error: metadataError,
   } = useMetadata<ProposalMetadata>(metadataUri);
+
+  const arrangeProposalData = useCallback(
+    (
+      proposal?: typeof proposalData,
+      creationEvent?: ProposalCreatedLogResponse["args"],
+      metadata?: ProposalMetadata
+    ): Proposal | null => {
+      if (!proposal) return null;
+
+      return {
+        actions: [...proposal.actions],
+        active: proposal.active,
+        executed: proposal.executed,
+        parameters: proposal.parameters,
+        tally: {
+          yes: proposal.tally.yes ?? 0n,
+          no: proposal.tally.no ?? 0n,
+          abstain: proposal.tally.abstain ?? 0n,
+        },
+        allowFailureMap: proposal.allowFailureMap,
+        creator: creationEvent?.creator ?? "",
+        title: metadata?.title ?? "",
+        summary: metadata?.summary ?? "",
+        description: metadata?.description ?? "",
+        resources: metadata?.resources ?? [],
+      };
+    },
+    []
+  );
 
   const proposal = arrangeProposalData(proposalData, proposalCreationEvent, metadataContent);
 
@@ -96,46 +124,5 @@ export function useProposal(proposalId: string, autoRefresh = false) {
       metadataLoading,
       metadataError: metadataError !== undefined,
     },
-  };
-}
-
-// Helpers
-
-function decodeProposalResultData(data?: Array<any>) {
-  if (!data?.length || data.length < 6) return null;
-
-  return {
-    active: data[0] as boolean,
-    executed: data[1] as boolean,
-    parameters: data[2] as ProposalParameters,
-    tally: data[3] as Tally,
-    actions: data[4] as Array<Action>,
-    allowFailureMap: data[5] as bigint,
-  };
-}
-
-function arrangeProposalData(
-  proposalData?: ReturnType<typeof decodeProposalResultData>,
-  creationEvent?: ProposalCreatedLogResponse["args"],
-  metadata?: ProposalMetadata
-): Proposal | null {
-  if (!proposalData) return null;
-
-  return {
-    actions: proposalData.actions,
-    active: proposalData.active,
-    executed: proposalData.executed,
-    parameters: proposalData.parameters,
-    tally: {
-      yes: proposalData.tally.yes || 0n,
-      no: proposalData.tally.no || 0n,
-      abstain: proposalData.tally.abstain || 0n,
-    },
-    allowFailureMap: proposalData.allowFailureMap,
-    creator: creationEvent?.creator || "",
-    title: metadata?.title || "",
-    summary: metadata?.summary || "",
-    description: metadata?.description || "",
-    resources: metadata?.resources || [],
   };
 }
