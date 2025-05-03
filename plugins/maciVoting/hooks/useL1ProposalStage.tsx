@@ -3,7 +3,7 @@ import { ITransformedStage, IVote, ProposalStages } from "@/utils/types";
 import dayjs from "dayjs";
 import { formatEther } from "viem";
 import { useVotingToken } from "./useVotingToken";
-import { useProposalVoting } from "./useProposalVoting";
+import { useProposalVoting } from "./useProposalVotingOld";
 import { useProposalStatus } from "./useProposalVariantStatus";
 import { useProposalExecute } from "./useProposalExecute";
 

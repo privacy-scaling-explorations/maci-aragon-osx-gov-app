@@ -1,47 +1,15 @@
 import { useEffect } from "react";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
-import { TokenVotingAbi } from "@/plugins/maciVoting/artifacts/TokenVoting.sol";
-import { AlertContextProps, useAlerts } from "@/context/Alerts";
+import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { TokenVotingAbi } from "@/plugins/tokenVoting/artifacts/TokenVoting.sol";
+import { type AlertContextProps, useAlerts } from "@/context/Alerts";
 import { useRouter } from "next/router";
-import { parseAbi, parseEther } from "viem";
-import {
-  PUB_CHAIN,
-  PUB_CHAIN_NAME,
-  PUB_L2_CHAIN,
-  PUB_L2_CHAIN_NAME,
-  PUB_TOUCAN_VOTING_PLUGIN_ADDRESS,
-  PUB_TOUCAN_VOTING_PLUGIN_L2_ADDRESS,
-} from "@/constants";
-import { useProposal } from "./useProposal";
-import { useCombinedVotesList } from "./useProposalVoteList";
-import { useCanVoteL1, useCanVoteL2 } from "./useUserCanVote";
-import { ToucanRelayAbi } from "../artifacts/ToucanRelay.sol";
-import { useProposalRef } from "./useProposalRef";
-import { useForceL1Chain, useForceL2Chain } from "./useForceChain";
-import { ChainName, readableChainName } from "@/utils/chains";
-import { useProposalL1Voting, useProposalL2Voting } from "./useGetPastVotes";
-import { usePaymasterTransaction } from "../components/paymaster/SponsoredVote";
+import { PUB_MACI_VOTING_PLUGIN_ADDRESS } from "@/constants";
 
 export function useProposalVoting(proposalId: string) {
-  const forceL1 = useForceL1Chain();
-  const forceL2 = useForceL2Chain();
   const { reload } = useRouter();
   const { addAlert } = useAlerts() as AlertContextProps;
-  const { proposal, status: proposalFetchStatus } = useProposal(proposalId, true);
-  const votes = useCombinedVotesList(proposalId, proposal);
-
-  const canVoteL1 = useCanVoteL1(proposalId);
-  const canVoteInL2 = useCanVoteL2(proposalId);
-
-  const { votes: addressVotesL1 } = useProposalL1Voting(proposalId);
-  const { votes: addressVotesL2 } = useProposalL2Voting(proposalId);
-
   const { writeContract: voteWrite, data: votingTxHash, error: votingError, status: votingStatus } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: votingTxHash });
-
-  const { proposalRef } = useProposalRef(Number(proposalId));
-
-  const { writeContract: paymaster } = usePaymasterTransaction();
 
   // Loading status and errors
   useEffect(() => {
@@ -52,8 +20,9 @@ export function useProposalVoting(proposalId: string) {
           timeout: 4 * 1000,
         });
       } else {
+        // eslint-disable-next-line no-console
         console.error(votingError);
-        addAlert("Could not vote in the proposal", { type: "error" });
+        addAlert("Could not create the proposal", { type: "error" });
       }
       return;
     }
@@ -75,68 +44,24 @@ export function useProposalVoting(proposalId: string) {
     });
 
     reload();
-  }, [votingStatus, votingTxHash, isConfirming, isConfirmed]);
+  }, [votingStatus, votingTxHash, isConfirming, isConfirmed, addAlert, reload, votingError]);
 
-  const voteProposal = async (votingOption: number, chainName: ChainName) => {
-    const effectiveVotes = chainName === PUB_L2_CHAIN_NAME ? addressVotesL2 : addressVotesL1;
-
-    if (effectiveVotes === undefined) {
-      addAlert("Could not fetch the user's voting power", { type: "error" });
-      return;
-    }
-
-    const votingTally = {
-      yes: votingOption === 1 ? effectiveVotes : 0n,
-      no: votingOption === 2 ? effectiveVotes : 0n,
-      abstain: votingOption === 3 ? effectiveVotes : 0n,
-    };
-
-    if (chainName === PUB_L2_CHAIN_NAME) {
-      if (!canVoteInL2) {
-        addAlert("User cannot vote in " + readableChainName(PUB_L2_CHAIN_NAME), { type: "error" });
-        return;
-      }
-
-      forceL2(() =>
-        voteWrite({
-          chainId: PUB_L2_CHAIN.id,
-          abi: ToucanRelayAbi,
-          address: PUB_TOUCAN_VOTING_PLUGIN_L2_ADDRESS,
-          functionName: "vote",
-          args: [proposalRef!, votingTally],
-        })
-      );
-    } else {
-      if (!canVoteL1) {
-        addAlert("User cannot vote in " + readableChainName(PUB_CHAIN_NAME), { type: "error" });
-        return;
-      }
-
-      forceL1(() =>
-        voteWrite({
-          chainId: PUB_CHAIN.id,
-          abi: TokenVotingAbi,
-          address: PUB_TOUCAN_VOTING_PLUGIN_ADDRESS,
-          functionName: "vote",
-          args: [BigInt(proposalId), votingTally, false],
-        })
-      );
-    }
-  };
-
-  const voteWPaymaster = async () => {
-    return await paymaster(proposalRef!, { yes: 0n, no: parseEther("0"), abstain: parseEther("5000") });
+  // TODO: MACI joinPoll
+  // TODO: MACI vote
+  // TODO: do not interact with plugin vote (the function does not even exist)
+  const voteProposal = (votingOption: number, autoExecute: boolean = false) => {
+    voteWrite({
+      abi: TokenVotingAbi,
+      address: PUB_MACI_VOTING_PLUGIN_ADDRESS,
+      functionName: "vote",
+      args: [BigInt(proposalId), votingOption, autoExecute],
+    });
   };
 
   return {
-    proposal,
-    proposalFetchStatus,
-    votes,
-    canVote: canVoteL1,
     voteProposal,
     votingStatus,
     isConfirming,
-    voteWPaymaster,
     isConfirmed,
   };
 }
