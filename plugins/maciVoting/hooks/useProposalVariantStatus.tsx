@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Proposal } from "@/plugins/maciVoting/utils/types";
-import { ProposalStatus } from "@aragon/ods";
+import { type Proposal } from "@/plugins/maciVoting/utils/types";
+import { type ProposalStatus } from "@aragon/ods";
 import dayjs from "dayjs";
 
 export const useProposalVariantStatus = (proposal: Proposal) => {
@@ -17,7 +17,7 @@ export const useProposalVariantStatus = (proposal: Proposal) => {
           ? { variant: "critical", label: "Failed" }
           : { variant: "info", label: "Active" }
     );
-  }, [proposal, proposal?.tally, proposal?.executed, proposal?.parameters?.supportThreshold]);
+  }, [proposal, proposal?.tally, proposal?.executed]);
 
   return status;
 };
@@ -28,7 +28,6 @@ export const useProposalStatus = (proposal: Proposal) => {
   useEffect(() => {
     if (!proposal || !proposal?.parameters || !proposal?.tally) return;
 
-    const pastSupportThreshold = proposal.tally.yes >= proposal.parameters.supportThreshold;
     const isExecuted = proposal.executed;
     const endDate = dayjs(Number(proposal.parameters.endDate) * 1000);
     const isActive = dayjs().isBefore(endDate);
@@ -37,12 +36,12 @@ export const useProposalStatus = (proposal: Proposal) => {
       setStatus("executed");
     } else if (isActive) {
       setStatus("active");
-    } else if (!pastSupportThreshold && !isActive) {
+    } else if (!isActive) {
       setStatus("rejected");
     } else {
       setStatus("accepted");
     }
-  }, [proposal, proposal?.tally, proposal?.executed, proposal?.parameters.supportThreshold]);
+  }, [proposal, proposal?.tally, proposal?.executed]);
 
   return status;
 };

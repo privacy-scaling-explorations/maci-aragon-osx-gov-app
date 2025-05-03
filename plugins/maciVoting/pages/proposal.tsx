@@ -8,7 +8,7 @@ import { ProposalAction } from "@/components/proposalAction/proposalAction";
 import { CardResources } from "@/components/proposal/cardResources";
 import DispatchVotes from "../components/bridge/DispatchVotes";
 import { L2ProposalVoting } from "../components/vote/CrosschainVoting/CrosschainVotingHeader";
-import { IBreadcrumbsLink } from "@aragon/ods";
+import { type IBreadcrumbsLink } from "@aragon/ods";
 import { If } from "@/components/if";
 
 // rather than change the common utility, adding a new one here
@@ -22,7 +22,7 @@ function generateToucanBreadcrumbs(proposalId: string | number | bigint): IBread
     },
     {
       label: proposalId.toString(),
-      href: "/#/plugins/crosschain-voting/proposals/" + proposalId.toString(),
+      href: `/#/plugins/crosschain-voting/proposals/${proposalId.toString()}`,
     },
   ];
 }
