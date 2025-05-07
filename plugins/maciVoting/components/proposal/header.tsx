@@ -1,25 +1,29 @@
-import { AvatarIcon, Breadcrumbs, Button, Heading, IBreadcrumbsLink, IconType, Tag, TagVariant } from "@aragon/ods";
-import { Proposal } from "@/plugins/maciVoting/utils/types";
+import {
+  AvatarIcon,
+  Breadcrumbs,
+  Button,
+  Heading,
+  IBreadcrumbsLink,
+  IconType,
+  Tag,
+  type TagVariant,
+} from "@aragon/ods";
+import { type Proposal } from "@/plugins/maciVoting/utils/types";
 import { useProposalStatus } from "@/plugins/maciVoting/hooks/useProposalVariantStatus";
 import dayjs from "dayjs";
 import classNames from "classnames";
-import { ReactNode } from "react";
+import { type ReactNode } from "react";
 import { Publisher } from "@/components/publisher";
 import { getSimpleRelativeTimeFromDate } from "@/utils/dates";
 
-const DEFAULT_PROPOSAL_TITLE = "(No proposal title)";
-const DEFAULT_PROPOSAL_SUMMARY = "(No proposal summary)";
-
 interface ProposalHeaderProps {
   proposalNumber: number;
-  breadcrumbs: IBreadcrumbsLink[];
   proposal: Proposal;
   canExecute: boolean;
-  transactionConfirming: boolean;
   onExecutePressed: () => void;
 }
 
-const ProposalHeader: React.FC<ProposalHeaderProps> = ({ proposal, breadcrumbs }) => {
+const ProposalHeader: React.FC<ProposalHeaderProps> = ({ proposal }) => {
   const status = useProposalStatus(proposal);
   const tagVariant = getTagVariantFromStatus(status);
 
@@ -29,16 +33,6 @@ const ProposalHeader: React.FC<ProposalHeaderProps> = ({ proposal, breadcrumbs }
     <div className="flex w-full justify-center bg-neutral-0">
       {/* Wrapper */}
       <MainSection className="flex flex-col gap-y-6 md:px-16 md:py-10">
-        <Breadcrumbs
-          links={breadcrumbs}
-          tag={
-            status && {
-              label: status,
-              className: "capitalize",
-              variant: tagVariant,
-            }
-          }
-        />
         {/* Title & description */}
         <div className="flex w-full flex-col gap-y-2">
           <div className="flex w-full items-center gap-x-4">

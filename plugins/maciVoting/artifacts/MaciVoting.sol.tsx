@@ -86,7 +86,7 @@ export const MaciVotingAbi = [
         internalType: "bool",
       },
     ],
-    stateMutability: "nonpayable",
+    stateMutability: "view",
   },
   {
     type: "function",

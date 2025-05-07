@@ -1,7 +1,6 @@
 import { useAccount, useBlockNumber, useReadContract } from "wagmi";
 import { type ReactNode, useEffect } from "react";
 import ProposalCard from "@/plugins/maciVoting/components/proposal";
-import { TokenVotingAbi } from "@/plugins/maciVoting/artifacts/TokenVoting.sol";
 import {
   Button,
   DataList,
@@ -16,6 +15,7 @@ import { Else, If, Then } from "@/components/if";
 import { PUB_MACI_VOTING_PLUGIN_ADDRESS, PUB_CHAIN } from "@/constants";
 
 import MaciCard from "../components/MaciCard";
+import { MaciVotingAbi } from "../artifacts/MaciVoting.sol";
 
 const DEFAULT_PAGE_SIZE = 6;
 
@@ -33,7 +33,7 @@ export default function Proposals() {
     refetch,
   } = useReadContract({
     address: PUB_MACI_VOTING_PLUGIN_ADDRESS,
-    abi: TokenVotingAbi,
+    abi: MaciVotingAbi,
     functionName: "proposalCount",
     chainId: PUB_CHAIN.id,
   });
@@ -97,7 +97,7 @@ export default function Proposals() {
         gap-5 md:flex-row md:pb-20 "
         >
           <div className="flex w-full grow flex-col gap-x-12 gap-y-6 md:w-auto md:flex-row">
-            <If condition={true || proposalCount}>
+            <If condition={proposalCount}>
               <Then>
                 <DataList.Root
                   entityLabel={entityLabel}
@@ -124,14 +124,7 @@ export default function Proposals() {
               </Then>
               <Else>
                 <div className="w-full">
-                  <p className="text-md text-neutral-400">
-                    No proposals have been created yet. Here you will see the proposals created by the Security Council
-                    before they can be submitted to the{" "}
-                    <Link href="/plugins/community-proposals/#/" className="underline">
-                      community voting stage
-                    </Link>
-                    .
-                  </p>
+                  <p className="text-md text-neutral-400">No proposals have been created yet.</p>
                   <IllustrationHuman
                     className="mx-auto mb-10 max-w-72"
                     body="BLOCKS"

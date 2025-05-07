@@ -1,27 +1,26 @@
 import { useEffect } from "react";
 import { useWaitForTransactionReceipt, useWriteContract, useReadContract } from "wagmi";
-import { TokenVotingAbi } from "../artifacts/TokenVoting.sol";
-import { AlertContextProps, useAlerts } from "@/context/Alerts";
+import { type AlertContextProps, useAlerts } from "@/context/Alerts";
 import { useRouter } from "next/router";
-import { PUB_CHAIN, PUB_TOUCAN_VOTING_PLUGIN_ADDRESS } from "@/constants";
-import { useForceL1Chain } from "./useForceChain";
+import { PUB_CHAIN, PUB_MACI_VOTING_PLUGIN_ADDRESS } from "@/constants";
+import { MaciVotingAbi } from "../artifacts/MaciVoting.sol";
 
 export function useProposalExecute(proposalId: string) {
   const { reload } = useRouter();
   const { addAlert } = useAlerts() as AlertContextProps;
-  const forceL1 = useForceL1Chain();
 
   const {
     data: canExecute,
     isError: isCanVoteError,
     isLoading: isCanVoteLoading,
   } = useReadContract({
-    address: PUB_TOUCAN_VOTING_PLUGIN_ADDRESS,
-    abi: TokenVotingAbi,
+    address: PUB_MACI_VOTING_PLUGIN_ADDRESS,
+    abi: MaciVotingAbi,
     chainId: PUB_CHAIN.id,
     functionName: "canExecute",
     args: [BigInt(proposalId)],
   });
+
   const {
     writeContract: executeWrite,
     data: executeTxHash,
@@ -33,15 +32,13 @@ export function useProposalExecute(proposalId: string) {
   const executeProposal = () => {
     if (!canExecute) return;
 
-    forceL1(() =>
-      executeWrite({
-        chainId: PUB_CHAIN.id,
-        abi: TokenVotingAbi,
-        address: PUB_TOUCAN_VOTING_PLUGIN_ADDRESS,
-        functionName: "execute",
-        args: [BigInt(proposalId)],
-      })
-    );
+    executeWrite({
+      address: PUB_MACI_VOTING_PLUGIN_ADDRESS,
+      abi: MaciVotingAbi,
+      chainId: PUB_CHAIN.id,
+      functionName: "execute",
+      args: [BigInt(proposalId)],
+    });
   };
 
   useEffect(() => {
@@ -52,6 +49,7 @@ export function useProposalExecute(proposalId: string) {
           timeout: 4 * 1000,
         });
       } else {
+        // eslint-disable-next-line no-console
         console.error(executingError);
         addAlert("Could not execute the proposal", {
           type: "error",
@@ -79,7 +77,7 @@ export function useProposalExecute(proposalId: string) {
     });
 
     setTimeout(() => reload(), 1000 * 2);
-  }, [executingStatus, executeTxHash, isConfirming, isConfirmed]);
+  }, [executingStatus, executeTxHash, isConfirming, isConfirmed, addAlert, executingError, reload]);
 
   return {
     executeProposal,

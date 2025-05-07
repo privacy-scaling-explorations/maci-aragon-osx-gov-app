@@ -106,6 +106,7 @@ export function useProposal(proposalId: string, autoRefresh = false) {
         summary: metadata?.summary ?? "",
         description: metadata?.description ?? "",
         resources: metadata?.resources ?? [],
+        pollId: proposal.pollId,
       };
     },
     []

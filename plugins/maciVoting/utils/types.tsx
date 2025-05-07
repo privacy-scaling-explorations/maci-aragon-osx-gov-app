@@ -42,6 +42,7 @@ export type Proposal = {
   summary: string;
   description: string;
   resources: MetadataResource[];
+  pollId: bigint;
 };
 
 export type ProposalMetadata = {
