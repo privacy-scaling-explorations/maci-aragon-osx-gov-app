@@ -1,10 +1,11 @@
 import { Button, Card, Heading } from "@aragon/ods";
 import { useCallback, useEffect, useState } from "react";
 import { useMaci } from "../hooks/useMaci";
+import { VoteOption } from "../utils/types";
 
 const PollCard = ({ pollId }: { pollId: bigint }) => {
   // check if the user joined the poll
-  const { setPollId, onJoinPoll, isRegistered, hasJoinedPoll, error: maciError } = useMaci();
+  const { setPollId, onJoinPoll, onVote, isRegistered, hasJoinedPoll, error: maciError } = useMaci();
   const [error, setError] = useState<string | undefined>(maciError);
 
   useEffect(() => {
@@ -26,6 +27,13 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
     await onJoinPoll(pollId);
   }, [hasJoinedPoll, isRegistered, onJoinPoll, pollId]);
 
+  const onClickVote = useCallback(
+    async (option: VoteOption) => {
+      await onVote(option);
+    },
+    [onVote]
+  );
+
   return (
     <Card className="flex flex-col gap-y-4 p-6 shadow-neutral">
       <Heading size="h3">MACI Poll</Heading>
@@ -38,9 +46,9 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
             <div className="flex flex-col justify-between gap-y-2">
               <p>Submit your vote anonymously to the poll. Results will be tallied after the voting period ends.</p>
               <div className="flex flex-row gap-x-1">
-                <Button>Yes</Button>
-                <Button>No</Button>
-                <Button>Abstain</Button>
+                <Button onClick={() => onClickVote(VoteOption.Yes)}>Yes</Button>
+                <Button onClick={() => onClickVote(VoteOption.No)}>No</Button>
+                <Button onClick={() => onClickVote(VoteOption.Abstain)}>Abstain</Button>
               </div>
             </div>
           ) : (

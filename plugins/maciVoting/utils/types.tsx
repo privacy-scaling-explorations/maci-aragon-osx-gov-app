@@ -108,3 +108,9 @@ export type VotesReceivedEvent = {
 export type VotesReceivedResponse = {
   args: VotesReceivedEvent[];
 };
+
+export enum VoteOption {
+  Yes,
+  No,
+  Abstain,
+}

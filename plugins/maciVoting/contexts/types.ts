@@ -1,4 +1,5 @@
 import { type Keypair } from "@maci-protocol/domainobjs";
+import { type VoteOption } from "../utils/types";
 
 export interface IVoteArgs {
   voteOptionIndex: bigint;
@@ -19,10 +20,5 @@ export interface MaciContextType {
   createKeypair: () => Promise<Keypair>;
   onSignup: () => Promise<void>;
   onJoinPoll: (pollId: bigint) => Promise<void>;
-  onVote?: (
-    args: IVoteArgs[],
-    pollId: string,
-    onError: (err: string) => void | Promise<void>,
-    onSuccess: () => void | Promise<void>
-  ) => Promise<void>;
+  onVote: (option: VoteOption) => Promise<void>;
 }

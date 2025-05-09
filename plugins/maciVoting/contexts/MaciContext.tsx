@@ -10,10 +10,14 @@ import {
   generateMaciStateTreeWithEndKey,
   downloadPollJoiningArtifactsBrowser,
   joinPoll,
+  getPoll,
+  publish,
 } from "@maci-protocol/sdk/browser";
-import { PUB_MACI_ADDRESS } from "@/constants";
-import { useSignMessage } from "wagmi";
+import { PUB_MACI_ADDRESS, PUB_MACI_DEPLOYMENT_BLOCK } from "@/constants";
+import { usePublicClient, useSignMessage } from "wagmi";
 import { useEthersSigner } from "../hooks/useEthersSigner";
+import { type Hex } from "viem";
+import { VoteOption } from "../utils/types";
 
 export const DEFAULT_SG_DATA = "0x0000000000000000000000000000000000000000000000000000000000000000";
 export const DEFAULT_IVCP_DATA = "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -28,11 +32,10 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
   const [isRegistered, setIsRegistered] = useState<boolean>(false);
   const [maciKeypair, setMaciKeypair] = useState<Keypair | undefined>();
   const [stateIndex, setStateIndex] = useState<string | undefined>(undefined);
-  const [stateTree, setStateTree] = useState<
-    Awaited<ReturnType<typeof generateMaciStateTreeWithEndKey>> | null | undefined
-  >();
+  const [inclusionProof, setInclusionProof] = useState<any>(null);
 
   // Poll contract
+  const [pollDeployBlock, setPollDeployBlock] = useState<number | undefined>(undefined);
   const [pollId, setPollId] = useState<bigint | undefined>(undefined);
   const [hasJoinedPoll, setHasJoinedPoll] = useState<boolean>(false);
   const [initialVoiceCredits, setInitialVoiceCredits] = useState<number>(0);
@@ -41,6 +44,45 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
   // Wallet variables
   const { signMessageAsync } = useSignMessage();
   const signer = useEthersSigner();
+  const publicClient = usePublicClient();
+
+  // get deploy block numbers of MACI and Poll contracts
+  useEffect(() => {
+    (async () => {
+      if (!signer) {
+        setError("Signer not found");
+        return;
+      }
+
+      if (!pollId) {
+        return;
+      }
+
+      if (!publicClient) {
+        return;
+      }
+
+      const { address } = await getPoll({
+        maciAddress: PUB_MACI_ADDRESS,
+        pollId,
+        signer,
+      });
+
+      const logs = await publicClient.getLogs({
+        address: address as Hex,
+        fromBlock: BigInt(PUB_MACI_DEPLOYMENT_BLOCK),
+        toBlock: "latest",
+      });
+
+      if (logs.length === 0) {
+        setPollDeployBlock(PUB_MACI_DEPLOYMENT_BLOCK);
+        return;
+      }
+
+      const pollDeployBlock = logs[0].blockNumber;
+      setPollDeployBlock(Number(pollDeployBlock));
+    })();
+  }, [pollId, publicClient, signer]);
 
   // check if maci private key is in localStorage
   useEffect(() => {
@@ -84,10 +126,50 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
     })();
   }, [maciKeypair, signer]);
 
+  // generate maci state tree locally
+  useEffect(() => {
+    (async () => {
+      if (!signer) {
+        setError("Signer not found");
+        return;
+      }
+
+      if (!maciKeypair) {
+        setError("Keypair not found");
+        return;
+      }
+
+      if (!isRegistered) {
+        setError("User not registered");
+        return;
+      }
+
+      try {
+        const maciContract = MACIFactory.connect(PUB_MACI_ADDRESS, signer);
+        console.log("before generateMaciStateTreeWithEndKey");
+        const stateTree = await generateMaciStateTreeWithEndKey({
+          maciContract,
+          signer,
+          userPublicKey: maciKeypair.publicKey,
+          startBlock: pollDeployBlock ?? PUB_MACI_DEPLOYMENT_BLOCK,
+        });
+        console.log("after generateMaciStateTreeWithEndKey");
+        const localInclusionProof = stateTree.signUpTree.generateProof(Number(stateIndex));
+
+        setInclusionProof(localInclusionProof);
+
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.log(error);
+        setError("Error generating MACI state tree");
+      }
+    })();
+  }, [isRegistered, maciKeypair, pollDeployBlock, pollId, signer, stateIndex]);
+
   // check poll user data
   useEffect(() => {
     (async () => {
-      console.log("Checking poll user data");
       setError(undefined);
       if (!signer) {
         setError("Signer not found");
@@ -96,52 +178,41 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
 
       if (!maciKeypair) {
         setError("Keypair not found");
-        setIsLoading(false);
         return;
       }
 
       if (!isRegistered) {
         setError("User not registered");
-        setIsLoading(false);
         return;
       }
 
       if (!pollId) {
-        setIsLoading(false);
         return;
       }
 
       try {
-        const startBlock = (await signer.provider?.getBlockNumber()) || 0;
+        console.log(`pollDeployBlock`, pollDeployBlock);
         const { isJoined, voiceCredits, pollStateIndex } = await getJoinedUserData({
           maciAddress: PUB_MACI_ADDRESS,
           pollId,
           pollPublicKey: maciKeypair.publicKey.serialize(),
           signer,
-          startBlock: 0,
+          startBlock: pollDeployBlock ?? PUB_MACI_DEPLOYMENT_BLOCK,
         });
         console.log("isJoined", isJoined);
-
-        const maciContract = MACIFactory.connect(PUB_MACI_ADDRESS, signer);
-        const localStateTree = await generateMaciStateTreeWithEndKey({
-          maciContract,
-          signer,
-          userPublicKey: maciKeypair.publicKey,
-        });
-        // const localInclusionProof = stateTree.signUpTree.generateProof(Number(stateIndex));
 
         setHasJoinedPoll(isJoined);
         setInitialVoiceCredits(Number(voiceCredits));
         setPollStateIndex(pollStateIndex);
-        setStateTree(localStateTree);
 
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.log(error);
         setError("Error checking if user has joined poll");
       }
     })();
-  }, [isRegistered, maciKeypair, pollId, signer, stateIndex]);
+  }, [isRegistered, maciKeypair, pollDeployBlock, pollId, signer, stateIndex]);
 
   const createKeypair = useCallback(async () => {
     setError(undefined);
@@ -155,6 +226,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
 
     setMaciKeypair(keypair);
     setIsLoading(false);
+    setError(undefined);
     return keypair;
   }, [signMessageAsync]);
 
@@ -198,6 +270,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
 
     setIsRegistered(true);
     setIsLoading(false);
+    setError(undefined);
   }, [isRegistered, maciKeypair, signer]);
 
   const onJoinPoll = useCallback(
@@ -206,7 +279,6 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(true);
       console.log("Joining poll", pollId);
 
-      console.log(signer);
       if (!signer) {
         setError("Signer not found");
         setIsLoading(false);
@@ -217,15 +289,17 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(false);
         return;
       }
-      if (!stateTree) {
-        setError("State tree not found");
+      if (!pollId) {
+        setIsLoading(false);
+        return;
+      }
+      if (hasJoinedPoll) {
+        setError("Already joined poll");
         setIsLoading(false);
         return;
       }
 
-      console.log("before inclusion proof");
-
-      const inclusionProof = stateTree.signUpTree.generateProof(Number(stateIndex));
+      console.log("before downloading artifacts");
       const { zKey, wasm } = await downloadPollJoiningArtifactsBrowser({
         testing: true,
         stateTreeDepth: 10,
@@ -249,10 +323,73 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
 
       setIsLoading(false);
     },
-    [maciKeypair, signer, stateIndex, stateTree]
+    [hasJoinedPoll, inclusionProof, maciKeypair, signer]
   );
 
-  // const onVote = useCallback(() => {}, []);
+  const onVote = useCallback(
+    async (option: VoteOption) => {
+      setError(undefined);
+      setIsLoading(true);
+
+      if (!signer) {
+        setError("Signer not found");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!maciKeypair) {
+        setError("Keypair not found");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!pollId) {
+        setIsLoading(false);
+        return;
+      }
+
+      if (!stateIndex) {
+        setError("State index not found");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!hasJoinedPoll) {
+        setError("User has not joined the poll");
+        setIsLoading(false);
+        return;
+      }
+
+      let voteOptionIndex: bigint;
+      switch (option) {
+        case VoteOption.Yes:
+          voteOptionIndex = 0n;
+          break;
+        case VoteOption.No:
+          voteOptionIndex = 1n;
+          break;
+        case VoteOption.Abstain:
+          voteOptionIndex = 2n;
+          break;
+      }
+
+      await publish({
+        publicKey: maciKeypair.publicKey.serialize(),
+        stateIndex: BigInt(stateIndex),
+        voteOptionIndex,
+        nonce: 0n, // should we keep this in local or is it onchain?
+        pollId,
+        newVoteWeight: 1n,
+        maciAddress: PUB_MACI_ADDRESS,
+        privateKey: maciKeypair.privateKey.serialize(),
+        signer,
+      });
+
+      setIsLoading(false);
+      setError(undefined);
+    },
+    [hasJoinedPoll, maciKeypair, pollId, signer, stateIndex]
+  );
 
   const value = useMemo<MaciContextType>(
     () => ({
@@ -269,6 +406,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       createKeypair,
       onSignup,
       onJoinPoll,
+      onVote,
     }),
     [
       isLoading,
@@ -283,6 +421,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       createKeypair,
       onSignup,
       onJoinPoll,
+      onVote,
     ]
   );
 
