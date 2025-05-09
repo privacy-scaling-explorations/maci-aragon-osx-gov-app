@@ -59,7 +59,7 @@ export function useProposal(proposalId: string, autoRefresh = false) {
           address: PUB_MACI_VOTING_PLUGIN_ADDRESS,
           event: ProposalCreatedEvent as any,
           fromBlock: BigInt(proposalData.parameters.snapshotBlock),
-          toBlock: "latest",
+          toBlock: BigInt(proposalData.parameters.startDate),
         });
 
         if (!logs || !logs.length) throw new Error("No creation logs");
