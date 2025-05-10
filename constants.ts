@@ -15,6 +15,7 @@ export const PUB_DELEGATION_CONTRACT_ADDRESS = (process.env.NEXT_PUBLIC_DELEGATI
 export const PUB_MACI_VOTING_PLUGIN_ADDRESS = (process.env.NEXT_PUBLIC_MACI_VOTING_PLUGIN_ADDRESS ?? "") as Address;
 export const PUB_MACI_ADDRESS = (process.env.NEXT_PUBLIC_MACI_ADDRESS ?? "") as Address;
 export const PUB_MACI_DEPLOYMENT_BLOCK = Number(process.env.NEXT_PUBLIC_MACI_DEPLOYMENT_BLOCK ?? 0);
+export const NEXT_PUBLIC_SECONDS_PER_BLOCK = Number(process.env.NEXT_PUBLIC_SECONDS_PER_BLOCK ?? 1); // ETH Mainnet block takes ~12s
 
 // TOUCAN VOTING
 export const PUB_TOUCAN_VOTING_PLUGIN_ADDRESS = (process.env.NEXT_PUBLIC_TOUCAN_VOTING_PLUGIN_ADDRESS ?? "") as Address;
@@ -42,6 +43,7 @@ export const PUB_ALCHEMY_API_KEY = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY ?? ""
 
 export const PUB_WEB3_ENDPOINT = (process.env.NEXT_PUBLIC_WEB3_URL_PREFIX ?? "") + PUB_ALCHEMY_API_KEY;
 export const PUB_WEB3_ENDPOINT_L2 = (process.env.NEXT_PUBLIC_WEB3_URL_PREFIX_L2 ?? "") + PUB_ALCHEMY_API_KEY;
+export const PUB_WEB3_MAINNET_ENDPOINT = (process.env.NEXT_PUBLIC_WEB3_URL_PREFIX_MAINNET ?? "") + PUB_ALCHEMY_API_KEY;
 
 export const PUB_ETHERSCAN_API_KEY = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY ?? "";
 

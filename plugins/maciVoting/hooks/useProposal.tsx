@@ -6,6 +6,7 @@ import { type Action } from "@/utils/types";
 import { type Proposal, type ProposalMetadata } from "@/plugins/maciVoting/utils/types";
 import { PUB_CHAIN, PUB_MACI_VOTING_PLUGIN_ADDRESS } from "@/constants";
 import { useMetadata } from "@/hooks/useMetadata";
+import { getCurrentBlock, getFutureBlockNumberAtTimestamp } from "../utils/blockAtTimestamp";
 
 type ProposalCreatedLogResponse = {
   args: {
@@ -54,12 +55,18 @@ export function useProposal(proposalId: string, autoRefresh = false) {
     (async () => {
       if (!proposalData || !publicClient) return;
 
+      const snapshotBlock = BigInt(proposalData.parameters.snapshotBlock);
+      const startBlock = await getFutureBlockNumberAtTimestamp(proposalData.parameters.startDate);
+      const currentBlock = (await getCurrentBlock()).number;
+
+      const minimumToBlock = BigInt(Math.min(Number(startBlock), Number(currentBlock)));
+
       try {
         const logs = await publicClient.getLogs({
           address: PUB_MACI_VOTING_PLUGIN_ADDRESS,
           event: ProposalCreatedEvent as any,
-          fromBlock: BigInt(proposalData.parameters.snapshotBlock),
-          toBlock: BigInt(proposalData.parameters.startDate),
+          fromBlock: snapshotBlock,
+          toBlock: minimumToBlock,
         });
 
         if (!logs || !logs.length) throw new Error("No creation logs");
