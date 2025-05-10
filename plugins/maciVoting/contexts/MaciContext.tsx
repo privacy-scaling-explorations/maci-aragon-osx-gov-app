@@ -4,7 +4,6 @@ import { Keypair, PrivateKey } from "@maci-protocol/domainobjs";
 import {
   signup,
   generateKeypair,
-  hasUserSignedUp,
   getJoinedUserData,
   MACI__factory as MACIFactory,
   generateMaciStateTreeWithEndKey,
@@ -12,11 +11,12 @@ import {
   joinPoll,
   getPoll,
   publish,
+  getSignedupUserData,
 } from "@maci-protocol/sdk/browser";
 import { PUB_MACI_ADDRESS, PUB_MACI_DEPLOYMENT_BLOCK } from "@/constants";
 import { usePublicClient, useSignMessage } from "wagmi";
 import { useEthersSigner } from "../hooks/useEthersSigner";
-import { type Hex } from "viem";
+import { keccak256, stringToHex, type Hex } from "viem";
 import { VoteOption } from "../utils/types";
 
 export const DEFAULT_SG_DATA = "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -112,15 +112,21 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
-        const hasSignedUp = await hasUserSignedUp({
+        console.log("before getSignedupUserData");
+        const { isRegistered: _isRegistered, stateIndex: _stateIndex } = await getSignedupUserData({
           maciAddress: PUB_MACI_ADDRESS,
           maciPublicKey: maciKeypair.publicKey.serialize(),
           signer,
         });
 
-        setIsRegistered(hasSignedUp);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        console.log("isRegistered", _isRegistered);
+        console.log("stateIndex", _stateIndex);
+
+        setIsRegistered(_isRegistered);
+        setStateIndex(_stateIndex);
       } catch (error) {
+        // eslint-disable-next-line no-console
+        console.log(error);
         setIsRegistered(false);
       }
     })();
@@ -155,6 +161,8 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         });
         console.log("after generateMaciStateTreeWithEndKey");
         const localInclusionProof = stateTree.signUpTree.generateProof(Number(stateIndex));
+
+        console.log("isRegistered", isRegistered);
 
         setInclusionProof(localInclusionProof);
 
@@ -217,8 +225,10 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
   const createKeypair = useCallback(async () => {
     setError(undefined);
     setIsLoading(true);
+
     const signature = await signMessageAsync({ message: `Sign to generate MACI keypair at ${window.location.origin}` });
-    const { privateKey } = generateKeypair({ seed: BigInt(signature) });
+    const signatureHash = keccak256(stringToHex(signature));
+    const { privateKey } = generateKeypair({ seed: BigInt(signatureHash) });
     const keypair = new Keypair(PrivateKey.deserialize(privateKey));
 
     // save private key in localStorage
@@ -277,7 +287,6 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
     async (pollId: bigint) => {
       setError(undefined);
       setIsLoading(true);
-      console.log("Joining poll", pollId);
 
       if (!signer) {
         setError("Signer not found");
@@ -289,7 +298,17 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(false);
         return;
       }
-      if (!pollId) {
+      if (!isRegistered) {
+        setError("User not registered");
+        setIsLoading(false);
+        return;
+      }
+      if (!stateIndex) {
+        setError("State index not found");
+        setIsLoading(false);
+        return;
+      }
+      if (!pollId && pollId !== 0n) {
         setIsLoading(false);
         return;
       }
@@ -299,7 +318,6 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      console.log("before downloading artifacts");
       const { zKey, wasm } = await downloadPollJoiningArtifactsBrowser({
         testing: true,
         stateTreeDepth: 10,
@@ -309,9 +327,9 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       await joinPoll({
         maciAddress: PUB_MACI_ADDRESS,
         privateKey: maciKeypair.privateKey.serialize(),
-        stateIndex: 3n,
+        stateIndex: BigInt(stateIndex),
         signer,
-        pollId: 0n,
+        pollId,
         inclusionProof,
         pollJoiningZkey: zKey as unknown as string,
         pollWasm: wasm as unknown as string,
@@ -323,7 +341,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
 
       setIsLoading(false);
     },
-    [hasJoinedPoll, inclusionProof, maciKeypair, signer]
+    [hasJoinedPoll, inclusionProof, isRegistered, maciKeypair, signer, stateIndex]
   );
 
   const onVote = useCallback(
