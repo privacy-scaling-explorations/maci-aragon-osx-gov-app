@@ -34,6 +34,11 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
   const [stateIndex, setStateIndex] = useState<string | undefined>(undefined);
   const [inclusionProof, setInclusionProof] = useState<any>(null);
 
+  // Artifacts
+  const [artifacts, setArtifacts] = useState<
+    Awaited<ReturnType<typeof downloadPollJoiningArtifactsBrowser>> | undefined
+  >();
+
   // Poll contract
   const [pollDeployBlock, setPollDeployBlock] = useState<number | undefined>(undefined);
   const [pollId, setPollId] = useState<bigint | undefined>(undefined);
@@ -112,15 +117,11 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
-        console.log("before getSignedupUserData");
         const { isRegistered: _isRegistered, stateIndex: _stateIndex } = await getSignedupUserData({
           maciAddress: PUB_MACI_ADDRESS,
           maciPublicKey: maciKeypair.publicKey.serialize(),
           signer,
         });
-
-        console.log("isRegistered", _isRegistered);
-        console.log("stateIndex", _stateIndex);
 
         setIsRegistered(_isRegistered);
         setStateIndex(_stateIndex);
@@ -152,17 +153,19 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
 
       try {
         const maciContract = MACIFactory.connect(PUB_MACI_ADDRESS, signer);
-        console.log("before generateMaciStateTreeWithEndKey");
         const stateTree = await generateMaciStateTreeWithEndKey({
           maciContract,
           signer,
           userPublicKey: maciKeypair.publicKey,
           startBlock: pollDeployBlock ?? PUB_MACI_DEPLOYMENT_BLOCK,
         });
-        console.log("after generateMaciStateTreeWithEndKey");
+        // TODO: check if this is correct. The state index is the maci contract or the poll contract?
+        console.log("stateIndex", stateIndex);
+
         const localInclusionProof = stateTree.signUpTree.generateProof(Number(stateIndex));
 
         console.log("isRegistered", isRegistered);
+        console.log("localInclusionProof", localInclusionProof);
 
         setInclusionProof(localInclusionProof);
 
@@ -199,7 +202,6 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
-        console.log(`pollDeployBlock`, pollDeployBlock);
         const { isJoined, voiceCredits, pollStateIndex } = await getJoinedUserData({
           maciAddress: PUB_MACI_ADDRESS,
           pollId,
@@ -207,7 +209,6 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
           signer,
           startBlock: pollDeployBlock ?? PUB_MACI_DEPLOYMENT_BLOCK,
         });
-        console.log("isJoined", isJoined);
 
         setHasJoinedPoll(isJoined);
         setInitialVoiceCredits(Number(voiceCredits));
@@ -221,6 +222,17 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       }
     })();
   }, [isRegistered, maciKeypair, pollDeployBlock, pollId, signer, stateIndex]);
+
+  // download poll joining artifacts and store them in state
+  useEffect(() => {
+    (async () => {
+      const downloadedArtifacts = await downloadPollJoiningArtifactsBrowser({
+        testing: true,
+        stateTreeDepth: 10,
+      });
+      setArtifacts(downloadedArtifacts);
+    })();
+  }, []);
 
   const createKeypair = useCallback(async () => {
     setError(undefined);
@@ -308,6 +320,11 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(false);
         return;
       }
+      if (!artifacts) {
+        setError("Artifacts not downloaded");
+        setIsLoading(false);
+        return;
+      }
       if (!pollId && pollId !== 0n) {
         setIsLoading(false);
         return;
@@ -317,31 +334,25 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(false);
         return;
       }
-
-      const { zKey, wasm } = await downloadPollJoiningArtifactsBrowser({
-        testing: true,
-        stateTreeDepth: 10,
-      });
-
+      // TODO: fix joinPoll
       console.log("before join poll");
       await joinPoll({
         maciAddress: PUB_MACI_ADDRESS,
         privateKey: maciKeypair.privateKey.serialize(),
-        stateIndex: BigInt(stateIndex),
+        // stateIndex: BigInt(stateIndex),
         signer,
         pollId,
         inclusionProof,
-        pollJoiningZkey: zKey as unknown as string,
-        pollWasm: wasm as unknown as string,
+        pollJoiningZkey: artifacts.zKey as unknown as string,
+        pollWasm: artifacts.wasm as unknown as string,
         sgDataArg: DEFAULT_SG_DATA,
         ivcpDataArg: DEFAULT_IVCP_DATA,
       });
-
       console.log("after join poll");
 
       setIsLoading(false);
     },
-    [hasJoinedPoll, inclusionProof, isRegistered, maciKeypair, signer, stateIndex]
+    [artifacts, hasJoinedPoll, inclusionProof, isRegistered, maciKeypair, signer, stateIndex]
   );
 
   const onVote = useCallback(
