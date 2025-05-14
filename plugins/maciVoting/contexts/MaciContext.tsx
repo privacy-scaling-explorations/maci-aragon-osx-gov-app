@@ -334,12 +334,10 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(false);
         return;
       }
-      // TODO: fix joinPoll
-      console.log("before join poll");
-      await joinPoll({
+
+      const joinedPoll = await joinPoll({
         maciAddress: PUB_MACI_ADDRESS,
         privateKey: maciKeypair.privateKey.serialize(),
-        // stateIndex: BigInt(stateIndex),
         signer,
         pollId,
         inclusionProof,
@@ -348,7 +346,10 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         sgDataArg: DEFAULT_SG_DATA,
         ivcpDataArg: DEFAULT_IVCP_DATA,
       });
-      console.log("after join poll");
+
+      setHasJoinedPoll(true);
+      setInitialVoiceCredits(Number(joinedPoll.voiceCredits));
+      setPollStateIndex(joinedPoll.pollStateIndex);
 
       setIsLoading(false);
     },
