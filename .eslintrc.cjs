@@ -18,6 +18,7 @@ module.exports = {
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-unused-vars": ["warn", { ignoreRestSiblings: true }],
     "@typescript-eslint/prefer-nullish-coalescing": "warn",
+    "@typescript-eslint/no-duplicate-enum-values": "off",
   },
   root: true,
 };
