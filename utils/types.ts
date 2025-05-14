@@ -1,23 +1,17 @@
-import { IApprovalThresholdResult, IButtonProps, ProposalType } from "@aragon/ods";
-import { Address, Hex, AbiFunction } from "viem";
+import { Address, Hex } from "viem";
 import { IVotesDataListVariant } from "@/components/proposalVoting/votesDataList/votesDataListItemStructure";
+import { IApprovalThresholdResult, IButtonProps, ProposalType } from "@aragon/ods";
 
-// General types
-type JsonLiteral = string | number | boolean;
-export type JsonValue = JsonLiteral | { [k: string]: JsonValue } | JsonValue[];
-export type EvmValue = string | Hex | Address | number | bigint | boolean;
-
-export type RawAction = {
+export type Action = {
   to: Address;
   value: bigint;
   data: Hex;
 };
 
-/** Includes the raw action plus the decoded ABI and parameters of the function call */
-export type DecodedAction = RawAction & {
-  functionName: string | null;
-  functionAbi: AbiFunction | null;
-  args: EvmValue[];
+export type RawAction = {
+  to: Address;
+  value: bigint;
+  data: Hex;
 };
 
 export interface IAlert {
@@ -29,24 +23,17 @@ export interface IAlert {
   dismissTimeout?: ReturnType<typeof setTimeout>;
 }
 
-export type ProposalMetadata = {
-  title: string;
-  summary: string;
-  description: string;
-  resources: IProposalResource[];
-};
+export enum ProposalStages {
+  DRAFT = "Draft",
+  MULTISIG_APPROVAL = "Multisig Approval",
+  OPTIMISTIC_EXECUTION = "Optimistic Execution",
+  MAJORITY_VOTING = "Majority Voting",
+}
 
 export type IProposalResource = {
   name: string;
   url: string;
 };
-
-export enum ProposalStages {
-  DRAFT = "Draft",
-  MULTISIG_APPROVAL = "Multisig Approval",
-  OPTIMISTIC_EXECUTION = "Optimistic Execution",
-  TOKEN_VOTING = "Token voting",
-}
 
 export type VotingCta = Pick<IButtonProps, "disabled" | "isLoading"> & {
   label?: string;
@@ -64,11 +51,9 @@ export interface IBreakdownMajorityVotingResult {
 }
 
 export interface IVotingStageDetails {
-  censusBlock?: number;
-  censusTimestamp?: number;
+  censusBlock: number;
   startDate: string;
   endDate: string;
-  tokenAddress?: Address;
   strategy: string;
   options: string;
 }
@@ -76,11 +61,6 @@ export interface IVotingStageDetails {
 export interface IVote {
   address: Address;
   variant: IVotesDataListVariant;
-}
-
-export interface IResource {
-  name: string;
-  link: string;
 }
 
 export interface ITransformedStage<TType extends ProposalType = ProposalType> {
@@ -96,3 +76,8 @@ export interface ITransformedStage<TType extends ProposalType = ProposalType> {
   result?: TType extends "approvalThreshold" ? IBreakdownApprovalThresholdResult : IBreakdownMajorityVotingResult;
   details?: IVotingStageDetails;
 }
+
+// General types
+
+type JsonLiteral = string | number | boolean;
+export type JsonValue = JsonLiteral | Record<string, JsonLiteral> | Array<JsonLiteral>;

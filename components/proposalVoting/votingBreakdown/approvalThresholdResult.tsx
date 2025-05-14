@@ -40,7 +40,13 @@ export const BreakdownApprovalThresholdResult: React.FC<IBreakdownApprovalThresh
       {/* Button */}
       {cta && (
         <span>
-          <Button size="md" disabled={cta.disabled} onClick={() => cta.onClick?.()} isLoading={cta.isLoading}>
+          <Button
+            size="md"
+            className="!rounded-full"
+            disabled={cta.disabled}
+            onClick={() => cta.onClick?.()}
+            isLoading={cta.isLoading}
+          >
             {cta?.label}
           </Button>
         </span>

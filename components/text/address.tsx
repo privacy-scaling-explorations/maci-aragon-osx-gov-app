@@ -4,12 +4,10 @@ import { type ReactNode, useState, useEffect } from "react";
 import { usePublicClient } from "wagmi";
 // import { Link } from '@aragon/ods'
 
-export const AddressText = ({ children, bold }: { children: ReactNode; bold?: boolean }) => {
+export const AddressText = ({ children }: { children: ReactNode }) => {
   const address = getChildrenText(children);
   const client = usePublicClient();
   const [link, setLink] = useState<string>();
-
-  const useBold = bold === undefined ? true : bold;
 
   useEffect(() => {
     if (!client) return;
@@ -19,11 +17,11 @@ export const AddressText = ({ children, bold }: { children: ReactNode; bold?: bo
 
   const formattedAddress = formatHexString(address.trim());
   if (!link) {
-    return <span className={(useBold ? "font-semibold" : "") + " text-primary-400 underline"}>{formattedAddress}</span>;
+    return <span className="font-semibold text-primary-400 underline">{formattedAddress}</span>;
   }
   return (
     <>
-      <a href={link} target="_blank" className={(useBold ? "font-semibold" : "") + " text-primary-400 underline"}>
+      <a href={link} target="_blank" className="font-semibold text-primary-400 underline">
         {formattedAddress}
       </a>
     </>

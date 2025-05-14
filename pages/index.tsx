@@ -1,21 +1,17 @@
-import { MainSection } from "@/components/layout/main-section";
 import { Button, IllustrationHuman } from "@aragon/ods";
 import { type ReactNode } from "react";
 import { useAccount } from "wagmi";
 import { useWeb3Modal } from "@web3modal/wagmi/react";
 import { Else, If, Then } from "@/components/if";
-import { PUB_APP_NAME } from "@/constants";
 
-export default function StandardHome() {
+export default function Home() {
   const { isConnected } = useAccount();
   const { open } = useWeb3Modal();
 
   return (
-    <MainSection narrow>
+    <main className="w-screen max-w-full flex-col">
       <Card>
-        <h1 className="line-clamp-1 flex flex-1 shrink-0 text-2xl font-normal leading-tight text-neutral-800 md:text-3xl">
-          Welcome to {PUB_APP_NAME}
-        </h1>
+        <h1 className="text-2xl font-[700] text-neutral-800">Welcome to Aragonette!</h1>
         <p className="text-md text-neutral-400">
           A beaufitul DAO experience in a simple template that you can customize. Get started by connecting your wallet
           and selecting a plugin from the menu.
@@ -23,9 +19,9 @@ export default function StandardHome() {
         <div className="">
           <IllustrationHuman className="mx-auto mb-10 max-w-96" body="BLOCKS" expression="SMILE_WINK" hairs="CURLY" />
           <div className="flex justify-center">
-            <If true={isConnected}>
+            <If condition={isConnected}>
               <Then>
-                <Button className="mb-2" variant="primary" href="https://devs.aragon.org/" target="_blank">
+                <Button className="mb-2" variant="primary" href="https://devs.aragon.org/docs/osx/" target="_blank">
                   Learn more about OSx
                 </Button>
               </Then>
@@ -38,11 +34,11 @@ export default function StandardHome() {
           </div>
         </div>
       </Card>
-    </MainSection>
+    </main>
   );
 }
 
-// This should be encapsulated
+// This should be encapsulated as soon as ODS exports this widget
 const Card = function ({ children }: { children: ReactNode }) {
   return (
     <div

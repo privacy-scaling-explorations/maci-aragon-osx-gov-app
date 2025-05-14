@@ -4,7 +4,6 @@ import { PleaseWaitSpinner } from "@/components/please-wait";
 import { resolveQueryParam } from "@/utils/query";
 import { NotFound } from "@/components/not-found";
 import { plugins } from "@/plugins";
-import { MainSection } from "@/components/layout/main-section";
 
 const PluginLoader: FC = () => {
   const { query } = useRouter();
@@ -33,11 +32,9 @@ const PluginLoader: FC = () => {
   if (!PageComponent) {
     if (componentLoading) {
       return (
-        <MainSection>
-          <div className="flex h-24 w-full items-center justify-center">
-            <PleaseWaitSpinner />
-          </div>
-        </MainSection>
+        <div className="flex h-screen w-screen items-center justify-center">
+          <PleaseWaitSpinner />
+        </div>
       );
     }
     return <NotFound />;

@@ -1,7 +1,7 @@
 import { Address, BaseError, ContractFunctionRevertedError, Hex, PublicClient, keccak256, parseAbi, toHex } from "viem";
 import { PUB_CHAIN } from "@/constants";
 
-const proxyAbi = parseAbi([
+const proxyAbi1 = parseAbi([
   "function implementation() external view returns (address)",
   "function proxiableUUID() external view returns (bytes32)",
 ]);
@@ -14,7 +14,7 @@ export function isProxyContract(publicClient: PublicClient, contractAddress: Add
   return publicClient
     .simulateContract({
       address: contractAddress,
-      abi: proxyAbi,
+      abi: proxyAbi1,
       functionName: "implementation",
       args: [],
       chain: PUB_CHAIN,
