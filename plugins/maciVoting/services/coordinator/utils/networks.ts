@@ -1,3 +1,4 @@
+/** This entire file is copied from https://github.com/privacy-scaling-explorations/maci/blob/dev/apps/coordinator/ts/common/networks.ts */
 import {
   arbitrum,
   arbitrumSepolia,
@@ -18,7 +19,7 @@ import {
   scrollSepolia,
   sepolia,
 } from "viem/chains";
-import { ErrorCodes } from "./types";
+import { ErrorCodes } from "./errors";
 
 export enum ESupportedNetworks {
   ETHEREUM = "mainnet",

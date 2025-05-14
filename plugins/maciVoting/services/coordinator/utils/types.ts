@@ -1,40 +1,7 @@
-/* eslint-disable @typescript-eslint/no-duplicate-enum-values */
 import { type EPolicies, type EInitialVoiceCreditProxies, type EMode } from "@maci-protocol/sdk";
 
 import type { Hex } from "viem";
 import { type ESupportedNetworks } from "./networks";
-
-/**
- * Error codes that are used for api responses
- */
-export enum ErrorCodes {
-  NOT_MERGED_STATE_TREE,
-  PRIVATE_KEY_MISMATCH,
-  POLL_NOT_FOUND,
-  DECRYPTION,
-  ENCRYPTION,
-  FILE_NOT_FOUND,
-  SUBGRAPH_DEPLOY,
-  SUBGRAPH_DEPLOY_KEY_NOT_FOUND,
-  SESSION_KEY_NOT_FOUND,
-  INVALID_APPROVAL,
-  UNSUPPORTED_NETWORK,
-  RPC_API_KEY_NOT_SET,
-  FAILED_TO_MERGE_STATE_TREE,
-  FAILED_TO_MERGE_MESSAGE_SUBTREES,
-  FAILED_TO_MERGE_MESSAGE_TREE,
-  UNSUPPORTED_VOICE_CREDIT_PROXY,
-  UNSUPPORTED_POLICY,
-  FAILED_TO_DEPLOY_CONTRACT,
-  FAILED_TO_SET_MACI_INSTANCE_ON_POLICY,
-  MACI_NOT_DEPLOYED,
-  VERIFIER_NOT_DEPLOYED,
-  VERIFYING_KEYS_REGISTRY_NOT_DEPLOYED,
-  FAILED_TO_SET_VERIFYING_KEYS,
-  FAILED_TO_DEPLOY_MACI,
-  FAILED_TO_DEPLOY_POLL,
-  NOT_MERGED_MESSAGE_TREE,
-}
 
 /**
  * IConstantInitialVoiceCreditProxyArgs represents the arguments for deploying a constant initial voice credit proxy

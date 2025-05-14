@@ -2,9 +2,12 @@ import fs from "fs";
 import { type KeyLike, publicEncrypt } from "crypto";
 import { type Signer, getBytes } from "ethers";
 import { hashMessage } from "viem";
-import { ErrorCodes } from "./types";
+import { ErrorCodes } from "./errors";
 
 /**
+ * @noitce encrypt copied from https://github.com/privacy-scaling-explorations/maci/blob/dev/apps/coordinator/ts/crypto/crypto.service.ts
+ * Converted from class method to function
+ *
  * Encrypt plaintext with public key
  *
  * @param publicKey - public key
@@ -22,6 +25,9 @@ const encrypt = (publicKey: KeyLike, value: string): string => {
 };
 
 /**
+ * @noitce encryptWithCoordinatorRSAPublicKey copied from https://github.com/privacy-scaling-explorations/maci/blob/dev/apps/coordinator/tests/utils.ts
+ * Uses encrypt above function rather than calling CryptoService class
+ *
  * Encrypt a message using the coordinator's public key
  * @param message to encrypt
  * @returns encrypted message (ciphertext)
@@ -32,6 +38,8 @@ export const encryptWithCoordinatorRSAPublicKey = async (message: string): Promi
 };
 
 /**
+ * @noitce getAuthorizationHeader copied from https://github.com/privacy-scaling-explorations/maci/blob/dev/apps/coordinator/tests/utils.ts
+ *
  * Sign a message with a wallet and encrypt it using the coordinator's public key
  * @param signer
  * @returns Authorization header

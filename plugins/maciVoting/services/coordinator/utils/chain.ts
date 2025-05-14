@@ -1,16 +1,18 @@
 import { JsonRpcProvider, type Signer, Wallet } from "ethers";
 
-import { ErrorCodes } from "./types";
+import { ErrorCodes } from "./errors";
 import { ESupportedNetworks, viemChain } from "./networks";
 import { type PublicClient, type HttpTransport, type Chain, createPublicClient, http } from "viem";
 
 /**
+ * @noitce getAlchemyRPCUrl copied from https://github.com/privacy-scaling-explorations/maci/blob/dev/apps/coordinator/ts/common/chain.ts
+ *
  * Generate the RPCUrl for Alchemy based on the chain we need to interact with
  *
  * @param network - the network we want to interact with
  * @returns the RPCUrl for the network
  */
-export const genAlchemyRPCUrl = (network: ESupportedNetworks): string => {
+export const getAlchemyRPCUrl = (network: ESupportedNetworks): string => {
   const rpcAPIKey = process.env.RPC_API_KEY;
 
   if (!rpcAPIKey) {
@@ -28,19 +30,24 @@ export const genAlchemyRPCUrl = (network: ESupportedNetworks): string => {
 };
 
 /**
+ * @noitce getSigner copied from https://github.com/privacy-scaling-explorations/maci/blob/dev/apps/coordinator/ts/common/chain.ts
+ *
  * Get a Ethers Signer given a chain and private key
  * @param chain
  * @returns
  */
 export const getSigner = (chain: ESupportedNetworks): Signer => {
   const wallet = new Wallet(process.env.PRIVATE_KEY!);
-  const alchemyRpcUrl = genAlchemyRPCUrl(chain);
+  const alchemyRpcUrl = getAlchemyRPCUrl(chain);
   const provider = new JsonRpcProvider(alchemyRpcUrl);
 
   return wallet.connect(provider);
 };
 
 /**
+ * @noitce getPublicClient copied from https://github.com/privacy-scaling-explorations/maci/blob/dev/apps/coordinator/ts/common/accountAbstraction.ts
+ * The return type was modified to return underlying type
+ *
  * Get a public client
  *
  * @param chainName - the name of the chain to use
@@ -48,6 +55,6 @@ export const getSigner = (chain: ESupportedNetworks): Signer => {
  */
 export const getPublicClient = (chainName: ESupportedNetworks): PublicClient<HttpTransport, Chain> =>
   createPublicClient({
-    transport: http(genAlchemyRPCUrl(chainName)),
+    transport: http(getAlchemyRPCUrl(chainName)),
     chain: viemChain(chainName),
   });

@@ -1,115 +1,31 @@
 import { type Address } from "viem";
+import { type z } from "zod";
 import { Keypair, PrivateKey } from "@maci-protocol/domainobjs";
-import { z } from "zod";
 import { ESupportedNetworks } from "./utils/networks";
 import { type IGenerateArgs, type ISubmitProofsArgs } from "./utils/types";
 import { getAuthorizationHeader, encryptWithCoordinatorRSAPublicKey } from "./utils/auth";
 import { getSigner, getPublicClient } from "./utils/chain";
 import { pollDeploymentConfig } from "./config";
+import { GenerateResponseSchema, SubmitResponseSchema } from "./utils/schemas";
 
-const BASE_URL = "http://localhost:3000/v1";
-const CHAIN = ESupportedNetworks.OPTIMISM_SEPOLIA;
+const BASE_URL = "http://localhost:3000/v1"; // TODO:
+const CHAIN = ESupportedNetworks.OPTIMISM_SEPOLIA; // TODO:
 
-export enum EMode {
-  QV,
-  NON_QV,
-  FULL,
-}
-
-export const TallyDataSchema = z.object({
-  maci: z.string(),
-  pollId: z.string(),
-  network: z.string().optional(),
-  chainId: z.string().optional(),
-  mode: z.nativeEnum(EMode),
-  tallyAddress: z.string(),
-  newTallyCommitment: z.string(),
-  results: z.object({
-    tally: z.array(z.string()),
-    salt: z.string(),
-    commitment: z.string(),
-  }),
-  totalSpentVoiceCredits: z.object({
-    spent: z.string(),
-    salt: z.string(),
-    commitment: z.string(),
-  }),
-  perVoteOptionSpentVoiceCredits: z
-    .object({
-      tally: z.array(z.string()),
-      salt: z.string(),
-      commitment: z.string(),
-    })
-    .optional(),
-});
-
-export const CircuitInputsSchema = z.record(
-  z.string(),
-  z.union([
-    z.string(),
-    z.bigint(),
-    z.array(z.bigint()),
-    z.array(z.array(z.bigint())),
-    z.array(z.string()),
-    z.array(z.array(z.array(z.bigint()))),
-  ])
-);
-
-const Groth16ProofSchema = z.object({
-  pi_a: z.array(z.string()),
-  pi_b: z.array(z.array(z.string())),
-  pi_c: z.array(z.string()),
-  protocol: z.string(),
-  curve: z.string(),
-});
-
-const SnarkProofSchema = z.object({
-  pi_a: z.array(z.bigint()),
-  pi_b: z.array(z.array(z.bigint())),
-  pi_c: z.array(z.bigint()),
-});
-
-export const ProofSchema = z.object({
-  proof: Groth16ProofSchema.or(SnarkProofSchema),
-  circuitInputs: CircuitInputsSchema,
-  publicInputs: z.array(z.string()),
-});
-
-export const GenerateDataSchema = z.object({
-  processProofs: z.array(ProofSchema),
-  tallyProofs: z.array(ProofSchema),
-  tallyData: TallyDataSchema,
-});
-
-export const SubmitResponseSchema = TallyDataSchema;
-
-export type GenerateData = z.infer<typeof GenerateDataSchema>;
-export type SubmitResponse = z.infer<typeof SubmitResponseSchema>;
-
-/**
- * Start date for the poll (it cannot be in the past)
- * n seconds are added to give it time until it is deployed
- */
-export const startDate = Math.floor(Date.now() / 1000) + 100;
-
-/**
- * Poll duration in seconds
- * n seconds are added to the poll start date
- */
-export const pollDuration = 60;
-
-/**
- * Coordinator MACI Keypair
- */
-export const coordinatorMACIKeypair = new Keypair(
-  PrivateKey.deserialize("macisk.bdd73f1757f75261a0c9997def6cd47519cad2856347cdc6fd30718999576860")
-);
+type GenerateResponse = z.infer<typeof GenerateResponseSchema>;
+type SubmitResponse = z.infer<typeof SubmitResponseSchema>;
+type CoordinatorServiceResult<T, E = Error> = { success: true; data: T } | { success: false; error: E };
 
 const signer = getSigner(CHAIN);
 const encryptedHeader = await getAuthorizationHeader(signer);
 const publicClient = getPublicClient(CHAIN);
 
-type CoordinatorServiceResult<T, E = Error> = { success: true; data: T } | { success: false; error: E };
+/**
+ * Coordinator MACI Keypair
+ */
+// TODO:
+export const coordinatorMACIKeypair = new Keypair(
+  PrivateKey.deserialize("macisk.bdd73f1757f75261a0c9997def6cd47519cad2856347cdc6fd30718999576860")
+);
 
 export const merge = async (
   maciContractAddress: Address,
@@ -164,7 +80,7 @@ export const generateProofs = async (
   maciContractAddress: Address,
   approval: string,
   sessionKeyAddress: Address
-): Promise<CoordinatorServiceResult<GenerateData>> => {
+): Promise<CoordinatorServiceResult<GenerateResponse>> => {
   const coordinatorMACIKeypair = new Keypair(
     PrivateKey.deserialize("macisk.bdd73f1757f75261a0c9997def6cd47519cad2856347cdc6fd30718999576860")
   );
@@ -219,7 +135,7 @@ export const generateProofs = async (
   const data = await response.json();
   return {
     success: true,
-    data: GenerateDataSchema.parse(data),
+    data: GenerateResponseSchema.parse(data),
   };
 };
 
@@ -229,6 +145,14 @@ export const submit = async (
   approval: string,
   sessionKeyAddress: Address
 ): Promise<CoordinatorServiceResult<SubmitResponse>> => {
+  const args: ISubmitProofsArgs = {
+    pollId: pollId,
+    maciContractAddress,
+    approval,
+    sessionKeyAddress,
+    chain: CHAIN,
+  };
+
   let response: Response;
   try {
     response = await fetch(`${BASE_URL}/proof/submit`, {
@@ -237,13 +161,7 @@ export const submit = async (
         Authorization: encryptedHeader,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        pollId: pollId,
-        maciContractAddress,
-        approval,
-        sessionKeyAddress,
-        chain: CHAIN,
-      } as ISubmitProofsArgs),
+      body: JSON.stringify(args),
     });
   } catch (error) {
     return {
