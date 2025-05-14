@@ -157,7 +157,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
           maciContract,
           signer,
           userPublicKey: maciKeypair.publicKey,
-          startBlock: pollDeployBlock ?? PUB_MACI_DEPLOYMENT_BLOCK,
+          startBlock: PUB_MACI_DEPLOYMENT_BLOCK,
         });
         // TODO: check if this is correct. The state index is the maci contract or the poll contract?
         console.log("stateIndex", stateIndex);
@@ -176,7 +176,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         setError("Error generating MACI state tree");
       }
     })();
-  }, [isRegistered, maciKeypair, pollDeployBlock, pollId, signer, stateIndex]);
+  }, [isRegistered, maciKeypair, pollId, signer, stateIndex]);
 
   // check poll user data
   useEffect(() => {
