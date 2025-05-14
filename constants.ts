@@ -1,14 +1,12 @@
-import { Address } from "viem";
-import { ChainName, getChain } from "./utils/chains";
+import { type Address } from "viem";
+import { type ChainName, getChain } from "./utils/chains";
 
 // Contract Addresses
 export const PUB_DAO_ADDRESS = (process.env.NEXT_PUBLIC_DAO_ADDRESS ?? "") as Address;
 export const PUB_TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_TOKEN_ADDRESS ?? "") as Address;
 
-export const PUB_MULTISIG_PLUGIN_ADDRESS = (process.env.NEXT_PUBLIC_MULTISIG_PLUGIN_ADDRESS ?? "") as Address;
 export const PUB_OPT_MULTISIG_PLUGIN_ADDRESS = (process.env.NEXT_PUBLIC_OPT_MULTISIG_PLUGIN_ADDRESS ?? "") as Address;
-export const PUB_EMERGENCY_MULTISIG_PLUGIN_ADDRESS = (process.env.NEXT_PUBLIC_EMERGENCY_MULTISIG_PLUGIN_ADDRESS ??
-  "") as Address;
+
 export const PUB_DUAL_GOVERNANCE_PLUGIN_ADDRESS = (process.env.NEXT_PUBLIC_DUAL_GOVERNANCE_PLUGIN_ADDRESS ??
   "") as Address;
 export const PUB_LOCK_TO_VOTE_PLUGIN_ADDRESS = (process.env.NEXT_PUBLIC_LOCK_TO_VOTE_PLUGIN_ADDRESS ?? "") as Address;
