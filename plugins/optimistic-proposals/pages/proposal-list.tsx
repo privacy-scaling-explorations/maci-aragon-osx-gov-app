@@ -8,16 +8,16 @@ import { MyOptimisticTokenVotingPluginAbi } from "../artifacts/MyOptimisticToken
 import { MainSection } from "@/components/layout/main-section";
 import { MissingContentView } from "@/components/MissingContentView";
 import { ADDRESS_ZERO } from "@/utils/evm";
-import { useTokenVotes } from "@/hooks/useTokenVotes";
 import { AddressText } from "@/components/text/address";
-import { Address } from "viem";
+import { type Address } from "viem";
 
 const DEFAULT_PAGE_SIZE = 6;
 
 export default function Proposals() {
   const { address } = useAccount();
   const { data: blockNumber } = useBlockNumber({ watch: true });
-  const { balance, delegatesTo } = useTokenVotes(address);
+  const balance = 0;
+  const delegatesTo = "0x0" as Address;
 
   const {
     data: proposalCountResponse,
@@ -53,7 +53,7 @@ export default function Proposals() {
   const delegatedToZero = !!delegatesTo && delegatesTo === ADDRESS_ZERO;
 
   return (
-    <MainSection narrow>
+    <MainSection narrow={true}>
       <div className="flex w-full flex-row content-center justify-between">
         <h1 className="line-clamp-1 flex flex-1 shrink-0 text-2xl font-normal leading-tight text-neutral-800 md:text-3xl">
           Proposals
@@ -121,7 +121,7 @@ const NoVetoPowerWarning = ({
             </ElseIf>
           </If>
           &nbsp;make sure that{" "}
-          <Link href={"/plugins/members/#/delegates/" + address} className="!text-sm text-primary-400 hover:underline">
+          <Link href={`/plugins/members/#/delegates/${address}`} className="!text-sm text-primary-400 hover:underline">
             your voting power is self delegated
           </Link>
           .

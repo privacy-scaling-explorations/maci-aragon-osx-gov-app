@@ -4,21 +4,20 @@ import { PleaseWaitSpinner } from "@/components/please-wait";
 import { useProposalVeto } from "@/plugins/optimistic-proposals/hooks/useProposalVeto";
 import { useProposalExecute } from "@/plugins/optimistic-proposals/hooks/useProposalExecute";
 import { BodySection } from "@/components/proposal/proposalBodySection";
-import { IBreakdownMajorityVotingResult, ProposalVoting } from "@/components/proposalVoting";
+import { type IBreakdownMajorityVotingResult, ProposalVoting } from "@/components/proposalVoting";
 import type { ITransformedStage, IVote } from "@/utils/types";
 import { ProposalStages } from "@/utils/types";
 import { useProposalStatus } from "../hooks/useProposalVariantStatus";
 import dayjs from "dayjs";
 import { ProposalActions } from "@/components/proposalActions/proposalActions";
 import { CardResources } from "@/components/proposal/cardResources";
-import { Address, formatEther } from "viem";
+import { type Address, formatEther } from "viem";
 import { useToken } from "../hooks/useToken";
 import { usePastSupply } from "../hooks/usePastSupply";
 import { ElseIf, If, Then } from "@/components/if";
 import { AlertCard, ProposalStatus } from "@aragon/ods";
 import { PUB_TOKEN_SYMBOL } from "@/constants";
 import { useAccount } from "wagmi";
-import { useTokenVotes } from "@/hooks/useTokenVotes";
 import { ADDRESS_ZERO } from "@/utils/evm";
 import { AddressText } from "@/components/text/address";
 import Link from "next/link";
@@ -37,7 +36,8 @@ export default function ProposalDetail({ index: proposalIdx }: { index: number }
   } = useProposalVeto(proposalIdx);
   const pastSupply = usePastSupply(proposal);
   const { symbol: tokenSymbol } = useToken();
-  const { balance, delegatesTo } = useTokenVotes(address);
+  const balance = 0;
+  const delegatesTo = "0x0" as Address;
 
   const { executeProposal, canExecute, isConfirming: isConfirmingExecution } = useProposalExecute(proposalIdx);
 
@@ -180,7 +180,7 @@ const NoVetoPowerWarning = ({
             </ElseIf>
           </If>
           &nbsp;make sure that{" "}
-          <Link href={"/plugins/members/#/delegates/" + address} className="!text-sm text-primary-400 hover:underline">
+          <Link href={`/plugins/members/#/delegates/${address}`} className="!text-sm text-primary-400 hover:underline">
             your voting power is self delegated
           </Link>
           .
