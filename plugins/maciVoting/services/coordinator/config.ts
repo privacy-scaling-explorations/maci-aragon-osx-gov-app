@@ -1,11 +1,16 @@
 import { EPolicies, EMode, EInitialVoiceCreditProxies } from "@maci-protocol/sdk";
-import { coordinatorMACIKeypair } from "./coordinator";
 import { type IDeployPollConfig } from "./utils/types";
+import { Keypair, PrivateKey } from "@maci-protocol/domainobjs";
 
 const MSG_BATCH_SIZE = 20;
 
 const startDate = Math.floor(Date.now() / 1000) + 100;
-const pollDuration = 60; // TODO:
+const pollDuration = 60;
+
+// TODO: what should I do with this?
+const coordinatorMACIKeypair = new Keypair(
+  PrivateKey.deserialize("macisk.bdd73f1757f75261a0c9997def6cd47519cad2856347cdc6fd30718999576860")
+);
 
 export const pollDeploymentConfig: IDeployPollConfig = {
   startDate,
@@ -17,10 +22,10 @@ export const pollDeploymentConfig: IDeployPollConfig = {
   pollStateTreeDepth: 10,
   voteOptionTreeDepth: 2,
   policy: {
-    type: EPolicies.FreeForAll, // TODO:
+    type: EPolicies.ERC20Votes,
   },
   initialVoiceCreditsProxy: {
-    type: EInitialVoiceCreditProxies.Constant, // TODO:
+    type: EInitialVoiceCreditProxies.ERC20Votes,
     args: {
       amount: 100,
     },

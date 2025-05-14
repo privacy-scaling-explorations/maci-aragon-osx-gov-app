@@ -8,8 +8,8 @@ import { getSigner, getPublicClient } from "./utils/chain";
 import { pollDeploymentConfig } from "./config";
 import { GenerateResponseSchema, SubmitResponseSchema } from "./utils/schemas";
 
-const BASE_URL = "http://localhost:3000/v1"; // TODO:
-const CHAIN = ESupportedNetworks.OPTIMISM_SEPOLIA; // TODO:
+const BASE_URL = "http://localhost:3000/v1";
+const CHAIN = ESupportedNetworks.ETHEREUM_SEPOLIA;
 
 type GenerateResponse = z.infer<typeof GenerateResponseSchema>;
 type SubmitResponse = z.infer<typeof SubmitResponseSchema>;
@@ -18,14 +18,6 @@ type CoordinatorServiceResult<T, E = Error> = { success: true; data: T } | { suc
 const signer = getSigner(CHAIN);
 const encryptedHeader = await getAuthorizationHeader(signer);
 const publicClient = getPublicClient(CHAIN);
-
-/**
- * Coordinator MACI Keypair
- */
-// TODO:
-export const coordinatorMACIKeypair = new Keypair(
-  PrivateKey.deserialize("macisk.bdd73f1757f75261a0c9997def6cd47519cad2856347cdc6fd30718999576860")
-);
 
 export const merge = async (
   maciContractAddress: Address,
@@ -78,17 +70,11 @@ export const merge = async (
 export const generateProofs = async (
   pollId: number,
   maciContractAddress: Address,
+  encryptedCoordinatorPrivateKey: string,
   approval: string,
   sessionKeyAddress: Address
 ): Promise<CoordinatorServiceResult<GenerateResponse>> => {
-  const coordinatorMACIKeypair = new Keypair(
-    PrivateKey.deserialize("macisk.bdd73f1757f75261a0c9997def6cd47519cad2856347cdc6fd30718999576860")
-  );
-
   const blockNumber = await publicClient.getBlockNumber();
-  const encryptedCoordinatorPrivateKey = await encryptWithCoordinatorRSAPublicKey(
-    coordinatorMACIKeypair.privateKey.serialize()
-  );
 
   const args: IGenerateArgs = {
     poll: pollId,
