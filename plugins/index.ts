@@ -1,4 +1,3 @@
-import { PUB_TOKEN_VOTING_PLUGIN_ADDRESS } from "@/constants";
 import { type IconType } from "@aragon/ods";
 
 type PluginItem = {
@@ -12,12 +11,4 @@ type PluginItem = {
   pluginAddress: string;
 };
 
-export const plugins: PluginItem[] = [
-  {
-    id: "token-voting",
-    folderName: "tokenVoting",
-    title: "Token Voting",
-    // icon: IconType.BLOCKCHAIN_BLOCKCHAIN,
-    pluginAddress: PUB_TOKEN_VOTING_PLUGIN_ADDRESS,
-  },
-];
+export const plugins: PluginItem[] = [];
