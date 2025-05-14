@@ -1,9 +1,8 @@
 import { type Address } from "viem";
 import { type z } from "zod";
-import { Keypair, PrivateKey } from "@maci-protocol/domainobjs";
 import { ESupportedNetworks } from "./utils/networks";
 import { type IGenerateArgs, type ISubmitProofsArgs } from "./utils/types";
-import { getAuthorizationHeader, encryptWithCoordinatorRSAPublicKey } from "./utils/auth";
+import { getAuthorizationHeader } from "./utils/auth";
 import { getSigner, getPublicClient } from "./utils/chain";
 import { pollDeploymentConfig } from "./config";
 import { GenerateResponseSchema, SubmitResponseSchema } from "./utils/schemas";

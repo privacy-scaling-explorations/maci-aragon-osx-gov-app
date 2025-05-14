@@ -1,3 +1,4 @@
+/** These types are copied from https://github.com/privacy-scaling-explorations/maci/blob/dev/apps/coordinator/ */
 import { type EPolicies, type EInitialVoiceCreditProxies, type EMode } from "@maci-protocol/sdk";
 
 import type { Hex } from "viem";
