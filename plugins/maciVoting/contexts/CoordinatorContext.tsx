@@ -8,8 +8,8 @@ import {
   type SubmitResponse,
   type CoordinatorContextType,
 } from "./types";
-import { getAuthorizationHeader } from "../services/coordinator/utils/auth";
-import { GenerateResponseSchema, SubmitResponseSchema } from "../services/coordinator/utils/schemas";
+import { getAuthorizationHeader } from "./auth";
+import { GenerateResponseSchema, SubmitResponseSchema } from "./schemas";
 
 // TODO: move to env
 const BASE_URL = "http://localhost:3000/v1";

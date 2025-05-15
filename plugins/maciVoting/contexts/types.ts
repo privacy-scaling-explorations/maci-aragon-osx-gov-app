@@ -1,7 +1,7 @@
 import { type Keypair } from "@maci-protocol/domainobjs";
 import { type z } from "zod";
 import { type VoteOption } from "../utils/types";
-import { type GenerateResponseSchema, type SubmitResponseSchema } from "../services/coordinator/utils/schemas";
+import { type GenerateResponseSchema, type SubmitResponseSchema } from "./schemas";
 
 export interface IVoteArgs {
   voteOptionIndex: bigint;

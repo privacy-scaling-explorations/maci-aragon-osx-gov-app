@@ -1,10 +1,5 @@
+import { EMode } from "@maci-protocol/sdk";
 import { z } from "zod";
-
-enum EMode {
-  QV,
-  NON_QV,
-  FULL,
-}
 
 const TallyDataSchema = z.object({
   maci: z.string(),
