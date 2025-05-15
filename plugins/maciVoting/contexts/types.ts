@@ -14,10 +14,13 @@ export type CoordinatorServiceResult<T, E = Error> = { success: true; data: T } 
 
 export interface CoordinatorContextType {
   merge: (pollId: number) => Promise<CoordinatorServiceResult<boolean>>;
-  generateProofs: (
-    pollId: number,
-    encryptedCoordinatorPrivateKey: string
-  ) => Promise<CoordinatorServiceResult<GenerateResponse>>;
+  generateProofs: ({
+    pollId,
+    encryptedCoordinatorPrivateKey,
+  }: {
+    pollId: number;
+    encryptedCoordinatorPrivateKey: string;
+  }) => Promise<CoordinatorServiceResult<GenerateResponse>>;
   submit: (pollId: number) => Promise<CoordinatorServiceResult<SubmitResponse>>;
 }
 

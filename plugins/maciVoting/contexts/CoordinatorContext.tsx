@@ -54,26 +54,20 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
       const publicKey = await getPublicKey();
       const encryptedHeader = await getAuthorizationHeader(publicKey);
 
-      let response: Response;
-      try {
-        response = await fetch(`${BASE_URL}/proof/merge`, {
-          method: "POST",
-          headers: {
-            Authorization: encryptedHeader,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            maciContractAddress: MACI_CONTRACT_ADDRESS,
-            pollId,
-            chain: publicClient.chain.id,
-          }),
-        });
-      } catch (error) {
-        return {
-          success: false,
-          error: error instanceof Error ? error : new Error(String(error)),
-        };
-      }
+      const response = await fetch(`${BASE_URL}/proof/merge`, {
+        method: "POST",
+        headers: {
+          Authorization: encryptedHeader,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          maciContractAddress: MACI_CONTRACT_ADDRESS,
+          pollId,
+          chain: publicClient.chain.id,
+        }),
+      }).catch((error) => {
+        throw error instanceof Error ? error : new Error(String(error));
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -97,10 +91,13 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const generateProofs = useCallback(
-    async (
-      pollId: number,
-      encryptedCoordinatorPrivateKey: string
-    ): Promise<CoordinatorServiceResult<GenerateResponse>> => {
+    async ({
+      pollId,
+      encryptedCoordinatorPrivateKey,
+    }: {
+      pollId: number;
+      encryptedCoordinatorPrivateKey: string;
+    }): Promise<CoordinatorServiceResult<GenerateResponse>> => {
       if (!publicClient) {
         return {
           success: false,
@@ -112,31 +109,25 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
       const encryptedHeader = await getAuthorizationHeader(publicKey);
       const blockNumber = await publicClient.getBlockNumber();
 
-      let response: Response;
-      try {
-        response = await fetch(`${BASE_URL}/proof/generate`, {
-          method: "POST",
-          headers: {
-            Authorization: encryptedHeader,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            poll: pollId,
-            maciContractAddress: MACI_CONTRACT_ADDRESS,
-            mode: EMode.NON_QV,
-            encryptedCoordinatorPrivateKey,
-            startBlock: Number(blockNumber) - 100,
-            endBlock: Number(blockNumber) + 100,
-            blocksPerBatch: 20,
-            chain: publicClient?.chain.id,
-          }),
-        });
-      } catch (error) {
-        return {
-          success: false,
-          error: error instanceof Error ? error : new Error(String(error)),
-        };
-      }
+      const response = await fetch(`${BASE_URL}/proof/generate`, {
+        method: "POST",
+        headers: {
+          Authorization: encryptedHeader,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          poll: pollId,
+          maciContractAddress: MACI_CONTRACT_ADDRESS,
+          mode: EMode.NON_QV,
+          encryptedCoordinatorPrivateKey,
+          startBlock: Number(blockNumber) - 100,
+          endBlock: Number(blockNumber) + 100,
+          blocksPerBatch: 20,
+          chain: publicClient?.chain.id,
+        }),
+      }).catch((error) => {
+        throw error instanceof Error ? error : new Error(String(error));
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -171,26 +162,20 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
       const publicKey = await getPublicKey();
       const encryptedHeader = await getAuthorizationHeader(publicKey);
 
-      let response: Response;
-      try {
-        response = await fetch(`${BASE_URL}/proof/submit`, {
-          method: "POST",
-          headers: {
-            Authorization: encryptedHeader,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            pollId,
-            maciContractAddress: MACI_CONTRACT_ADDRESS,
-            chain: publicClient.chain.id,
-          }),
-        });
-      } catch (error) {
-        return {
-          success: false,
-          error: error instanceof Error ? error : new Error(String(error)),
-        };
-      }
+      const response = await fetch(`${BASE_URL}/proof/submit`, {
+        method: "POST",
+        headers: {
+          Authorization: encryptedHeader,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          pollId,
+          maciContractAddress: MACI_CONTRACT_ADDRESS,
+          chain: publicClient.chain.id,
+        }),
+      }).catch((error) => {
+        throw error instanceof Error ? error : new Error(String(error));
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
