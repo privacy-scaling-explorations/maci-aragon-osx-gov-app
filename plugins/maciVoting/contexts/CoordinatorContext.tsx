@@ -1,14 +1,15 @@
+import { type KeyLike } from "crypto";
 import { EMode } from "@maci-protocol/sdk";
 import { createContext, type ReactNode, useCallback, useMemo } from "react";
-import { usePublicClient } from "wagmi";
-import { useEthersSigner } from "../hooks/useEthersSigner";
+import { hashMessage, toBytes } from "viem";
+import { usePublicClient, useSignMessage } from "wagmi";
 import {
   type CoordinatorServiceResult,
   type GenerateResponse,
   type SubmitResponse,
   type CoordinatorContextType,
 } from "./types";
-import { getAuthorizationHeader } from "./auth";
+import { encryptWithCoordinatorRSA } from "./auth";
 import { GenerateResponseSchema, SubmitResponseSchema } from "./schemas";
 
 // TODO: move to env
@@ -18,8 +19,28 @@ const MACI_CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000000";
 export const CoordinatorContext = createContext<CoordinatorContextType | undefined>(undefined);
 
 export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
-  const signer = useEthersSigner();
   const publicClient = usePublicClient();
+  const { signMessageAsync } = useSignMessage();
+
+  const getPublicKey = async (): Promise<KeyLike> => {
+    const response = await fetch(`${BASE_URL}/proof/publicKey`, {
+      method: "GET",
+    });
+    const body = await response.json();
+    return body.publicKey;
+  };
+
+  const getAuthorizationHeader = useCallback(
+    async (publicKey: KeyLike): Promise<string> => {
+      const signature = await signMessageAsync({
+        message: "message",
+      });
+      const digest = Buffer.from(toBytes(hashMessage("message"))).toString("hex");
+      const encrypted = encryptWithCoordinatorRSA(publicKey, `${signature}:${digest}`);
+      return `Bearer ${encrypted}`;
+    },
+    [signMessageAsync]
+  );
 
   const merge = useCallback(
     async (pollId: number): Promise<CoordinatorServiceResult<boolean>> => {
@@ -30,7 +51,8 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
         };
       }
 
-      const encryptedHeader = await getAuthorizationHeader(signer);
+      const publicKey = await getPublicKey();
+      const encryptedHeader = await getAuthorizationHeader(publicKey);
 
       let response: Response;
       try {
@@ -71,7 +93,7 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
         data: Boolean(data), // zod is overkill for this
       };
     },
-    [publicClient, signer]
+    [getAuthorizationHeader, publicClient]
   );
 
   const generateProofs = useCallback(
@@ -86,7 +108,8 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
         };
       }
 
-      const encryptedHeader = await getAuthorizationHeader(signer);
+      const publicKey = await getPublicKey();
+      const encryptedHeader = await getAuthorizationHeader(publicKey);
       const blockNumber = await publicClient.getBlockNumber();
 
       let response: Response;
@@ -133,7 +156,7 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
         data: GenerateResponseSchema.parse(data),
       };
     },
-    [publicClient, signer]
+    [getAuthorizationHeader, publicClient]
   );
 
   const submit = useCallback(
@@ -145,7 +168,8 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
         };
       }
 
-      const encryptedHeader = await getAuthorizationHeader(signer);
+      const publicKey = await getPublicKey();
+      const encryptedHeader = await getAuthorizationHeader(publicKey);
 
       let response: Response;
       try {
@@ -186,7 +210,7 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
         data: SubmitResponseSchema.parse(data),
       };
     },
-    [publicClient, signer]
+    [getAuthorizationHeader, publicClient]
   );
 
   const value = useMemo<CoordinatorContextType>(
