@@ -1,5 +1,6 @@
 import { type KeyLike } from "crypto";
 import { EMode } from "@maci-protocol/sdk";
+import { PUB_COORDINATOR_SERVICE_URL, PUB_MACI_ADDRESS } from "@/constants";
 import { createContext, type ReactNode, useCallback, useMemo } from "react";
 import { hashMessage, toBytes } from "viem";
 import { usePublicClient, useSignMessage } from "wagmi";
@@ -12,9 +13,8 @@ import {
 import { encryptWithCoordinatorRSA } from "./auth";
 import { GenerateResponseSchema, SubmitResponseSchema } from "./schemas";
 
-// TODO: move to env
-const BASE_URL = "http://localhost:3000/v1";
-const MACI_CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000000";
+const baseUrl = PUB_COORDINATOR_SERVICE_URL;
+const maciContractAddress = PUB_MACI_ADDRESS;
 
 export const CoordinatorContext = createContext<CoordinatorContextType | undefined>(undefined);
 
@@ -23,7 +23,7 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
   const { signMessageAsync } = useSignMessage();
 
   const getPublicKey = async (): Promise<KeyLike> => {
-    const response = await fetch(`${BASE_URL}/proof/publicKey`, {
+    const response = await fetch(`${baseUrl}/proof/publicKey`, {
       method: "GET",
     });
     const body = await response.json();
@@ -54,14 +54,14 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
       const publicKey = await getPublicKey();
       const encryptedHeader = await getAuthorizationHeader(publicKey);
 
-      const response = await fetch(`${BASE_URL}/proof/merge`, {
+      const response = await fetch(`${baseUrl}/proof/merge`, {
         method: "POST",
         headers: {
           Authorization: encryptedHeader,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          maciContractAddress: MACI_CONTRACT_ADDRESS,
+          maciContractAddress,
           pollId,
           chain: publicClient.chain.id,
         }),
@@ -94,9 +94,13 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
     async ({
       pollId,
       encryptedCoordinatorPrivateKey,
+      startBlock,
+      endBlock,
     }: {
       pollId: number;
       encryptedCoordinatorPrivateKey: string;
+      startBlock: number;
+      endBlock: number;
     }): Promise<CoordinatorServiceResult<GenerateResponse>> => {
       if (!publicClient) {
         return {
@@ -107,9 +111,8 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
 
       const publicKey = await getPublicKey();
       const encryptedHeader = await getAuthorizationHeader(publicKey);
-      const blockNumber = await publicClient.getBlockNumber();
 
-      const response = await fetch(`${BASE_URL}/proof/generate`, {
+      const response = await fetch(`${baseUrl}/proof/generate`, {
         method: "POST",
         headers: {
           Authorization: encryptedHeader,
@@ -117,13 +120,13 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
         },
         body: JSON.stringify({
           poll: pollId,
-          maciContractAddress: MACI_CONTRACT_ADDRESS,
+          maciContractAddress,
           mode: EMode.NON_QV,
           encryptedCoordinatorPrivateKey,
-          startBlock: Number(blockNumber) - 100,
-          endBlock: Number(blockNumber) + 100,
+          startBlock,
+          endBlock,
           blocksPerBatch: 20,
-          chain: publicClient?.chain.id,
+          chain: publicClient.chain.id,
         }),
       }).catch((error) => {
         throw error instanceof Error ? error : new Error(String(error));
@@ -162,7 +165,7 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
       const publicKey = await getPublicKey();
       const encryptedHeader = await getAuthorizationHeader(publicKey);
 
-      const response = await fetch(`${BASE_URL}/proof/submit`, {
+      const response = await fetch(`${baseUrl}/proof/submit`, {
         method: "POST",
         headers: {
           Authorization: encryptedHeader,
@@ -170,7 +173,7 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
         },
         body: JSON.stringify({
           pollId,
-          maciContractAddress: MACI_CONTRACT_ADDRESS,
+          maciContractAddress,
           chain: publicClient.chain.id,
         }),
       }).catch((error) => {

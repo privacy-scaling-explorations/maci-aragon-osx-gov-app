@@ -17,9 +17,13 @@ export interface CoordinatorContextType {
   generateProofs: ({
     pollId,
     encryptedCoordinatorPrivateKey,
+    startBlock,
+    endBlock,
   }: {
     pollId: number;
     encryptedCoordinatorPrivateKey: string;
+    startBlock: number;
+    endBlock: number;
   }) => Promise<CoordinatorServiceResult<GenerateResponse>>;
   submit: (pollId: number) => Promise<CoordinatorServiceResult<SubmitResponse>>;
 }
