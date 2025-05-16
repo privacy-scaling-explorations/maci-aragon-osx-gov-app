@@ -17,6 +17,9 @@ export const PUB_MACI_ADDRESS = (process.env.NEXT_PUBLIC_MACI_ADDRESS ?? "") as 
 export const PUB_MACI_DEPLOYMENT_BLOCK = Number(process.env.NEXT_PUBLIC_MACI_DEPLOYMENT_BLOCK ?? 0);
 export const NEXT_PUBLIC_SECONDS_PER_BLOCK = Number(process.env.NEXT_PUBLIC_SECONDS_PER_BLOCK ?? 1); // ETH Mainnet block takes ~12s
 
+// MACI Coordinator service
+export const PUB_COORDINATOR_SERVICE_URL = process.env.NEXT_PUBLIC_COORDINATOR_SERVICE_URL ?? "";
+
 // TOUCAN VOTING
 export const PUB_TOUCAN_VOTING_PLUGIN_ADDRESS = (process.env.NEXT_PUBLIC_TOUCAN_VOTING_PLUGIN_ADDRESS ?? "") as Address;
 export const PUB_OFT_ADAPTER_ADDRESS = (process.env.NEXT_PUBLIC_OFT_ADAPTER_ADDRESS ?? "") as Address;
