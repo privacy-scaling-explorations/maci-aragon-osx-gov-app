@@ -19,8 +19,8 @@ export function fetchIpfsAsBlob(ipfsUri: string) {
   return fetchRawIpfs(ipfsUri).then((res) => res.blob());
 }
 
-export async function uploadToPinata(strBody: string) {
-  const blob = new Blob([strBody], { type: "text/plain" });
+export async function uploadToPinata(blob: Blob) {
+  // const blob = new Blob([strBody], { type: "text/plain" });
   const file = new File([blob], UPLOAD_FILE_NAME);
   const data = new FormData();
   data.append("file", file);

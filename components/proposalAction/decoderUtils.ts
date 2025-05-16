@@ -11,15 +11,15 @@ export type CallParameterFieldType =
   | CallParameterFieldType[]
   | { [k: string]: CallParameterFieldType };
 
-export function resolveParamValue(value: CallParameterFieldType, abi?: AbiParameter): string {
+export function resolveValue(value: CallParameterFieldType, abi?: AbiParameter): string {
   if (!abi?.type) {
     if (Array.isArray(value)) return value.join(", ");
     return value.toString();
   } else if (abi.type === "tuple[]") {
-    const abiClone = Object.assign({}, { ...abi });
+    const abiClone = { ...abi };
     abiClone.type = abiClone.type.replace(/\[\]$/, "");
 
-    const items = (value as any as any[]).map((item) => resolveParamValue(item, abiClone));
+    const items = (value as any as any[]).map((item) => resolveValue(item, abiClone));
     return items.join(", ");
   } else if (abi.type === "tuple") {
     const result = {} as Record<string, string>;
@@ -27,7 +27,7 @@ export function resolveParamValue(value: CallParameterFieldType, abi?: AbiParame
 
     for (const element of components) {
       const k = element.name!;
-      result[k] = resolveParamValue((value as any)[k], element);
+      result[k] = resolveValue((value as any)[k], element);
     }
 
     return getReadableJson(result);
@@ -45,14 +45,9 @@ export function resolveParamValue(value: CallParameterFieldType, abi?: AbiParame
   return value.toString();
 }
 
-export function resolveFieldTitle(name: string, abiType: string | undefined, idx: number): string {
-  if (name) {
-    if (!abiType) return name;
-    else if (abiType.startsWith("uint") || abiType.startsWith("int")) {
-      return name + " (in wei)";
-    }
-    return name;
-  } else if (abiType) {
+export function resolveAddon(name: string, abiType: string | undefined, idx: number): string {
+  if (name) return name;
+  else if (abiType) {
     if (abiType === "address") {
       return "Address";
     } else if (abiType === "bytes32") {
@@ -67,7 +62,7 @@ export function resolveFieldTitle(name: string, abiType: string | undefined, idx
       return "Boolean";
     }
   }
-  return "Parameter " + (idx + 1).toString();
+  return (idx + 1).toString();
 }
 
 function getReadableJson(value: Record<string, InputValue>): string {

@@ -1,8 +1,8 @@
-import type { IProposalResource } from "@/utils/types";
+import { IProposalResource } from "@/utils/types";
 import { Card, CardEmptyState, Heading, IconType, Link } from "@aragon/ods";
 import React from "react";
 
-interface ICardResourcesProps {
+export interface ICardResourcesProps {
   displayLink?: boolean;
   resources?: IProposalResource[];
   title: string;
@@ -25,7 +25,6 @@ export const CardResources: React.FC<ICardResourcesProps> = (props) => {
       <div className="flex flex-col gap-y-4">
         {resources?.map((resource) => (
           <Link
-            target="_blank"
             key={resource.url}
             href={resource.url}
             variant="primary"
