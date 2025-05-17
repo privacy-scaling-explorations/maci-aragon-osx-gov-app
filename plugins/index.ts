@@ -1,4 +1,5 @@
-import { type IconType } from "@aragon/ods";
+import { PUB_MACI_VOTING_PLUGIN_ADDRESS } from "@/constants";
+import { IconType } from "@aragon/ods";
 
 type PluginItem = {
   /** The URL fragment after /plugins */
@@ -7,8 +8,16 @@ type PluginItem = {
   folderName: string;
   /** Title on menu */
   title: string;
-  icon?: IconType;
+  icon: IconType;
   pluginAddress: string;
 };
 
-export const plugins: PluginItem[] = [];
+export const plugins: PluginItem[] = [
+  {
+    id: "maci-voting",
+    folderName: "maciVoting",
+    title: "MACI Voting",
+    icon: IconType.BLOCKCHAIN_BLOCKCHAIN,
+    pluginAddress: PUB_MACI_VOTING_PLUGIN_ADDRESS,
+  },
+];
