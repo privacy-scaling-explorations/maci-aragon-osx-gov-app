@@ -1,5 +1,5 @@
 import { type KeyLike } from "crypto";
-import { EMode } from "@maci-protocol/sdk";
+import { EMode } from "@maci-protocol/core";
 import { PUB_COORDINATOR_SERVICE_URL, PUB_MACI_ADDRESS } from "@/constants";
 import { createContext, type ReactNode, useCallback, useMemo } from "react";
 import { hashMessage, toBytes } from "viem";

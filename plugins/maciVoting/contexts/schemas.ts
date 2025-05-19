@@ -1,4 +1,4 @@
-import { EMode } from "@maci-protocol/sdk";
+import { EMode } from "@maci-protocol/core";
 import { z } from "zod";
 
 const TallyDataSchema = z.object({
