@@ -66,8 +66,6 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
           pollId,
           chain: publicClient.chain.id,
         }),
-      }).catch((error) => {
-        throw error instanceof Error ? error : new Error(String(error));
       });
 
       if (!response.ok) {
@@ -124,8 +122,6 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
           blocksPerBatch: 20,
           chain: publicClient.chain.id,
         }),
-      }).catch((error) => {
-        throw error instanceof Error ? error : new Error(String(error));
       });
 
       if (!response.ok) {
@@ -172,8 +168,6 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
           maciContractAddress,
           chain: publicClient.chain.id,
         }),
-      }).catch((error) => {
-        throw error instanceof Error ? error : new Error(String(error));
       });
 
       if (!response.ok) {
