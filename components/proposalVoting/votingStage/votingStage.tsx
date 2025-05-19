@@ -1,4 +1,4 @@
-import { PUB_CHAIN } from "@/constants";
+import { PUBLIC_CHAIN } from "@/constants";
 import { getSimpleRelativeTimeFromDate } from "@/utils/dates";
 import { AccordionItem, AccordionItemContent, AccordionItemHeader, Heading, Tabs, formatterUtils } from "@aragon/ods";
 import { Tabs as RadixTabsRoot } from "@radix-ui/react-tabs";
@@ -74,7 +74,7 @@ export const VotingStage: React.FC<IVotingStageProps> = (props) => {
   const defaultTab = status === "active" ? "breakdown" : "breakdown";
   const stageKey = `Stage ${number}`;
   const formattedSnapshotBlock = formatterUtils.formatNumber(details?.censusBlock) ?? "";
-  const snapshotBlockURL = `${PUB_CHAIN.blockExplorers?.default.url}/block/${details?.censusBlock}`;
+  const snapshotBlockURL = `${PUBLIC_CHAIN.blockExplorers?.default.url}/block/${details?.censusBlock}`;
 
   return (
     <AccordionItem

@@ -1,11 +1,11 @@
-import { PUB_IPFS_ENDPOINTS, PUB_PINATA_JWT, PUB_APP_NAME } from "@/constants";
+import { PUBLIC_IPFS_ENDPOINTS, PUBLIC_PINATA_JWT, PUBLIC_APP_NAME } from "@/constants";
 import { type Hex, fromHex, toBytes } from "viem";
 import { CID } from "multiformats/cid";
 import * as raw from "multiformats/codecs/raw";
 import { sha256 } from "multiformats/hashes/sha2";
 
 const IPFS_FETCH_TIMEOUT = 5000; // 1 second
-const UPLOAD_FILE_NAME = `${PUB_APP_NAME.toLowerCase().trim().replaceAll(" ", "-")}.json`;
+const UPLOAD_FILE_NAME = `${PUBLIC_APP_NAME.toLowerCase().trim().replaceAll(" ", "-")}.json`;
 
 export function fetchIpfsAsJson(ipfsUri: string) {
   return fetchRawIpfs(ipfsUri).then((res) => res.json());
@@ -30,7 +30,7 @@ export async function uploadToPinata(blob: Blob) {
   const res = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${PUB_PINATA_JWT}`,
+      Authorization: `Bearer ${PUBLIC_PINATA_JWT}`,
     },
     body: data,
   });
@@ -60,7 +60,7 @@ async function fetchRawIpfs(ipfsUri: string): Promise<Response> {
     if (!ipfsUri) throw new Error("Invalid IPFS URI");
   }
 
-  const uriPrefixes = PUB_IPFS_ENDPOINTS.split(",").filter((uri) => !!uri.trim());
+  const uriPrefixes = PUBLIC_IPFS_ENDPOINTS.split(",").filter((uri) => !!uri.trim());
   if (!uriPrefixes.length) throw new Error("No available IPFS endpoints to fetch from");
 
   const cid = resolvePath(ipfsUri);

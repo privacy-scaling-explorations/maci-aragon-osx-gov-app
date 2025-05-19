@@ -1,8 +1,8 @@
 import { useContext } from "react";
-import { type MaciContextType } from "../contexts/types";
+import { type IMaciContextType } from "../contexts/types";
 import { MaciContext } from "../contexts/MaciContext";
 
-export const useMaci = (): MaciContextType => {
+export const useMaci = (): IMaciContextType => {
   const maciContext = useContext(MaciContext);
 
   if (!maciContext) {

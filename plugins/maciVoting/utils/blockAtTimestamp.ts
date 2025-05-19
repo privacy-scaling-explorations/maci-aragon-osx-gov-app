@@ -1,4 +1,4 @@
-import { NEXT_PUBLIC_SECONDS_PER_BLOCK, PUB_CHAIN } from "@/constants";
+import { NEXT_PUBLIC_SECONDS_PER_BLOCK, PUBLIC_CHAIN } from "@/constants";
 import { config } from "@/context/Web3Modal";
 import { getBlock } from "@wagmi/core";
 import { mainnet } from "viem/chains";
@@ -35,9 +35,9 @@ export async function getBlockNumberAtTimestamp(
 
 export async function getCurrentBlock() {
   // Fetch the latest block as usual
-  let chainIdToFetchBlock = PUB_CHAIN.id;
+  let chainIdToFetchBlock = PUBLIC_CHAIN.id;
   // Arbitrum block.number is the parent chain block number (ETH Mainnet)
-  if (PUB_CHAIN.name.toLowerCase().includes("arbitrum")) {
+  if (PUBLIC_CHAIN.name.toLowerCase().includes("arbitrum")) {
     chainIdToFetchBlock = mainnet.id;
   }
 

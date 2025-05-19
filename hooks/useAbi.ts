@@ -4,16 +4,16 @@ import { usePublicClient } from "wagmi";
 import { AbiFunction } from "abitype";
 import { useQuery } from "@tanstack/react-query";
 import { isAddress } from "@/utils/evm";
-import { PUB_CHAIN, PUB_ETHERSCAN_API_KEY } from "@/constants";
+import { PUBLIC_CHAIN, PUBLIC_ETHERSCAN_API_KEY } from "@/constants";
 import { useAlerts } from "@/context/Alerts";
 import { getImplementation, isProxyContract } from "@/utils/proxies";
 import { ChainName } from "@/utils/chains";
 
-const CHAIN_NAME = PUB_CHAIN.name.toLowerCase() as ChainName;
+const CHAIN_NAME = PUBLIC_CHAIN.name.toLowerCase() as ChainName;
 
 export const useAbi = (contractAddress: Address) => {
   const { addAlert } = useAlerts();
-  const publicClient = usePublicClient({ chainId: PUB_CHAIN.id });
+  const publicClient = usePublicClient({ chainId: PUBLIC_CHAIN.id });
 
   const { data: implementationAddress, isLoading: isLoadingImpl } = useQuery<Address | null>({
     queryKey: ["proxy-check", contractAddress, !!publicClient],
@@ -108,26 +108,26 @@ function getEtherscanAbiLoader() {
   switch (CHAIN_NAME) {
     case "mainnet":
       return new whatsabi.loaders.EtherscanABILoader({
-        apiKey: PUB_ETHERSCAN_API_KEY,
+        apiKey: PUBLIC_ETHERSCAN_API_KEY,
       });
     case "polygon":
       return new whatsabi.loaders.EtherscanABILoader({
-        apiKey: PUB_ETHERSCAN_API_KEY,
+        apiKey: PUBLIC_ETHERSCAN_API_KEY,
         baseURL: "https://api.polygonscan.com/api",
       });
     case "arbitrum":
       return new whatsabi.loaders.EtherscanABILoader({
-        apiKey: PUB_ETHERSCAN_API_KEY,
+        apiKey: PUBLIC_ETHERSCAN_API_KEY,
         baseURL: "https://api.arbiscan.io/api",
       });
     case "sepolia":
       return new whatsabi.loaders.EtherscanABILoader({
-        apiKey: PUB_ETHERSCAN_API_KEY,
+        apiKey: PUBLIC_ETHERSCAN_API_KEY,
         baseURL: "https://api-sepolia.etherscan.io/api",
       });
     case "mumbai":
       return new whatsabi.loaders.EtherscanABILoader({
-        apiKey: PUB_ETHERSCAN_API_KEY,
+        apiKey: PUBLIC_ETHERSCAN_API_KEY,
         baseURL: "https://api-mumbai.polygonscan.com/api",
       });
     default:

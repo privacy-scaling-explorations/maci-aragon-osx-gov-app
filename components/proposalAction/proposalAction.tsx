@@ -1,4 +1,4 @@
-import { PUB_CHAIN } from "@/constants";
+import { PUBLIC_CHAIN } from "@/constants";
 import { formatHexString } from "@/utils/evm";
 import {
   AccordionContainer,
@@ -57,7 +57,7 @@ const ActionItem = ({ index, rawAction }: { index: number; rawAction: RawAction 
   const isEthTransfer = !action.data || action.data === "0x";
   const functionName = isEthTransfer ? "Withdraw assets" : action.functionName;
   const functionAbi = action.functionAbi ?? null;
-  const explorerUrl = `${PUB_CHAIN.blockExplorers?.default.url}/address/${action.to}`;
+  const explorerUrl = `${PUBLIC_CHAIN.blockExplorers?.default.url}/address/${action.to}`;
 
   return (
     <AccordionItem className="border-t border-t-neutral-100 bg-neutral-0" value={title}>

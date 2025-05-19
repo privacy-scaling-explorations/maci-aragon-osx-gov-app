@@ -1,7 +1,7 @@
 import { type Address } from "viem";
 import { useState, useEffect } from "react";
 import { useBalance, useAccount, useReadContracts } from "wagmi";
-import { PUB_CHAIN, PUB_MACI_VOTING_PLUGIN_ADDRESS } from "@/constants";
+import { PUBLIC_CHAIN, PUBLIC_MACI_VOTING_PLUGIN_ADDRESS } from "@/constants";
 import { MaciVotingAbi } from "../artifacts/MaciVoting.sol";
 
 export function useCanCreateProposal() {
@@ -11,20 +11,20 @@ export function useCanCreateProposal() {
   const { data: balance } = useBalance({
     address,
     token: votingToken,
-    chainId: PUB_CHAIN.id,
+    chainId: PUBLIC_CHAIN.id,
   });
 
   const { data: contractReads } = useReadContracts({
     contracts: [
       {
-        chainId: PUB_CHAIN.id,
-        address: PUB_MACI_VOTING_PLUGIN_ADDRESS,
+        chainId: PUBLIC_CHAIN.id,
+        address: PUBLIC_MACI_VOTING_PLUGIN_ADDRESS,
         abi: MaciVotingAbi,
         functionName: "minProposerVotingPower",
       },
       {
-        chainId: PUB_CHAIN.id,
-        address: PUB_MACI_VOTING_PLUGIN_ADDRESS,
+        chainId: PUBLIC_CHAIN.id,
+        address: PUBLIC_MACI_VOTING_PLUGIN_ADDRESS,
         abi: MaciVotingAbi,
         functionName: "getVotingToken",
       },
