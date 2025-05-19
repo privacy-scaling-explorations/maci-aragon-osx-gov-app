@@ -6,9 +6,10 @@ import { hashMessage, toBytes } from "viem";
 import { usePublicClient, useSignMessage } from "wagmi";
 import {
   type ICoordinatorServiceResult,
-  type GenerateResponse,
-  type SubmitResponse,
-  type CoordinatorContextType,
+  type TGenerateResponse,
+  type TSubmitResponse,
+  type ICoordinatorContextType,
+  IGenerateProofsArgs,
 } from "./types";
 import { encryptWithCoordinatorRSA } from "./auth";
 import { GenerateResponseSchema, SubmitResponseSchema } from "./schemas";
@@ -16,19 +17,19 @@ import { GenerateResponseSchema, SubmitResponseSchema } from "./schemas";
 const baseUrl = PUBLIC_COORDINATOR_SERVICE_URL;
 const maciContractAddress = PUBLIC_MACI_ADDRESS;
 
-export const CoordinatorContext = createContext<CoordinatorContextType | undefined>(undefined);
+export const CoordinatorContext = createContext<ICoordinatorContextType | undefined>(undefined);
 
 export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
   const publicClient = usePublicClient();
   const { signMessageAsync } = useSignMessage();
 
-  const getPublicKey = async (): Promise<KeyLike> => {
+  const getPublicKey = useCallback(async (): Promise<KeyLike> => {
     const response = await fetch(`${baseUrl}/proof/publicKey`, {
       method: "GET",
     });
     const body = await response.json();
     return body.publicKey;
-  };
+  }, []);
 
   const getAuthorizationHeader = useCallback(
     async (publicKey: KeyLike): Promise<string> => {
@@ -87,7 +88,7 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
         data: Boolean(data), // zod is overkill for this
       };
     },
-    [getAuthorizationHeader, publicClient]
+    [getAuthorizationHeader, getPublicKey, publicClient]
   );
 
   const generateProofs = useCallback(
@@ -96,12 +97,7 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
       encryptedCoordinatorPrivateKey,
       startBlock,
       endBlock,
-    }: {
-      pollId: number;
-      encryptedCoordinatorPrivateKey: string;
-      startBlock: number;
-      endBlock: number;
-    }): Promise<ICoordinatorServiceResult<GenerateResponse>> => {
+    }: IGenerateProofsArgs): Promise<ICoordinatorServiceResult<TGenerateResponse>> => {
       if (!publicClient) {
         return {
           success: false,
@@ -150,11 +146,11 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
         data: GenerateResponseSchema.parse(data),
       };
     },
-    [getAuthorizationHeader, publicClient]
+    [getAuthorizationHeader, getPublicKey, publicClient]
   );
 
   const submit = useCallback(
-    async (pollId: number): Promise<ICoordinatorServiceResult<SubmitResponse>> => {
+    async (pollId: number): Promise<ICoordinatorServiceResult<TSubmitResponse>> => {
       if (!publicClient) {
         return {
           success: false,
@@ -198,10 +194,10 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
         data: SubmitResponseSchema.parse(data),
       };
     },
-    [getAuthorizationHeader, publicClient]
+    [getAuthorizationHeader, getPublicKey, publicClient]
   );
 
-  const value = useMemo<CoordinatorContextType>(
+  const value = useMemo<ICoordinatorContextType>(
     () => ({
       merge,
       generateProofs,
@@ -210,5 +206,5 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
     [merge, generateProofs, submit]
   );
 
-  return <CoordinatorContext.Provider value={value as CoordinatorContextType}>{children}</CoordinatorContext.Provider>;
+  return <CoordinatorContext.Provider value={value as ICoordinatorContextType}>{children}</CoordinatorContext.Provider>;
 };

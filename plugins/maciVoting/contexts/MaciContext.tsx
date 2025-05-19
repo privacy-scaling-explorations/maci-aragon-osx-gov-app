@@ -1,5 +1,5 @@
 import { createContext, type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
-import { type MaciContextType } from "./types";
+import { type IMaciContextType } from "./types";
 import { Keypair, PrivateKey } from "@maci-protocol/domainobjs";
 import {
   signup,
@@ -23,7 +23,7 @@ import { useAlerts } from "@/context/Alerts";
 export const DEFAULT_SG_DATA = "0x0000000000000000000000000000000000000000000000000000000000000000";
 export const DEFAULT_IVCP_DATA = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
-export const MaciContext = createContext<MaciContextType | undefined>(undefined);
+export const MaciContext = createContext<IMaciContextType | undefined>(undefined);
 
 export const MaciProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -476,7 +476,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
     })();
   }, []);
 
-  const value = useMemo<MaciContextType>(
+  const value = useMemo<IMaciContextType>(
     () => ({
       isLoading,
       error,
@@ -510,5 +510,5 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
     ]
   );
 
-  return <MaciContext.Provider value={value as MaciContextType}>{children}</MaciContext.Provider>;
+  return <MaciContext.Provider value={value as IMaciContextType}>{children}</MaciContext.Provider>;
 };

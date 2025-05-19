@@ -8,31 +8,28 @@ export interface IVoteArgs {
   newVoteWeight: bigint;
 }
 
-export type GenerateResponse = z.infer<typeof GenerateResponseSchema>;
-export type SubmitResponse = z.infer<typeof SubmitResponseSchema>;
+export type TGenerateResponse = z.infer<typeof GenerateResponseSchema>;
+export type TSubmitResponse = z.infer<typeof SubmitResponseSchema>;
 export interface ICoordinatorServiceResult<T, E = Error> {
   success: boolean;
   data?: T;
   error?: E;
 }
 
-export interface CoordinatorContextType {
-  merge: (pollId: number) => Promise<ICoordinatorServiceResult<boolean>>;
-  generateProofs: ({
-    pollId,
-    encryptedCoordinatorPrivateKey,
-    startBlock,
-    endBlock,
-  }: {
-    pollId: number;
-    encryptedCoordinatorPrivateKey: string;
-    startBlock: number;
-    endBlock: number;
-  }) => Promise<ICoordinatorServiceResult<GenerateResponse>>;
-  submit: (pollId: number) => Promise<ICoordinatorServiceResult<SubmitResponse>>;
+export interface IGenerateProofsArgs {
+  pollId: number;
+  encryptedCoordinatorPrivateKey: string;
+  startBlock: number;
+  endBlock: number;
 }
 
-export interface MaciContextType {
+export interface ICoordinatorContextType {
+  merge: (pollId: number) => Promise<ICoordinatorServiceResult<boolean>>;
+  generateProofs: (args: IGenerateProofsArgs) => Promise<ICoordinatorServiceResult<TGenerateResponse>>;
+  submit: (pollId: number) => Promise<ICoordinatorServiceResult<TSubmitResponse>>;
+}
+
+export interface IMaciContextType {
   isLoading: boolean;
   error?: string;
   pollId?: bigint;
