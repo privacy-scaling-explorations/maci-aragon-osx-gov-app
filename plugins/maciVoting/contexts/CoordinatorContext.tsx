@@ -5,7 +5,7 @@ import { createContext, type ReactNode, useCallback, useMemo } from "react";
 import { hashMessage, toBytes } from "viem";
 import { usePublicClient, useSignMessage } from "wagmi";
 import {
-  type CoordinatorServiceResult,
+  type ICoordinatorServiceResult,
   type GenerateResponse,
   type SubmitResponse,
   type CoordinatorContextType,
@@ -43,7 +43,7 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const merge = useCallback(
-    async (pollId: number): Promise<CoordinatorServiceResult<boolean>> => {
+    async (pollId: number): Promise<ICoordinatorServiceResult<boolean>> => {
       if (!publicClient) {
         return {
           success: false,
@@ -101,7 +101,7 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
       encryptedCoordinatorPrivateKey: string;
       startBlock: number;
       endBlock: number;
-    }): Promise<CoordinatorServiceResult<GenerateResponse>> => {
+    }): Promise<ICoordinatorServiceResult<GenerateResponse>> => {
       if (!publicClient) {
         return {
           success: false,
@@ -154,7 +154,7 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const submit = useCallback(
-    async (pollId: number): Promise<CoordinatorServiceResult<SubmitResponse>> => {
+    async (pollId: number): Promise<ICoordinatorServiceResult<SubmitResponse>> => {
       if (!publicClient) {
         return {
           success: false,

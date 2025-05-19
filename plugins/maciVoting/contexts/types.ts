@@ -10,10 +10,14 @@ export interface IVoteArgs {
 
 export type GenerateResponse = z.infer<typeof GenerateResponseSchema>;
 export type SubmitResponse = z.infer<typeof SubmitResponseSchema>;
-export type CoordinatorServiceResult<T, E = Error> = { success: true; data: T } | { success: false; error: E };
+export interface ICoordinatorServiceResult<T, E = Error> {
+  success: boolean;
+  data?: T;
+  error?: E;
+}
 
 export interface CoordinatorContextType {
-  merge: (pollId: number) => Promise<CoordinatorServiceResult<boolean>>;
+  merge: (pollId: number) => Promise<ICoordinatorServiceResult<boolean>>;
   generateProofs: ({
     pollId,
     encryptedCoordinatorPrivateKey,
@@ -24,8 +28,8 @@ export interface CoordinatorContextType {
     encryptedCoordinatorPrivateKey: string;
     startBlock: number;
     endBlock: number;
-  }) => Promise<CoordinatorServiceResult<GenerateResponse>>;
-  submit: (pollId: number) => Promise<CoordinatorServiceResult<SubmitResponse>>;
+  }) => Promise<ICoordinatorServiceResult<GenerateResponse>>;
+  submit: (pollId: number) => Promise<ICoordinatorServiceResult<SubmitResponse>>;
 }
 
 export interface MaciContextType {
