@@ -11,6 +11,9 @@ export const PUB_MACI_ADDRESS = (process.env.NEXT_PUBLIC_MACI_ADDRESS ?? "") as 
 export const PUB_MACI_DEPLOYMENT_BLOCK = Number(process.env.NEXT_PUBLIC_MACI_DEPLOYMENT_BLOCK ?? 0);
 export const NEXT_PUBLIC_SECONDS_PER_BLOCK = Number(process.env.NEXT_PUBLIC_SECONDS_PER_BLOCK ?? 1); // ETH Mainnet block takes ~12s
 
+// MACI Coordinator service
+export const PUB_COORDINATOR_SERVICE_URL = process.env.NEXT_PUBLIC_COORDINATOR_SERVICE_URL ?? "";
+
 // Target chain
 export const PUB_CHAIN_NAME = (process.env.NEXT_PUBLIC_CHAIN_NAME ?? "sepolia") as ChainName;
 export const PUB_CHAIN = getChain(PUB_CHAIN_NAME);
