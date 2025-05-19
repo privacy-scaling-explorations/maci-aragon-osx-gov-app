@@ -1,39 +1,39 @@
 import { http, createConfig } from "wagmi";
 import { walletConnect } from "wagmi/connectors";
 import {
-  PUB_APP_DESCRIPTION,
-  PUB_APP_NAME,
-  PUB_CHAIN,
-  PUB_L2_CHAIN,
-  PUB_PROJECT_URL,
-  PUB_WALLET_CONNECT_PROJECT_ID,
-  PUB_WALLET_ICON,
-  PUB_WEB3_ENDPOINT,
-  PUB_WEB3_ENDPOINT_L2,
-  PUB_WEB3_MAINNET_ENDPOINT,
+  PUBLIC_APP_DESCRIPTION,
+  PUBLIC_APP_NAME,
+  PUBLIC_CHAIN,
+  PUBLIC_L2_CHAIN,
+  PUBLIC_PROJECT_URL,
+  PUBLIC_WALLET_CONNECT_PROJECT_ID,
+  PUBLIC_WALLET_ICON,
+  PUBLIC_WEB3_ENDPOINT,
+  PUBLIC_WEB3_ENDPOINT_L2,
+  PUBLIC_WEB3_MAINNET_ENDPOINT,
 } from "@/constants";
 import { mainnet } from "viem/chains";
 
 // wagmi config
 const metadata = {
-  name: PUB_APP_NAME,
-  description: PUB_APP_DESCRIPTION,
-  url: PUB_PROJECT_URL,
-  icons: [PUB_WALLET_ICON],
+  name: PUBLIC_APP_NAME,
+  description: PUBLIC_APP_DESCRIPTION,
+  url: PUBLIC_PROJECT_URL,
+  icons: [PUBLIC_WALLET_ICON],
 };
 
 export const config = createConfig({
-  chains: [PUB_CHAIN, mainnet, PUB_L2_CHAIN],
+  chains: [PUBLIC_CHAIN, mainnet, PUBLIC_L2_CHAIN],
   syncConnectedChain: true,
   ssr: true,
   transports: {
-    [PUB_CHAIN.id]: http(PUB_WEB3_ENDPOINT, { batch: true }),
-    [PUB_L2_CHAIN.id]: http(PUB_WEB3_ENDPOINT_L2, { batch: true }),
-    [mainnet.id]: http(PUB_WEB3_MAINNET_ENDPOINT, { batch: true }),
+    [PUBLIC_CHAIN.id]: http(PUBLIC_WEB3_ENDPOINT, { batch: true }),
+    [PUBLIC_L2_CHAIN.id]: http(PUBLIC_WEB3_ENDPOINT_L2, { batch: true }),
+    [mainnet.id]: http(PUBLIC_WEB3_MAINNET_ENDPOINT, { batch: true }),
   },
   connectors: [
     walletConnect({
-      projectId: PUB_WALLET_CONNECT_PROJECT_ID,
+      projectId: PUBLIC_WALLET_CONNECT_PROJECT_ID,
       metadata,
       showQrModal: false,
     }),

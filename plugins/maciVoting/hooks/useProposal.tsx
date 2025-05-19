@@ -4,7 +4,7 @@ import { fromHex, getAbiItem, type Hex } from "viem";
 import { MaciVotingAbi } from "../artifacts/MaciVoting.sol";
 import { type Action } from "@/utils/types";
 import { type Proposal, type ProposalMetadata } from "@/plugins/maciVoting/utils/types";
-import { PUB_CHAIN, PUB_MACI_VOTING_PLUGIN_ADDRESS } from "@/constants";
+import { PUBLIC_CHAIN, PUBLIC_MACI_VOTING_PLUGIN_ADDRESS } from "@/constants";
 import { useMetadata } from "@/hooks/useMetadata";
 
 type ProposalCreatedLogResponse = {
@@ -25,7 +25,7 @@ const ProposalCreatedEvent = getAbiItem({
 });
 
 export function useProposal(proposalId: string, autoRefresh = false) {
-  const publicClient = usePublicClient({ chainId: PUB_CHAIN.id });
+  const publicClient = usePublicClient({ chainId: PUBLIC_CHAIN.id });
   const [proposalCreationEvent, setProposalCreationEvent] = useState<ProposalCreatedLogResponse["args"]>();
   const [metadataUri, setMetadata] = useState<string>();
   const { data: blockNumber } = useBlockNumber();
@@ -38,8 +38,8 @@ export function useProposal(proposalId: string, autoRefresh = false) {
     refetch: proposalRefetch,
     queryKey: proposalQueryKey,
   } = useReadContract({
-    chainId: PUB_CHAIN.id,
-    address: PUB_MACI_VOTING_PLUGIN_ADDRESS,
+    chainId: PUBLIC_CHAIN.id,
+    address: PUBLIC_MACI_VOTING_PLUGIN_ADDRESS,
     abi: MaciVotingAbi,
     functionName: "getProposal",
     args: [BigInt(proposalId)],
@@ -58,7 +58,7 @@ export function useProposal(proposalId: string, autoRefresh = false) {
 
       try {
         const logs = await publicClient.getLogs({
-          address: PUB_MACI_VOTING_PLUGIN_ADDRESS,
+          address: PUBLIC_MACI_VOTING_PLUGIN_ADDRESS,
           event: ProposalCreatedEvent as any,
           fromBlock: snapshotBlock,
           toBlock: snapshotBlock + 1n,

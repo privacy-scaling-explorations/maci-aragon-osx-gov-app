@@ -1,4 +1,4 @@
-import { PUB_WEB3_MAINNET_ENDPOINT } from "@/constants";
+import { PUBLIC_WEB3_MAINNET_ENDPOINT } from "@/constants";
 import { formatHexString } from "@/utils/evm";
 import { MemberAvatar } from "@aragon/ods";
 import { useWeb3Modal } from "@web3modal/wagmi/react";
@@ -14,7 +14,7 @@ const config = createConfig({
   client({ chain }) {
     return createClient({
       chain,
-      transport: http(PUB_WEB3_MAINNET_ENDPOINT, { batch: true }),
+      transport: http(PUBLIC_WEB3_MAINNET_ENDPOINT, { batch: true }),
     });
   },
 });

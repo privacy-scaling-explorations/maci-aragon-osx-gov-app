@@ -13,7 +13,7 @@ import {
   publish,
   getSignedupUserData,
 } from "@maci-protocol/sdk/browser";
-import { PUB_MACI_ADDRESS, PUB_MACI_DEPLOYMENT_BLOCK } from "@/constants";
+import { PUBLIC_MACI_ADDRESS, PUBLIC_MACI_DEPLOYMENT_BLOCK } from "@/constants";
 import { useAccount, usePublicClient, useSignMessage } from "wagmi";
 import { useEthersSigner } from "../hooks/useEthersSigner";
 import { keccak256, stringToHex, type Hex } from "viem";
@@ -116,7 +116,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       const { stateIndex: _stateIndex } = await signup({
-        maciAddress: PUB_MACI_ADDRESS,
+        maciAddress: PUBLIC_MACI_ADDRESS,
         maciPublicKey: maciKeypair.publicKey.serialize(),
         sgData: DEFAULT_SG_DATA,
         signer,
@@ -180,7 +180,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const joinedPoll = await joinPoll({
-        maciAddress: PUB_MACI_ADDRESS,
+        maciAddress: PUBLIC_MACI_ADDRESS,
         privateKey: maciKeypair.privateKey.serialize(),
         signer,
         pollId,
@@ -259,7 +259,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         nonce: 0n, // should we keep this in local or is it onchain?
         pollId,
         newVoteWeight: 1n,
-        maciAddress: PUB_MACI_ADDRESS,
+        maciAddress: PUBLIC_MACI_ADDRESS,
         privateKey: maciKeypair.privateKey.serialize(),
         signer,
       });
@@ -302,19 +302,19 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const { address } = await getPoll({
-        maciAddress: PUB_MACI_ADDRESS,
+        maciAddress: PUBLIC_MACI_ADDRESS,
         pollId,
         signer,
       });
 
       const logs = await publicClient.getLogs({
         address: address as Hex,
-        fromBlock: BigInt(PUB_MACI_DEPLOYMENT_BLOCK),
+        fromBlock: BigInt(PUBLIC_MACI_DEPLOYMENT_BLOCK),
         toBlock: "latest",
       });
 
       if (logs.length === 0) {
-        setPollDeployBlock(PUB_MACI_DEPLOYMENT_BLOCK);
+        setPollDeployBlock(PUBLIC_MACI_DEPLOYMENT_BLOCK);
         return;
       }
 
@@ -361,7 +361,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
 
       try {
         const { isRegistered: _isRegistered, stateIndex: _stateIndex } = await getSignedupUserData({
-          maciAddress: PUB_MACI_ADDRESS,
+          maciAddress: PUBLIC_MACI_ADDRESS,
           maciPublicKey: maciKeypair.publicKey.serialize(),
           signer,
         });
@@ -395,12 +395,12 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
-        const maciContract = MACIFactory.connect(PUB_MACI_ADDRESS, signer);
+        const maciContract = MACIFactory.connect(PUBLIC_MACI_ADDRESS, signer);
         const stateTree = await generateMaciStateTreeWithEndKey({
           maciContract,
           signer,
           userPublicKey: maciKeypair.publicKey,
-          startBlock: PUB_MACI_DEPLOYMENT_BLOCK,
+          startBlock: PUBLIC_MACI_DEPLOYMENT_BLOCK,
         });
 
         const localInclusionProof = stateTree.signUpTree.generateProof(Number(stateIndex));
@@ -442,11 +442,11 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
 
       try {
         const { isJoined, voiceCredits, pollStateIndex } = await getJoinedUserData({
-          maciAddress: PUB_MACI_ADDRESS,
+          maciAddress: PUBLIC_MACI_ADDRESS,
           pollId,
           pollPublicKey: maciKeypair.publicKey.serialize(),
           signer,
-          startBlock: pollDeployBlock ?? PUB_MACI_DEPLOYMENT_BLOCK,
+          startBlock: pollDeployBlock ?? PUBLIC_MACI_DEPLOYMENT_BLOCK,
         });
 
         console.log(isJoined, voiceCredits, pollStateIndex);

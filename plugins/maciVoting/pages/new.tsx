@@ -11,7 +11,7 @@ import { type Action } from "@/utils/types";
 import { useRouter } from "next/router";
 import { Else, ElseIf, If, Then } from "@/components/if";
 import { PleaseWaitSpinner } from "@/components/please-wait";
-import { PUB_CHAIN, PUB_MACI_VOTING_PLUGIN_ADDRESS } from "@/constants";
+import { PUBLIC_CHAIN, PUBLIC_MACI_VOTING_PLUGIN_ADDRESS } from "@/constants";
 import { ActionCard } from "@/components/actions/action";
 
 enum ActionType {
@@ -136,11 +136,11 @@ export default function Create() {
     const startDateTime = Math.floor(new Date(`${startDate}T${startTime ? startTime : "00:00:00"}`).getTime() / 1000);
     const endDateTime = Math.floor(new Date(`${endDate}T${endTime ? endTime : "00:00:00"}`).getTime() / 1000);
 
-    if (chainId !== PUB_CHAIN.id) await switchChainAsync({ chainId: PUB_CHAIN.id });
+    if (chainId !== PUBLIC_CHAIN.id) await switchChainAsync({ chainId: PUBLIC_CHAIN.id });
     createProposalWrite({
-      chainId: PUB_CHAIN.id,
+      chainId: PUBLIC_CHAIN.id,
       abi: MaciVotingAbi,
-      address: PUB_MACI_VOTING_PLUGIN_ADDRESS,
+      address: PUBLIC_MACI_VOTING_PLUGIN_ADDRESS,
       functionName: "createProposal",
       // args: _metadata, _actions, _allowFailureMap, _startDate, _endDate
       args: [toHex(ipfsPin), actions, BigInt(0), BigInt(startDateTime), BigInt(endDateTime)],

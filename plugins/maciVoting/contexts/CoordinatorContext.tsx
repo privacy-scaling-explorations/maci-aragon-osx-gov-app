@@ -1,6 +1,6 @@
 import { type KeyLike } from "crypto";
 import { EMode } from "@maci-protocol/core";
-import { PUB_COORDINATOR_SERVICE_URL, PUB_MACI_ADDRESS } from "@/constants";
+import { PUBLIC_COORDINATOR_SERVICE_URL, PUBLIC_MACI_ADDRESS } from "@/constants";
 import { createContext, type ReactNode, useCallback, useMemo } from "react";
 import { hashMessage, toBytes } from "viem";
 import { usePublicClient, useSignMessage } from "wagmi";
@@ -13,8 +13,8 @@ import {
 import { encryptWithCoordinatorRSA } from "./auth";
 import { GenerateResponseSchema, SubmitResponseSchema } from "./schemas";
 
-const baseUrl = PUB_COORDINATOR_SERVICE_URL;
-const maciContractAddress = PUB_MACI_ADDRESS;
+const baseUrl = PUBLIC_COORDINATOR_SERVICE_URL;
+const maciContractAddress = PUBLIC_MACI_ADDRESS;
 
 export const CoordinatorContext = createContext<CoordinatorContextType | undefined>(undefined);
 

@@ -1,6 +1,6 @@
 import { erc20Abi } from "viem";
 import { useAccount, useReadContract } from "wagmi";
-import { PUB_CHAIN, PUB_TOKEN_ADDRESS } from "@/constants";
+import { PUBLIC_CHAIN, PUBLIC_TOKEN_ADDRESS } from "@/constants";
 
 export function useVotingToken() {
   const {
@@ -8,8 +8,8 @@ export function useVotingToken() {
     isError: isError1,
     isLoading: isLoading1,
   } = useReadContract({
-    chainId: PUB_CHAIN.id,
-    address: PUB_TOKEN_ADDRESS,
+    chainId: PUBLIC_CHAIN.id,
+    address: PUBLIC_TOKEN_ADDRESS,
     abi: erc20Abi,
     functionName: "totalSupply",
   });
@@ -19,14 +19,14 @@ export function useVotingToken() {
     isError: isError2,
     isLoading: isLoading2,
   } = useReadContract({
-    chainId: PUB_CHAIN.id,
-    address: PUB_TOKEN_ADDRESS,
+    chainId: PUBLIC_CHAIN.id,
+    address: PUBLIC_TOKEN_ADDRESS,
     abi: erc20Abi,
     functionName: "symbol",
   });
 
   return {
-    address: PUB_TOKEN_ADDRESS,
+    address: PUBLIC_TOKEN_ADDRESS,
     tokenSupply,
     symbol: tokenSymbol,
     status: {
@@ -46,8 +46,8 @@ export function useVotingTokenBalance() {
     isLoading,
     queryKey,
   } = useReadContract({
-    chainId: PUB_CHAIN.id,
-    address: PUB_TOKEN_ADDRESS,
+    chainId: PUBLIC_CHAIN.id,
+    address: PUBLIC_TOKEN_ADDRESS,
     abi: erc20Abi,
     functionName: "balanceOf",
     args: [address ?? "0x"],

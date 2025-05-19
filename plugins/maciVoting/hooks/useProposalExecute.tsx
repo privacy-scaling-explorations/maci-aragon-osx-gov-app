@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useWaitForTransactionReceipt, useWriteContract, useReadContract } from "wagmi";
 import { type AlertContextProps, useAlerts } from "@/context/Alerts";
 import { useRouter } from "next/router";
-import { PUB_CHAIN, PUB_MACI_VOTING_PLUGIN_ADDRESS } from "@/constants";
+import { PUBLIC_CHAIN, PUBLIC_MACI_VOTING_PLUGIN_ADDRESS } from "@/constants";
 import { MaciVotingAbi } from "../artifacts/MaciVoting.sol";
 
 export function useProposalExecute(proposalId: string) {
@@ -14,9 +14,9 @@ export function useProposalExecute(proposalId: string) {
     isError: isCanVoteError,
     isLoading: isCanVoteLoading,
   } = useReadContract({
-    address: PUB_MACI_VOTING_PLUGIN_ADDRESS,
+    address: PUBLIC_MACI_VOTING_PLUGIN_ADDRESS,
     abi: MaciVotingAbi,
-    chainId: PUB_CHAIN.id,
+    chainId: PUBLIC_CHAIN.id,
     functionName: "canExecute",
     args: [BigInt(proposalId)],
   });
@@ -33,9 +33,9 @@ export function useProposalExecute(proposalId: string) {
     if (!canExecute) return;
 
     executeWrite({
-      address: PUB_MACI_VOTING_PLUGIN_ADDRESS,
+      address: PUBLIC_MACI_VOTING_PLUGIN_ADDRESS,
       abi: MaciVotingAbi,
-      chainId: PUB_CHAIN.id,
+      chainId: PUBLIC_CHAIN.id,
       functionName: "execute",
       args: [BigInt(proposalId)],
     });

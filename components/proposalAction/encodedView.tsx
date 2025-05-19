@@ -1,4 +1,4 @@
-import { PUB_CHAIN } from "@/constants";
+import { PUBLIC_CHAIN } from "@/constants";
 import { capitalizeFirstLetter } from "@/utils/text";
 import { type RawAction } from "@/utils/types";
 import { InputText, NumberFormat, formatterUtils } from "@aragon/ods";
@@ -24,7 +24,7 @@ function getEncodedArgs(action: RawAction) {
       { title: "To", value: action.to },
       {
         title: "Value",
-        value: `${formatterUtils.formatNumber(formatEther(action.value, "wei"), { format: NumberFormat.TOKEN_AMOUNT_SHORT })} ${PUB_CHAIN.nativeCurrency.symbol}`,
+        value: `${formatterUtils.formatNumber(formatEther(action.value, "wei"), { format: NumberFormat.TOKEN_AMOUNT_SHORT })} ${PUBLIC_CHAIN.nativeCurrency.symbol}`,
       },
     ];
   }

@@ -12,7 +12,7 @@ import {
 import { useCanCreateProposal } from "@/plugins/maciVoting/hooks/useCanCreateProposal";
 import Link from "next/link";
 import { Else, If, Then } from "@/components/if";
-import { PUB_MACI_VOTING_PLUGIN_ADDRESS, PUB_CHAIN } from "@/constants";
+import { PUBLIC_MACI_VOTING_PLUGIN_ADDRESS, PUBLIC_CHAIN } from "@/constants";
 
 import MaciCard from "../components/MaciCard";
 import { MaciVotingAbi } from "../artifacts/MaciVoting.sol";
@@ -32,10 +32,10 @@ export default function Proposals() {
     isFetching: isFetchingNextPage,
     refetch,
   } = useReadContract({
-    address: PUB_MACI_VOTING_PLUGIN_ADDRESS,
+    address: PUBLIC_MACI_VOTING_PLUGIN_ADDRESS,
     abi: MaciVotingAbi,
     functionName: "proposalCount",
-    chainId: PUB_CHAIN.id,
+    chainId: PUBLIC_CHAIN.id,
   });
 
   const proposalCount = Number(proposalCountResponse);
