@@ -23,10 +23,11 @@ export interface IGenerateProofsArgs {
   endBlock: number;
 }
 
+export type FinalizeStatus = "notStarted" | "merging" | "merged" | "proving" | "proved" | "submitting" | "submitted";
+
 export interface ICoordinatorContextType {
-  merge: (pollId: number) => Promise<ICoordinatorServiceResult<boolean>>;
-  generateProofs: (args: IGenerateProofsArgs) => Promise<ICoordinatorServiceResult<TGenerateResponse>>;
-  submit: (pollId: number) => Promise<ICoordinatorServiceResult<TSubmitResponse>>;
+  finalizeStatus: FinalizeStatus;
+  finalizeProposal: (pollId: number) => Promise<void>;
 }
 
 export interface IMaciContextType {

@@ -1,18 +1,21 @@
 import { type KeyLike } from "crypto";
 import { EMode } from "@maci-protocol/core";
-import { PUBLIC_COORDINATOR_SERVICE_URL, PUBLIC_MACI_ADDRESS } from "@/constants";
-import { createContext, type ReactNode, useCallback, useMemo } from "react";
-import { hashMessage, toBytes } from "viem";
-import { usePublicClient, useSignMessage } from "wagmi";
+import { getPoll } from "@maci-protocol/sdk/browser";
+import { PUBLIC_CHAIN, PUBLIC_COORDINATOR_SERVICE_URL, PUBLIC_MACI_ADDRESS, PUBLIC_WEB3_ENDPOINT } from "@/constants";
+import { createContext, type ReactNode, useCallback, useMemo, useState } from "react";
+import { createPublicClient, hashMessage, http, parseAbi, toBytes } from "viem";
+import { useSignMessage } from "wagmi";
 import {
   type ICoordinatorServiceResult,
   type TGenerateResponse,
   type TSubmitResponse,
   type ICoordinatorContextType,
   IGenerateProofsArgs,
+  FinalizeStatus,
 } from "./types";
 import { encryptWithCoordinatorRSA } from "./auth";
 import { GenerateResponseSchema, SubmitResponseSchema } from "./schemas";
+import { useEthersSigner } from "../hooks/useEthersSigner";
 
 const baseUrl = PUBLIC_COORDINATOR_SERVICE_URL;
 const maciContractAddress = PUBLIC_MACI_ADDRESS;
@@ -20,8 +23,14 @@ const maciContractAddress = PUBLIC_MACI_ADDRESS;
 export const CoordinatorContext = createContext<ICoordinatorContextType | undefined>(undefined);
 
 export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
-  const publicClient = usePublicClient();
+  const [finalizeStatus, setFinalizeStatus] = useState<FinalizeStatus>("notStarted");
+
+  const publicClient = createPublicClient({
+    chain: PUBLIC_CHAIN,
+    transport: http(PUBLIC_WEB3_ENDPOINT),
+  });
   const { signMessageAsync } = useSignMessage();
+  const signer = useEthersSigner();
 
   const getPublicKey = useCallback(async (): Promise<KeyLike> => {
     const response = await fetch(`${baseUrl}/proof/publicKey`, {
@@ -45,13 +54,6 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
 
   const merge = useCallback(
     async (pollId: number): Promise<ICoordinatorServiceResult<boolean>> => {
-      if (!publicClient) {
-        return {
-          success: false,
-          error: new Error("Public client not found"),
-        };
-      }
-
       const publicKey = await getPublicKey();
       const encryptedHeader = await getAuthorizationHeader(publicKey);
 
@@ -96,13 +98,6 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
       startBlock,
       endBlock,
     }: IGenerateProofsArgs): Promise<ICoordinatorServiceResult<TGenerateResponse>> => {
-      if (!publicClient) {
-        return {
-          success: false,
-          error: new Error("Public client not found"),
-        };
-      }
-
       const publicKey = await getPublicKey();
       const encryptedHeader = await getAuthorizationHeader(publicKey);
 
@@ -147,13 +142,6 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
 
   const submit = useCallback(
     async (pollId: number): Promise<ICoordinatorServiceResult<TSubmitResponse>> => {
-      if (!publicClient) {
-        return {
-          success: false,
-          error: new Error("Public client not found"),
-        };
-      }
-
       const publicKey = await getPublicKey();
       const encryptedHeader = await getAuthorizationHeader(publicKey);
 
@@ -191,13 +179,64 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
     [getAuthorizationHeader, getPublicKey, publicClient]
   );
 
+  const checkMergeStatus = async (pollId: number) => {
+    const { address: pollAddress } = await getPoll({
+      maciAddress: PUBLIC_MACI_ADDRESS,
+      pollId,
+      signer,
+    });
+    const pollAbi = parseAbi(["function stateMerged() view returns (bool)"]);
+    const statemMerged = await publicClient.readContract({
+      address: pollAddress as `0x${string}`,
+      abi: pollAbi,
+      functionName: "stateMerged",
+    });
+    return statemMerged;
+  };
+
+  const finalizeProposal = useCallback(async (pollId: number) => {
+    setFinalizeStatus("merging");
+    const hasMerged = await checkMergeStatus(pollId);
+    if (!hasMerged) {
+      const mergeResult = await merge(pollId);
+      if (!mergeResult.success) {
+        return;
+      }
+    }
+    setFinalizeStatus("merged");
+
+    // TODO: get these values
+    const encryptedCoordinatorPrivateKey = "";
+    const startBlock = 0;
+    const endBlock = 0;
+
+    setFinalizeStatus("proving");
+    const proveResult = await generateProofs({
+      pollId,
+      encryptedCoordinatorPrivateKey,
+      startBlock,
+      endBlock,
+    });
+    if (!proveResult.success) {
+      return;
+    }
+    setFinalizeStatus("proved");
+
+    setFinalizeStatus("submitting");
+    const submitResult = await submit(pollId);
+    if (!submitResult.success) {
+      return;
+    }
+    setFinalizeStatus("submitted");
+    return;
+  }, []);
+
   const value = useMemo<ICoordinatorContextType>(
     () => ({
-      merge,
-      generateProofs,
-      submit,
+      finalizeStatus,
+      finalizeProposal,
     }),
-    [merge, generateProofs, submit]
+    [finalizeStatus, finalizeProposal]
   );
 
   return <CoordinatorContext.Provider value={value as ICoordinatorContextType}>{children}</CoordinatorContext.Provider>;
