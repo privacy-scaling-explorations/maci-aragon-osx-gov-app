@@ -1,7 +1,14 @@
 import { type KeyLike } from "crypto";
+import { Poll__factory as PollFactory } from "@maci-protocol/contracts";
 import { EMode } from "@maci-protocol/core";
 import { getPoll } from "@maci-protocol/sdk/browser";
-import { PUBLIC_CHAIN, PUBLIC_COORDINATOR_SERVICE_URL, PUBLIC_MACI_ADDRESS, PUBLIC_WEB3_ENDPOINT } from "@/constants";
+import {
+  PUBLIC_CHAIN,
+  PUBLIC_COORDINATOR_SERVICE_URL,
+  PUBLIC_MACI_ADDRESS,
+  PUBLIC_MACI_DEPLOYMENT_BLOCK,
+  PUBLIC_WEB3_ENDPOINT,
+} from "@/constants";
 import { createContext, type ReactNode, useCallback, useMemo, useState } from "react";
 import { createPublicClient, hashMessage, http, parseAbi, toBytes } from "viem";
 import { useSignMessage } from "wagmi";
@@ -16,6 +23,7 @@ import {
 import { encryptWithCoordinatorRSA } from "./auth";
 import { GenerateResponseSchema, SubmitResponseSchema } from "./schemas";
 import { useEthersSigner } from "../hooks/useEthersSigner";
+import { getFutureBlockNumberAtTimestamp } from "../utils/blockAtTimestamp";
 
 const baseUrl = PUBLIC_COORDINATOR_SERVICE_URL;
 const maciContractAddress = PUBLIC_MACI_ADDRESS;
@@ -185,13 +193,8 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
       pollId,
       signer,
     });
-    const pollAbi = parseAbi(["function stateMerged() view returns (bool)"]);
-    const statemMerged = await publicClient.readContract({
-      address: pollAddress as `0x${string}`,
-      abi: pollAbi,
-      functionName: "stateMerged",
-    });
-    return statemMerged;
+    const poll = PollFactory.connect(pollAddress, signer);
+    return await poll.stateMerged();
   };
 
   const finalizeProposal = useCallback(async (pollId: number) => {
@@ -205,10 +208,16 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
     }
     setFinalizeStatus("merged");
 
-    // TODO: get these values
+    const { address: pollAddress } = await getPoll({
+      maciAddress: PUBLIC_MACI_ADDRESS,
+      pollId,
+      signer,
+    });
+    const poll = PollFactory.connect(pollAddress, signer);
+    const endDate = await poll.endDate();
     const encryptedCoordinatorPrivateKey = "";
-    const startBlock = 0;
-    const endBlock = 0;
+    const startBlock = PUBLIC_MACI_DEPLOYMENT_BLOCK;
+    const endBlock = Number(await getFutureBlockNumberAtTimestamp(endDate));
 
     setFinalizeStatus("proving");
     const proveResult = await generateProofs({
