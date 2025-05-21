@@ -37,6 +37,7 @@ export const useCanFinalize = (pollId?: bigint) => {
 
         if (now < endDate) {
           setCanFinalize(false);
+          return;
         }
 
         setCanFinalize(true);

@@ -10,15 +10,18 @@ export interface IVoteArgs {
 
 export type TGenerateResponse = z.infer<typeof GenerateResponseSchema>;
 export type TSubmitResponse = z.infer<typeof SubmitResponseSchema>;
-export interface ICoordinatorServiceResult<T, E = Error> {
-  success: boolean;
-  data?: T;
-  error?: E;
-}
+export type ICoordinatorServiceResult<T, E = Error> =
+  | {
+      success: true;
+      data: T;
+    }
+  | {
+      success: false;
+      error: E;
+    };
 
 export interface IGenerateProofsArgs {
   pollId: number;
-  encryptedCoordinatorPrivateKey: string;
   startBlock: number;
   endBlock: number;
 }
