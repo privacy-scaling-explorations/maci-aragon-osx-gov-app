@@ -1,7 +1,6 @@
 import { type KeyLike } from "crypto";
-import { Poll__factory as PollFactory } from "@maci-protocol/contracts";
 import { EMode } from "@maci-protocol/core";
-import { getPoll } from "@maci-protocol/sdk/browser";
+import { getPoll, Poll__factory as PollFactory } from "@maci-protocol/sdk/browser";
 import {
   PUBLIC_CHAIN,
   PUBLIC_COORDINATOR_SERVICE_URL,
