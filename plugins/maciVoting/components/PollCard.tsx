@@ -60,13 +60,18 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
             <div className="flex flex-col justify-between gap-y-2">
               <p>Submit your vote anonymously to the poll. Results will be tallied after the voting period ends.</p>
               <div className="flex flex-row gap-x-1">
-                <Button onClick={() => onClickVote(VoteOption.Yes)} disabled={isLoading}>
+                <Button onClick={() => onClickVote(VoteOption.Yes)} disabled={isLoading} size="sm" variant="success">
                   Yes
                 </Button>
-                <Button onClick={() => onClickVote(VoteOption.No)} disabled={isLoading}>
+                <Button onClick={() => onClickVote(VoteOption.No)} disabled={isLoading} size="sm" variant="critical">
                   No
                 </Button>
-                <Button onClick={() => onClickVote(VoteOption.Abstain)} disabled={isLoading}>
+                <Button
+                  onClick={() => onClickVote(VoteOption.Abstain)}
+                  disabled={isLoading}
+                  size="sm"
+                  variant="warning"
+                >
                   Abstain
                 </Button>
               </div>

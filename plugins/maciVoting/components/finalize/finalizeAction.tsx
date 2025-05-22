@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useCoordinator } from "../../hooks/useCoordinator";
 import { Button } from "@aragon/ods";
 
@@ -7,6 +8,27 @@ interface IFinalizeActionProps {
 
 export const FinalizeAction: React.FC<IFinalizeActionProps> = ({ pollId }) => {
   const { finalizeStatus, finalizeProposal } = useCoordinator();
+
+  const finalizationMessage = useMemo(() => {
+    switch (finalizeStatus) {
+      case "notStarted":
+        return "";
+      case "merging":
+        return "Merging poll...";
+      case "merged":
+        return "The poll has been merged.";
+      case "proving":
+        return "Generating proofs...";
+      case "proved":
+        return "The proofs have been generated.";
+      case "submitting":
+        return "Submitting proofs...";
+      case "submitted":
+        return "The proofs have been submitted. You can now execute the proposal.";
+      default:
+        return "";
+    }
+  }, [finalizeStatus]);
 
   return (
     <div className="overflow-hidden rounded-xl bg-neutral-0 pb-2 shadow-neutral">
@@ -20,12 +42,7 @@ export const FinalizeAction: React.FC<IFinalizeActionProps> = ({ pollId }) => {
         <p className="text-base leading-normal text-neutral-500 md:text-lg">
           The poll must have ended in order for it to be finalized.
         </p>
-        {finalizeStatus === "merging" && <p>Merging poll...</p>}
-        {finalizeStatus === "merged" && <p>The poll has been merged.</p>}
-        {finalizeStatus === "proving" && <p>Generating proofs...</p>}
-        {finalizeStatus === "proved" && <p>The proofs have been generated.</p>}
-        {finalizeStatus === "submitting" && <p>Submitting proofs...</p>}
-        {finalizeStatus === "submitted" && <p>The proofs have been submitted. You can now execute the proposal.</p>}
+        <p className="text-sm text-info-500">{finalizationMessage}</p>
       </div>
     </div>
   );
