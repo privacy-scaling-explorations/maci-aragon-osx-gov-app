@@ -202,8 +202,8 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       }
 
       setHasJoinedPoll(true);
-      setInitialVoiceCredits(Number(joinedPoll!.voiceCredits));
-      setPollStateIndex(joinedPoll!.pollStateIndex);
+      setInitialVoiceCredits(Number(joinedPoll.voiceCredits));
+      setPollStateIndex(joinedPoll.pollStateIndex);
 
       setIsLoading(false);
 
@@ -459,9 +459,6 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
           signer,
           startBlock: pollDeployBlock ?? PUBLIC_MACI_DEPLOYMENT_BLOCK,
         });
-
-        //console.log(isJoined, voiceCredits, pollStateIndex);
-        //console.log(hasJoinedPoll, initialVoiceCredits, pollStateIndex);
 
         setHasJoinedPoll(isJoined);
         setInitialVoiceCredits(Number(voiceCredits));

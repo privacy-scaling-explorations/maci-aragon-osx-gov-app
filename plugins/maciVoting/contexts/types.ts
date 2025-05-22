@@ -22,8 +22,6 @@ export type ICoordinatorServiceResult<T, E = Error> =
 
 export interface IGenerateProofsArgs {
   pollId: number;
-  startBlock: number;
-  endBlock: number;
 }
 
 export type FinalizeStatus = "notStarted" | "merging" | "merged" | "proving" | "proved" | "submitting" | "submitted";
