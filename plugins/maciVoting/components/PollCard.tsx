@@ -1,12 +1,16 @@
 import { Button, Card, Heading } from "@aragon/ods";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMaci } from "../hooks/useMaci";
 import { VoteOption } from "../utils/types";
 
 const PollCard = ({ pollId }: { pollId: bigint }) => {
   // check if the user joined the poll
-  const { setPollId, onJoinPoll, onVote, isRegistered, hasJoinedPoll, error: maciError } = useMaci();
-  const [error, setError] = useState<string | undefined>(maciError);
+  const { setPollId, onJoinPoll, onVote, isRegistered, hasJoinedPoll, isLoading, error: maciError } = useMaci();
+  const [error, setError] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    setError(maciError);
+  }, [maciError]);
 
   useEffect(() => {
     setPollId(pollId);
@@ -34,6 +38,16 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
     [onVote]
   );
 
+  const buttonMessage = useMemo(() => {
+    if (hasJoinedPoll) {
+      return "Already joined poll";
+    }
+    if (isLoading) {
+      return "Joining poll...";
+    }
+    return "Join poll";
+  }, [hasJoinedPoll, isLoading]);
+
   return (
     <Card className="flex flex-col gap-y-4 p-6 shadow-neutral">
       <Heading size="h3">MACI Poll</Heading>
@@ -46,9 +60,20 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
             <div className="flex flex-col justify-between gap-y-2">
               <p>Submit your vote anonymously to the poll. Results will be tallied after the voting period ends.</p>
               <div className="flex flex-row gap-x-1">
-                <Button onClick={() => onClickVote(VoteOption.Yes)}>Yes</Button>
-                <Button onClick={() => onClickVote(VoteOption.No)}>No</Button>
-                <Button onClick={() => onClickVote(VoteOption.Abstain)}>Abstain</Button>
+                <Button onClick={() => onClickVote(VoteOption.Yes)} disabled={isLoading} size="sm" variant="success">
+                  Yes
+                </Button>
+                <Button onClick={() => onClickVote(VoteOption.No)} disabled={isLoading} size="sm" variant="critical">
+                  No
+                </Button>
+                <Button
+                  onClick={() => onClickVote(VoteOption.Abstain)}
+                  disabled={isLoading}
+                  size="sm"
+                  variant="warning"
+                >
+                  Abstain
+                </Button>
               </div>
             </div>
           ) : (
@@ -57,7 +82,9 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
                 In order to submit your vote you need to join the poll using your locally generated MACI public key and
                 any wallet you want.
               </p>
-              <Button onClick={onClickJoinPoll}>Join poll</Button>
+              <Button onClick={onClickJoinPoll} disabled={hasJoinedPoll || isLoading}>
+                {buttonMessage}
+              </Button>
             </div>
           )}
         </>

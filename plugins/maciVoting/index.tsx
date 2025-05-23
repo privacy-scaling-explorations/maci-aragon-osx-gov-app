@@ -5,7 +5,7 @@ import ProposalDetail from "./pages/proposal";
 import { useUrl } from "@/hooks/useUrl";
 import type { ReactNode } from "react";
 import { MaciProvider } from "./contexts/MaciContext";
-
+import { CoordinatorProvider } from "./contexts/CoordinatorContext";
 export default function PluginPage() {
   // Select the inner pages to display depending on the URL hash
   const { hash } = useUrl();
@@ -21,5 +21,9 @@ export default function PluginPage() {
     // Default not found page
     content = <NotFound />;
   }
-  return <MaciProvider>{content}</MaciProvider>;
+  return (
+    <MaciProvider>
+      <CoordinatorProvider>{content}</CoordinatorProvider>
+    </MaciProvider>
+  );
 }

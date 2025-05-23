@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMaci } from "../hooks/useMaci";
 
 const MaciCard = () => {
-  const { onSignup, maciKeypair, isRegistered, createKeypair, error: maciError } = useMaci();
+  const { onSignup, maciKeypair, isRegistered, isLoading, createKeypair, error: maciError } = useMaci();
   const [error, setError] = useState<string | undefined>(undefined);
 
   useEffect(() => {
@@ -37,7 +37,7 @@ const MaciCard = () => {
         <p>You need to sign up your locally generated public key to the main Maci contract.</p>
         <p className="text-sm text-critical-500">{error}</p>
       </div>
-      <Button onClick={onClick} disabled={isRegistered}>
+      <Button onClick={onClick} disabled={isRegistered ?? isLoading}>
         {buttonMessage}
       </Button>
     </Card>

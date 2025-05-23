@@ -10,23 +10,25 @@ export interface IVoteArgs {
 
 export type TGenerateResponse = z.infer<typeof GenerateResponseSchema>;
 export type TSubmitResponse = z.infer<typeof SubmitResponseSchema>;
-export interface ICoordinatorServiceResult<T, E = Error> {
-  success: boolean;
-  data?: T;
-  error?: E;
-}
+export type ICoordinatorServiceResult<T, E = Error> =
+  | {
+      success: true;
+      data: T;
+    }
+  | {
+      success: false;
+      error: E;
+    };
 
 export interface IGenerateProofsArgs {
   pollId: number;
-  encryptedCoordinatorPrivateKey: string;
-  startBlock: number;
-  endBlock: number;
 }
 
+export type FinalizeStatus = "notStarted" | "merging" | "merged" | "proving" | "proved" | "submitting" | "submitted";
+
 export interface ICoordinatorContextType {
-  merge: (pollId: number) => Promise<ICoordinatorServiceResult<boolean>>;
-  generateProofs: (args: IGenerateProofsArgs) => Promise<ICoordinatorServiceResult<TGenerateResponse>>;
-  submit: (pollId: number) => Promise<ICoordinatorServiceResult<TSubmitResponse>>;
+  finalizeStatus: FinalizeStatus;
+  finalizeProposal: (pollId: number) => Promise<void>;
 }
 
 export interface IMaciContextType {

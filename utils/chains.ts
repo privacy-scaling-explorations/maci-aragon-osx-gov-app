@@ -5,7 +5,7 @@ import {
   arbitrum,
   arbitrumSepolia,
   polygonMumbai,
-  Chain,
+  type Chain,
   optimismSepolia,
   zkSync,
   zkSyncSepoliaTestnet,
