@@ -266,7 +266,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         publicKey: maciKeypair.publicKey.serialize(),
         stateIndex: BigInt(stateIndex),
         voteOptionIndex,
-        nonce: 0n, // should we keep this in local or is it onchain?
+        nonce: 1n,
         pollId,
         newVoteWeight: 1n,
         maciAddress: PUBLIC_MACI_ADDRESS,
