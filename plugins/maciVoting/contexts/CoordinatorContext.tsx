@@ -1,16 +1,14 @@
 import { EMode } from "@maci-protocol/core";
-import { getPoll, getPollContracts, Poll__factory as PollFactory } from "@maci-protocol/sdk/browser";
+import { getPoll, getPollContracts, ITallyData, Poll__factory as PollFactory } from "@maci-protocol/sdk/browser";
 import { PUBLIC_CHAIN_NAME, PUBLIC_COORDINATOR_SERVICE_URL, PUBLIC_MACI_ADDRESS } from "@/constants";
 import { createContext, type ReactNode, useCallback, useMemo, useState } from "react";
 import {
-  type ICoordinatorServiceResult,
-  type TGenerateResponse,
-  type TSubmitResponse,
+  type TCoordinatorServiceResult,
+  type IGenerateData,
   type ICoordinatorContextType,
   type IGenerateProofsArgs,
   type FinalizeStatus,
 } from "./types";
-import { GenerateResponseSchema, SubmitResponseSchema } from "./schemas";
 import { useEthersSigner } from "../hooks/useEthersSigner";
 import { toBackendChainFormat } from "../utils/chains";
 
@@ -21,7 +19,7 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
 
   const signer = useEthersSigner();
 
-  const merge = useCallback(async (pollId: number): Promise<ICoordinatorServiceResult<boolean>> => {
+  const merge = useCallback(async (pollId: number): Promise<TCoordinatorServiceResult<boolean>> => {
     let response: Response;
     try {
       response = await fetch(`${PUBLIC_COORDINATOR_SERVICE_URL}/proof/merge`, {
@@ -57,12 +55,12 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
     const data = await response.json();
     return {
       success: true,
-      data: Boolean(data), // zod is overkill for this
+      data: Boolean(data),
     };
   }, []);
 
   const generateProofs = useCallback(
-    async ({ pollId }: IGenerateProofsArgs): Promise<ICoordinatorServiceResult<TGenerateResponse>> => {
+    async ({ pollId }: IGenerateProofsArgs): Promise<TCoordinatorServiceResult<IGenerateData>> => {
       let response: Response;
       try {
         response = await fetch(`${PUBLIC_COORDINATOR_SERVICE_URL}/proof/generate`, {
@@ -100,13 +98,13 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
       const data = await response.json();
       return {
         success: true,
-        data: GenerateResponseSchema.parse(data),
+        data,
       };
     },
     []
   );
 
-  const submit = useCallback(async (pollId: number): Promise<ICoordinatorServiceResult<TSubmitResponse>> => {
+  const submit = useCallback(async (pollId: number): Promise<TCoordinatorServiceResult<ITallyData>> => {
     let response: Response;
     try {
       response = await fetch(`${PUBLIC_COORDINATOR_SERVICE_URL}/proof/submit`, {
@@ -142,7 +140,7 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
     const data = await response.json();
     return {
       success: true,
-      data: SubmitResponseSchema.parse(data),
+      data,
     };
   }, []);
 
