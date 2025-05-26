@@ -1,128 +1,87 @@
-import { type KeyLike } from "crypto";
 import { EMode } from "@maci-protocol/core";
-import { PUBLIC_COORDINATOR_SERVICE_URL, PUBLIC_MACI_ADDRESS } from "@/constants";
-import { createContext, type ReactNode, useCallback, useMemo } from "react";
-import { hashMessage, toBytes } from "viem";
-import { usePublicClient, useSignMessage } from "wagmi";
+import { getPoll, getPollContracts, ITallyData, Poll__factory as PollFactory } from "@maci-protocol/sdk/browser";
+import { PUBLIC_CHAIN_NAME, PUBLIC_COORDINATOR_SERVICE_URL, PUBLIC_MACI_ADDRESS } from "@/constants";
+import { createContext, type ReactNode, useCallback, useMemo, useState } from "react";
 import {
-  type ICoordinatorServiceResult,
-  type TGenerateResponse,
-  type TSubmitResponse,
+  type TCoordinatorServiceResult,
+  type IGenerateData,
   type ICoordinatorContextType,
-  IGenerateProofsArgs,
+  type IGenerateProofsArgs,
+  type FinalizeStatus,
 } from "./types";
-import { encryptWithCoordinatorRSA } from "./auth";
-import { GenerateResponseSchema, SubmitResponseSchema } from "./schemas";
-
-const baseUrl = PUBLIC_COORDINATOR_SERVICE_URL;
-const maciContractAddress = PUBLIC_MACI_ADDRESS;
+import { useEthersSigner } from "../hooks/useEthersSigner";
+import { toBackendChainFormat } from "../utils/chains";
 
 export const CoordinatorContext = createContext<ICoordinatorContextType | undefined>(undefined);
 
 export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
-  const publicClient = usePublicClient();
-  const { signMessageAsync } = useSignMessage();
+  const [finalizeStatus, setFinalizeStatus] = useState<FinalizeStatus>("notStarted");
 
-  const getPublicKey = useCallback(async (): Promise<KeyLike> => {
-    const response = await fetch(`${baseUrl}/proof/publicKey`, {
-      method: "GET",
-    });
-    const body = await response.json();
-    return body.publicKey;
+  const signer = useEthersSigner();
+
+  const merge = useCallback(async (pollId: number): Promise<TCoordinatorServiceResult<boolean>> => {
+    let response: Response;
+    try {
+      response = await fetch(`${PUBLIC_COORDINATOR_SERVICE_URL}/proof/merge`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          maciContractAddress: PUBLIC_MACI_ADDRESS,
+          pollId,
+          chain: toBackendChainFormat(PUBLIC_CHAIN_NAME),
+        }),
+      });
+    } catch (error) {
+      return {
+        success: false,
+        error: new Error(`Failed to merge: ${error}`),
+      };
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      const errorMessage = errorData.message
+        ? `${response.status} - ${response.statusText}. ${errorData.message}`
+        : `${response.status} - ${response.statusText}`;
+
+      return {
+        success: false,
+        error: new Error(`Failed to merge: ${errorMessage}`),
+      };
+    }
+
+    const data = await response.json();
+    return {
+      success: true,
+      data: Boolean(data),
+    };
   }, []);
 
-  const getAuthorizationHeader = useCallback(
-    async (publicKey: KeyLike): Promise<string> => {
-      const signature = await signMessageAsync({
-        message: "message",
-      });
-      const digest = Buffer.from(toBytes(hashMessage("message"))).toString("hex");
-      const encrypted = encryptWithCoordinatorRSA(publicKey, `${signature}:${digest}`);
-      return `Bearer ${encrypted}`;
-    },
-    [signMessageAsync]
-  );
-
-  const merge = useCallback(
-    async (pollId: number): Promise<ICoordinatorServiceResult<boolean>> => {
-      if (!publicClient) {
-        return {
-          success: false,
-          error: new Error("Public client not found"),
-        };
-      }
-
-      const publicKey = await getPublicKey();
-      const encryptedHeader = await getAuthorizationHeader(publicKey);
-
-      const response = await fetch(`${baseUrl}/proof/merge`, {
-        method: "POST",
-        headers: {
-          Authorization: encryptedHeader,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          maciContractAddress,
-          pollId,
-          chain: publicClient.chain.id,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = errorData.message
-          ? `${response.status} - ${response.statusText}. ${errorData.message}`
-          : `${response.status} - ${response.statusText}`;
-
-        return {
-          success: false,
-          error: new Error(`Failed to merge: ${errorMessage}`),
-        };
-      }
-
-      const data = await response.json();
-      return {
-        success: true,
-        data: Boolean(data), // zod is overkill for this
-      };
-    },
-    [getAuthorizationHeader, getPublicKey, publicClient]
-  );
-
   const generateProofs = useCallback(
-    async ({
-      pollId,
-      encryptedCoordinatorPrivateKey,
-      startBlock,
-      endBlock,
-    }: IGenerateProofsArgs): Promise<ICoordinatorServiceResult<TGenerateResponse>> => {
-      if (!publicClient) {
+    async ({ pollId }: IGenerateProofsArgs): Promise<TCoordinatorServiceResult<IGenerateData>> => {
+      let response: Response;
+      try {
+        response = await fetch(`${PUBLIC_COORDINATOR_SERVICE_URL}/proof/generate`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            poll: pollId,
+            maciContractAddress: PUBLIC_MACI_ADDRESS,
+            mode: EMode.NON_QV,
+            blocksPerBatch: 20,
+            chain: toBackendChainFormat(PUBLIC_CHAIN_NAME),
+          }),
+        });
+      } catch (error) {
         return {
           success: false,
-          error: new Error("Public client not found"),
+          error: new Error(`Failed to generate proofs: ${error}`),
         };
       }
-
-      const publicKey = await getPublicKey();
-      const encryptedHeader = await getAuthorizationHeader(publicKey);
-
-      const response = await fetch(`${baseUrl}/proof/generate`, {
-        method: "POST",
-        headers: {
-          Authorization: encryptedHeader,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          poll: pollId,
-          maciContractAddress,
-          mode: EMode.NON_QV,
-          encryptedCoordinatorPrivateKey,
-          startBlock,
-          endBlock,
-          blocksPerBatch: 20,
-          chain: publicClient.chain.id,
-        }),
-      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -139,65 +98,125 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
       const data = await response.json();
       return {
         success: true,
-        data: GenerateResponseSchema.parse(data),
+        data,
       };
     },
-    [getAuthorizationHeader, getPublicKey, publicClient]
+    []
   );
 
-  const submit = useCallback(
-    async (pollId: number): Promise<ICoordinatorServiceResult<TSubmitResponse>> => {
-      if (!publicClient) {
-        return {
-          success: false,
-          error: new Error("Public client not found"),
-        };
-      }
-
-      const publicKey = await getPublicKey();
-      const encryptedHeader = await getAuthorizationHeader(publicKey);
-
-      const response = await fetch(`${baseUrl}/proof/submit`, {
+  const submit = useCallback(async (pollId: number): Promise<TCoordinatorServiceResult<ITallyData>> => {
+    let response: Response;
+    try {
+      response = await fetch(`${PUBLIC_COORDINATOR_SERVICE_URL}/proof/submit`, {
         method: "POST",
         headers: {
-          Authorization: encryptedHeader,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           pollId,
-          maciContractAddress,
-          chain: publicClient.chain.id,
+          maciContractAddress: PUBLIC_MACI_ADDRESS,
+          chain: toBackendChainFormat(PUBLIC_CHAIN_NAME),
         }),
       });
+    } catch (error) {
+      return {
+        success: false,
+        error: new Error(`Failed to submit: ${error}`),
+      };
+    }
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        const partialErrorMessage = errorData.message
-          ? `${response.status} - ${response.statusText}. ${errorData.message}`
-          : `${response.status} - ${response.statusText}`;
+    if (!response.ok) {
+      const errorData = await response.json();
+      const partialErrorMessage = errorData.message
+        ? `${response.status} - ${response.statusText}. ${errorData.message}`
+        : `${response.status} - ${response.statusText}`;
 
-        return {
-          success: false,
-          error: new Error(`Failed to submit: ${partialErrorMessage}`),
-        };
+      return {
+        success: false,
+        error: new Error(`Failed to submit: ${partialErrorMessage}`),
+      };
+    }
+
+    const data = await response.json();
+    return {
+      success: true,
+      data,
+    };
+  }, []);
+
+  const checkMergeStatus = useCallback(
+    async (pollId: number) => {
+      const { address: pollAddress } = await getPoll({
+        maciAddress: PUBLIC_MACI_ADDRESS,
+        pollId,
+        signer,
+      });
+      const poll = PollFactory.connect(pollAddress, signer);
+      return await poll.stateMerged();
+    },
+    [signer]
+  );
+
+  const finalizeProposal = useCallback(
+    async (pollId: number) => {
+      if (!signer) {
+        console.log("No signer");
+        return;
       }
 
-      const data = await response.json();
-      return {
-        success: true,
-        data: SubmitResponseSchema.parse(data),
-      };
+      // check if poll was already finalized
+      // TODO: what should we do here?
+      const { tally } = await getPollContracts({
+        maciAddress: PUBLIC_MACI_ADDRESS,
+        pollId,
+        signer,
+      });
+      const isTallied = await tally.isTallied();
+      console.log("isTallied", isTallied);
+      /*if (isTallied) {
+        console.log("Poll already finalized");
+        return;
+      }*/
+
+      setFinalizeStatus("merging");
+      const hasMerged = await checkMergeStatus(pollId);
+      if (!hasMerged) {
+        const mergeResult = await merge(pollId);
+        if (!mergeResult.success) {
+          console.log("Failed to merge");
+          return;
+        }
+      }
+      setFinalizeStatus("merged");
+
+      setFinalizeStatus("proving");
+      const proveResult = await generateProofs({
+        pollId,
+      });
+      if (!proveResult.success) {
+        console.log("Failed to generate proofs");
+        return;
+      }
+      setFinalizeStatus("proved");
+
+      setFinalizeStatus("submitting");
+      const submitResult = await submit(pollId);
+      if (!submitResult.success) {
+        console.log("Failed to submit");
+        return;
+      }
+      setFinalizeStatus("submitted");
+      return;
     },
-    [getAuthorizationHeader, getPublicKey, publicClient]
+    [checkMergeStatus, generateProofs, merge, signer, submit]
   );
 
   const value = useMemo<ICoordinatorContextType>(
     () => ({
-      merge,
-      generateProofs,
-      submit,
+      finalizeStatus,
+      finalizeProposal,
     }),
-    [merge, generateProofs, submit]
+    [finalizeStatus, finalizeProposal]
   );
 
   return <CoordinatorContext.Provider value={value as ICoordinatorContextType}>{children}</CoordinatorContext.Provider>;

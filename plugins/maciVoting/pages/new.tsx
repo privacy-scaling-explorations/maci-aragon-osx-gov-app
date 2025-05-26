@@ -77,7 +77,7 @@ export default function Create() {
     setTimeout(() => {
       push("#/");
     }, 1000 * 2);
-  }, [status, createTxHash, isConfirming, isConfirmed, error]);
+  }, [status, createTxHash, isConfirming, isConfirmed, error, push]);
 
   const submitProposal = async () => {
     // Check metadata

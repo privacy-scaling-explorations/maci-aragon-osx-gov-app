@@ -1,32 +1,28 @@
 import { type Keypair } from "@maci-protocol/domainobjs";
-import { type z } from "zod";
+import { IProof, ITallyData } from "@maci-protocol/sdk/browser";
 import { type VoteOption } from "../utils/types";
-import { type GenerateResponseSchema, type SubmitResponseSchema } from "./schemas";
 
 export interface IVoteArgs {
   voteOptionIndex: bigint;
   newVoteWeight: bigint;
 }
 
-export type TGenerateResponse = z.infer<typeof GenerateResponseSchema>;
-export type TSubmitResponse = z.infer<typeof SubmitResponseSchema>;
-export interface ICoordinatorServiceResult<T, E = Error> {
-  success: boolean;
-  data?: T;
-  error?: E;
+export interface IGenerateData {
+  processProofs: IProof[];
+  tallyProofs: IProof[];
+  tallyData: ITallyData;
 }
+export type TCoordinatorServiceResult<T, E = Error> = { success: true; data: T } | { success: false; error: E };
 
 export interface IGenerateProofsArgs {
   pollId: number;
-  encryptedCoordinatorPrivateKey: string;
-  startBlock: number;
-  endBlock: number;
 }
 
+export type FinalizeStatus = "notStarted" | "merging" | "merged" | "proving" | "proved" | "submitting" | "submitted";
+
 export interface ICoordinatorContextType {
-  merge: (pollId: number) => Promise<ICoordinatorServiceResult<boolean>>;
-  generateProofs: (args: IGenerateProofsArgs) => Promise<ICoordinatorServiceResult<TGenerateResponse>>;
-  submit: (pollId: number) => Promise<ICoordinatorServiceResult<TSubmitResponse>>;
+  finalizeStatus: FinalizeStatus;
+  finalizeProposal: (pollId: number) => Promise<void>;
 }
 
 export interface IMaciContextType {

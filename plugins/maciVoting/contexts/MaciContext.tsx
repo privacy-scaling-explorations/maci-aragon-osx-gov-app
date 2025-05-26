@@ -137,7 +137,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       setError("Error signing up");
       setIsLoading(false);
     }
-  }, [isRegistered, maciKeypair, signer]);
+  }, [addAlert, isRegistered, maciKeypair, signer]);
 
   const onJoinPoll = useCallback(
     async (pollId: bigint) => {
@@ -189,7 +189,17 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         pollWasm: artifacts.wasm as unknown as string,
         sgDataArg: DEFAULT_SG_DATA,
         ivcpDataArg: DEFAULT_IVCP_DATA,
+      }).catch((error) => {
+        // eslint-disable-next-line no-console
+        console.log("Error joining poll", error);
+        return;
       });
+
+      if (!joinedPoll) {
+        setError("Error joining poll");
+        setIsLoading(false);
+        return;
+      }
 
       setHasJoinedPoll(true);
       setInitialVoiceCredits(Number(joinedPoll.voiceCredits));
@@ -256,7 +266,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         publicKey: maciKeypair.publicKey.serialize(),
         stateIndex: BigInt(stateIndex),
         voteOptionIndex,
-        nonce: 0n, // should we keep this in local or is it onchain?
+        nonce: 1n,
         pollId,
         newVoteWeight: 1n,
         maciAddress: PUBLIC_MACI_ADDRESS,
@@ -332,6 +342,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         localStorage.removeItem("address");
         setMaciKeypair(undefined);
         setIsRegistered(false);
+        setError(undefined);
         return;
       }
 
@@ -448,9 +459,6 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
           signer,
           startBlock: pollDeployBlock ?? PUBLIC_MACI_DEPLOYMENT_BLOCK,
         });
-
-        console.log(isJoined, voiceCredits, pollStateIndex);
-        console.log(hasJoinedPoll, initialVoiceCredits, pollStateIndex);
 
         setHasJoinedPoll(isJoined);
         setInitialVoiceCredits(Number(voiceCredits));
