@@ -165,6 +165,7 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
       }
 
       // check if poll was already finalized
+      // TODO: what should we do here?
       const { tally } = await getPollContracts({
         maciAddress: PUBLIC_MACI_ADDRESS,
         pollId,
@@ -180,17 +181,13 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
       setFinalizeStatus("merging");
       const hasMerged = await checkMergeStatus(pollId);
       if (!hasMerged) {
-        console.log("Not merged");
         const mergeResult = await merge(pollId);
         if (!mergeResult.success) {
           console.log("Failed to merge");
           return;
         }
       }
-      console.log("Merged");
       setFinalizeStatus("merged");
-
-      console.log("Generating proofs");
 
       setFinalizeStatus("proving");
       const proveResult = await generateProofs({
@@ -201,7 +198,6 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       setFinalizeStatus("proved");
-      console.log("Proved");
 
       setFinalizeStatus("submitting");
       const submitResult = await submit(pollId);
@@ -210,7 +206,6 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       setFinalizeStatus("submitted");
-      console.log("Submitted");
       return;
     },
     [checkMergeStatus, generateProofs, merge, signer, submit]

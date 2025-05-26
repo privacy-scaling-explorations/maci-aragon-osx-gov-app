@@ -1,6 +1,7 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useCoordinator } from "../../hooks/useCoordinator";
 import { Button } from "@aragon/ods";
+import { useAlerts } from "@/context/Alerts";
 
 interface IFinalizeActionProps {
   pollId: number;
@@ -8,6 +9,7 @@ interface IFinalizeActionProps {
 
 export const FinalizeAction: React.FC<IFinalizeActionProps> = ({ pollId }) => {
   const { finalizeStatus, finalizeProposal } = useCoordinator();
+  const { addAlert } = useAlerts();
 
   const finalizationMessage = useMemo(() => {
     switch (finalizeStatus) {
@@ -27,6 +29,46 @@ export const FinalizeAction: React.FC<IFinalizeActionProps> = ({ pollId }) => {
         return "The proofs have been submitted. You can now execute the proposal.";
       default:
         return "";
+    }
+  }, [finalizeStatus]);
+
+  useEffect(() => {
+    if (finalizeStatus === "notStarted") return;
+    if (finalizeStatus === "merging") {
+      addAlert("Votes merging", {
+        description: "The votes are being merged.",
+        type: "info",
+      });
+    }
+    if (finalizeStatus === "merged") {
+      addAlert("Votes merged", {
+        description: "The votes have been merged.",
+        type: "success",
+      });
+    }
+    if (finalizeStatus === "proving") {
+      addAlert("Votes proving", {
+        description: "The votes are being proved.",
+        type: "info",
+      });
+    }
+    if (finalizeStatus === "proved") {
+      addAlert("Votes proved", {
+        description: "The votes have been proved.",
+        type: "success",
+      });
+    }
+    if (finalizeStatus === "submitting") {
+      addAlert("Submitting votes.", {
+        description: "The votes are being submitted.",
+        type: "info",
+      });
+    }
+    if (finalizeStatus === "submitted") {
+      addAlert("Votes submitted", {
+        description: "The votes have been submitted.",
+        type: "success",
+      });
     }
   }, [finalizeStatus]);
 
