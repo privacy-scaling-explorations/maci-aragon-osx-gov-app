@@ -160,18 +160,23 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
   const finalizeProposal = useCallback(
     async (pollId: number) => {
       if (!signer) {
+        // eslint-disable-next-line no-console
         console.log("No signer");
         return;
       }
 
       // check if poll was already finalized
       // TODO: what should we do here?
-      const { tally } = await getPollContracts({
+      const pollContracts = await getPollContracts({
         maciAddress: PUBLIC_MACI_ADDRESS,
         pollId,
         signer,
-      });
-      const isTallied = await tally.isTallied();
+      }).catch(() => setFinalizeStatus("notStarted"));
+      if (!pollContracts) {
+        return;
+      }
+      const isTallied = await pollContracts.tally.isTallied();
+      // eslint-disable-next-line no-console
       console.log("isTallied", isTallied);
       /*if (isTallied) {
         console.log("Poll already finalized");
@@ -179,11 +184,11 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
       }*/
 
       setFinalizeStatus("merging");
-      const hasMerged = await checkMergeStatus(pollId);
+      const hasMerged = await checkMergeStatus(pollId).catch(() => setFinalizeStatus("notStarted"));
       if (!hasMerged) {
         const mergeResult = await merge(pollId);
         if (!mergeResult.success) {
-          console.log("Failed to merge");
+          setFinalizeStatus("notStarted");
           return;
         }
       }
@@ -194,7 +199,7 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
         pollId,
       });
       if (!proveResult.success) {
-        console.log("Failed to generate proofs");
+        setFinalizeStatus("notStarted");
         return;
       }
       setFinalizeStatus("proved");
@@ -202,7 +207,7 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
       setFinalizeStatus("submitting");
       const submitResult = await submit(pollId);
       if (!submitResult.success) {
-        console.log("Failed to submit");
+        setFinalizeStatus("notStarted");
         return;
       }
       setFinalizeStatus("submitted");

@@ -1,4 +1,4 @@
-import { Button, Card, Heading } from "@aragon/ods";
+import { Button, Card, Heading, Spinner } from "@aragon/ods";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMaci } from "../hooks/useMaci";
 
@@ -11,16 +11,17 @@ const MaciCard = () => {
   }, [maciError]);
 
   const buttonMessage = useMemo(() => {
+    if (isLoading) {
+      return <Spinner size="sm" variant="neutral" className="-m-[2px] inline-block" />;
+    }
     if (isRegistered) {
       return "Already signed up";
-    } else {
-      if (!maciKeypair) {
-        return "Generate keys";
-      } else {
-        return "Sign up";
-      }
     }
-  }, [maciKeypair, isRegistered]);
+    if (!maciKeypair) {
+      return "Generate keys";
+    }
+    return "Sign up";
+  }, [maciKeypair, isRegistered, isLoading]);
 
   const onClick = useCallback(async () => {
     if (!maciKeypair) {

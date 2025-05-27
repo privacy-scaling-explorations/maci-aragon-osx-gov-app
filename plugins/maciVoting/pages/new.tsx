@@ -37,6 +37,8 @@ export default function Create() {
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: createTxHash });
   const [actionType, setActionType] = useState<ActionType>(ActionType.Signaling);
 
+  const isLoading = status === "pending" || isConfirming;
+
   const changeActionType = (actionType: ActionType) => {
     setActions([]);
     setActionType(actionType);
@@ -77,6 +79,8 @@ export default function Create() {
     setTimeout(() => {
       push("#/");
     }, 1000 * 2);
+    // adding addAlert causes multiple re-renders of the toast messeage
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, createTxHash, isConfirming, isConfirmed, error, push]);
 
   const submitProposal = async () => {
@@ -316,7 +320,7 @@ export default function Create() {
                 disabled={!actions.length}
                 onClick={() => submitProposal()}
               >
-                Submit proposal
+                {isLoading ? <PleaseWaitSpinner fullMessage="Submitting proposal..." /> : "Submit proposal"}
               </Button>
             </div>
           </Else>

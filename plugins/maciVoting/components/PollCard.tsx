@@ -2,6 +2,7 @@ import { Button, Card, Heading } from "@aragon/ods";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMaci } from "../hooks/useMaci";
 import { VoteOption } from "../utils/types";
+import { PleaseWaitSpinner } from "@/components/please-wait";
 
 const PollCard = ({ pollId }: { pollId: bigint }) => {
   // check if the user joined the poll
@@ -43,9 +44,10 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
       return "Already joined poll";
     }
     if (isLoading) {
-      return "Joining poll...";
+      return <PleaseWaitSpinner fullMessage="Joining poll..." />;
     }
     return "Join poll";
+    // TODO: hide Join poll if we can finalize / or after the sign up window closes whenever that is
   }, [hasJoinedPoll, isLoading]);
 
   return (
@@ -60,17 +62,27 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
             <div className="flex flex-col justify-between gap-y-2">
               <p>Submit your vote anonymously to the poll. Results will be tallied after the voting period ends.</p>
               <div className="flex flex-row gap-x-1">
-                <Button onClick={() => onClickVote(VoteOption.Yes)} disabled={isLoading} size="sm" variant="success">
+                <Button
+                  onClick={() => onClickVote(VoteOption.Yes)}
+                  disabled={isLoading}
+                  size="sm"
+                  variant={isLoading ? "tertiary" : "success"}
+                >
                   Yes
                 </Button>
-                <Button onClick={() => onClickVote(VoteOption.No)} disabled={isLoading} size="sm" variant="critical">
+                <Button
+                  onClick={() => onClickVote(VoteOption.No)}
+                  disabled={isLoading}
+                  size="sm"
+                  variant={isLoading ? "tertiary" : "critical"}
+                >
                   No
                 </Button>
                 <Button
                   onClick={() => onClickVote(VoteOption.Abstain)}
                   disabled={isLoading}
                   size="sm"
-                  variant="warning"
+                  variant={isLoading ? "tertiary" : "warning"}
                 >
                   Abstain
                 </Button>
