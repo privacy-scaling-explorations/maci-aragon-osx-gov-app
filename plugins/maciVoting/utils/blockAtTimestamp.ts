@@ -4,33 +4,39 @@ import { getBlock } from "@wagmi/core";
 import { mainnet } from "viem/chains";
 import { type usePublicClient } from "wagmi";
 
-// This results in a crap ton of requests to the RPC node, so we need a better way.
-export async function getBlockNumberAtTimestamp(
+/* This is the optimized version that uses the latest block to avoid redundant RPC calls. 
+But there's aspects of the problem that should be taken into account. */
+export async function getPastBlockNumberAtTimestamp(
   timestamp: bigint,
-  client: ReturnType<typeof usePublicClient>
+  client: ReturnType<typeof usePublicClient>,
+  latestBlock: any
 ): Promise<bigint> {
-  const latestBlock = await client!.getBlock();
-  const end = latestBlock.number;
+  const latestTimestamp = latestBlock.timestamp;
+  const latestNumber = latestBlock.number;
 
-  async function recursiveSearch(start: bigint, end: bigint): Promise<bigint> {
-    if (start > end) {
-      const closestBlock = await client!.getBlock({ blockNumber: start });
-      return closestBlock?.number ?? latestBlock.number;
-    }
+  const secondsAgo = Number(latestTimestamp - timestamp);
+  const estimatedBlocksAgo = Math.floor(secondsAgo / NEXT_PUBLIC_SECONDS_PER_BLOCK);
+  const margin = Math.floor(Math.max(50, estimatedBlocksAgo * 0.2));
+  let start = latestBlock.number - BigInt(estimatedBlocksAgo + margin);
 
+  if (start < 0n) start = 0n;
+  let end = latestNumber;
+
+  while (start <= end) {
     const mid = (start + end) / 2n;
     const block = await client!.getBlock({ blockNumber: mid });
 
     if (block.timestamp === timestamp) {
       return block.number;
     } else if (block.timestamp < timestamp) {
-      return recursiveSearch(mid + 1n, end);
+      start = mid + 1n;
     } else {
-      return recursiveSearch(start, mid - 1n);
+      end = mid - 1n;
     }
   }
 
-  return recursiveSearch(0n, end);
+  const closestBlock = await client!.getBlock({ blockNumber: end });
+  return closestBlock.number;
 }
 
 export async function getCurrentBlock() {
@@ -49,8 +55,7 @@ export async function getCurrentBlock() {
   return latestBlock;
 }
 
-export async function getFutureBlockNumberAtTimestamp(futureTimestamp: bigint): Promise<bigint> {
-  const latestBlock = await getCurrentBlock();
+export async function getFutureBlockNumberAtTimestamp(futureTimestamp: bigint, latestBlock: any): Promise<bigint> {
   const currentBlockNumber = latestBlock.number;
   const currentTimestamp = latestBlock.timestamp;
 
@@ -61,4 +66,30 @@ export async function getFutureBlockNumberAtTimestamp(futureTimestamp: bigint): 
   const futureBlockNumber = currentBlockNumber + BigInt(estimatedBlocks);
 
   return futureBlockNumber;
+}
+
+/**
+ * Gets the block number at a specific timestamp, handling both past and future timestamps.
+ *
+ * @param timestamp - The target timestamp (in seconds) to find the block number for
+ * @param client - The public client instance from wagmi
+ * @returns Promise<bigint> - The estimated or exact block number at the given timestamp
+ *
+ * @description
+ * - For future timestamps: Uses blockchain speed (NEXT_PUBLIC_SECONDS_PER_BLOCK) to estimate the block number
+ * - For past/current timestamps: Uses binary search with optimization to find the closest block
+ * - Automatically detects whether the timestamp is in the past or future by comparing with current block timestamp
+ */
+export async function getBlockNumberAtTimestamp(
+  timestamp: bigint,
+  client: ReturnType<typeof usePublicClient>
+): Promise<bigint> {
+  const latestBlock = await getCurrentBlock();
+  const currentTimestamp = latestBlock.timestamp;
+
+  if (timestamp > currentTimestamp) {
+    return getFutureBlockNumberAtTimestamp(timestamp, latestBlock);
+  }
+
+  return getPastBlockNumberAtTimestamp(timestamp, client, latestBlock);
 }
