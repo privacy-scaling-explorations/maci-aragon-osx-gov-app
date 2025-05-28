@@ -1,5 +1,5 @@
 import { EMode } from "@maci-protocol/core";
-import { getPoll, getPollContracts, ITallyData, Poll__factory as PollFactory } from "@maci-protocol/sdk/browser";
+import { getPoll, getPollContracts, type ITallyData, Poll__factory as PollFactory } from "@maci-protocol/sdk/browser";
 import { PUBLIC_CHAIN_NAME, PUBLIC_COORDINATOR_SERVICE_URL, PUBLIC_MACI_ADDRESS } from "@/constants";
 import { createContext, type ReactNode, useCallback, useMemo, useState } from "react";
 import {
@@ -72,7 +72,7 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
             poll: pollId,
             maciContractAddress: PUBLIC_MACI_ADDRESS,
             mode: EMode.NON_QV,
-            blocksPerBatch: 20,
+            blocksPerBatch: 1000,
             chain: toBackendChainFormat(PUBLIC_CHAIN_NAME),
           }),
         });
