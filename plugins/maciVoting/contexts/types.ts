@@ -1,5 +1,5 @@
 import { type Keypair } from "@maci-protocol/domainobjs";
-import { IProof, ITallyData } from "@maci-protocol/sdk/browser";
+import { type IProof, type ITallyData } from "@maci-protocol/sdk/browser";
 import { type VoteOption } from "../utils/types";
 
 export interface IVoteArgs {
@@ -18,7 +18,7 @@ export interface IGenerateProofsArgs {
   pollId: number;
 }
 
-export type FinalizeStatus = "notStarted" | "merging" | "merged" | "proving" | "proved" | "submitting" | "submitted";
+export type FinalizeStatus = "notStarted" | "merging" | "proving" | "submitting" | "submitted";
 
 export interface ICoordinatorContextType {
   finalizeStatus: FinalizeStatus;

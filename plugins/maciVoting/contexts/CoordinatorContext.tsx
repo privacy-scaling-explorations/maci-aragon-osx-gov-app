@@ -11,6 +11,7 @@ import {
 } from "./types";
 import { useEthersSigner } from "../hooks/useEthersSigner";
 import { toBackendChainFormat } from "../utils/chains";
+import { useAlerts } from "@/context/Alerts";
 
 export const CoordinatorContext = createContext<ICoordinatorContextType | undefined>(undefined);
 
@@ -18,6 +19,7 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
   const [finalizeStatus, setFinalizeStatus] = useState<FinalizeStatus>("notStarted");
 
   const signer = useEthersSigner();
+  const { addAlert } = useAlerts();
 
   const merge = useCallback(async (pollId: number): Promise<TCoordinatorServiceResult<boolean>> => {
     let response: Response;
@@ -189,10 +191,17 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
         const mergeResult = await merge(pollId);
         if (!mergeResult.success) {
           setFinalizeStatus("notStarted");
+          addAlert("Failed to merge", {
+            description: "Failed to merge. Please try again.",
+            type: "error",
+          });
           return;
         }
       }
-      setFinalizeStatus("merged");
+      addAlert("Votes merged", {
+        description: "The votes have been merged.",
+        type: "success",
+      });
 
       setFinalizeStatus("proving");
       const proveResult = await generateProofs({
@@ -200,20 +209,35 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
       });
       if (!proveResult.success) {
         setFinalizeStatus("notStarted");
+        addAlert("Failed to generate proofs", {
+          description: "The proofs have not been generated. Please try again.",
+          type: "error",
+        });
         return;
       }
-      setFinalizeStatus("proved");
+      addAlert("Votes proved", {
+        description: "The votes have been proved.",
+        type: "success",
+      });
 
       setFinalizeStatus("submitting");
       const submitResult = await submit(pollId);
       if (!submitResult.success) {
         setFinalizeStatus("notStarted");
+        addAlert("Failed to submit proofs", {
+          description: "The proofs have not been submitted. Please try again.",
+          type: "error",
+        });
         return;
       }
       setFinalizeStatus("submitted");
+      addAlert("Votes submitted", {
+        description: "The votes have been submitted.",
+        type: "success",
+      });
       return;
     },
-    [checkMergeStatus, generateProofs, merge, signer, submit]
+    [addAlert, checkMergeStatus, generateProofs, merge, signer, submit]
   );
 
   const value = useMemo<ICoordinatorContextType>(

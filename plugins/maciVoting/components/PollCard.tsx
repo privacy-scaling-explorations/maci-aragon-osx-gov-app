@@ -3,15 +3,39 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMaci } from "../hooks/useMaci";
 import { VoteOption } from "../utils/types";
 import { PleaseWaitSpinner } from "@/components/please-wait";
+import { PUBLIC_MACI_ADDRESS } from "@/constants";
+import { getPoll } from "@maci-protocol/sdk/browser";
+import { useEthersSigner } from "../hooks/useEthersSigner";
 
 const PollCard = ({ pollId }: { pollId: bigint }) => {
   // check if the user joined the poll
   const { setPollId, onJoinPoll, onVote, isRegistered, hasJoinedPoll, isLoading, error: maciError } = useMaci();
+  const signer = useEthersSigner();
   const [error, setError] = useState<string | undefined>(undefined);
+  const [voteEnded, setVoteEnded] = useState(false);
+
+  const disabled = isLoading || voteEnded;
 
   useEffect(() => {
     setError(maciError);
   }, [maciError]);
+
+  useEffect(() => {
+    if (!signer) {
+      return;
+    }
+
+    const checkVoteEnded = async () => {
+      const poll = await getPoll({
+        maciAddress: PUBLIC_MACI_ADDRESS,
+        pollId,
+        signer,
+      });
+      setVoteEnded(Number(poll.endDate) < Date.now() * 1000);
+    };
+
+    checkVoteEnded();
+  }, [voteEnded, setVoteEnded, pollId, signer]);
 
   useEffect(() => {
     setPollId(pollId);
@@ -64,25 +88,25 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
               <div className="flex flex-row gap-x-1">
                 <Button
                   onClick={() => onClickVote(VoteOption.Yes)}
-                  disabled={isLoading}
+                  disabled={disabled}
                   size="sm"
-                  variant={isLoading ? "tertiary" : "success"}
+                  variant={disabled ? "tertiary" : "success"}
                 >
                   Yes
                 </Button>
                 <Button
                   onClick={() => onClickVote(VoteOption.No)}
-                  disabled={isLoading}
+                  disabled={disabled}
                   size="sm"
-                  variant={isLoading ? "tertiary" : "critical"}
+                  variant={disabled ? "tertiary" : "critical"}
                 >
                   No
                 </Button>
                 <Button
                   onClick={() => onClickVote(VoteOption.Abstain)}
-                  disabled={isLoading}
+                  disabled={disabled}
                   size="sm"
-                  variant={isLoading ? "tertiary" : "warning"}
+                  variant={disabled ? "tertiary" : "warning"}
                 >
                   Abstain
                 </Button>
