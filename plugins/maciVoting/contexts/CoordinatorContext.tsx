@@ -6,7 +6,6 @@ import {
   type TCoordinatorServiceResult,
   type IGenerateData,
   type ICoordinatorContextType,
-  type IGenerateProofsArgs,
   type FinalizeStatus,
 } from "./types";
 import { useEthersSigner } from "../hooks/useEthersSigner";
@@ -15,6 +14,34 @@ import { useAlerts } from "@/context/Alerts";
 
 export const CoordinatorContext = createContext<ICoordinatorContextType | undefined>(undefined);
 
+async function makeCoordinatorServicePostRequest<T>(url: string, body: string): Promise<TCoordinatorServiceResult<T>> {
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      const errorMessage = errorData.message
+        ? `${response.status} - ${response.statusText}. ${errorData.message}`
+        : `${response.status} - ${response.statusText}`;
+      return { success: false, error: new Error(`Failed to submit: ${errorMessage}`) };
+    }
+
+    const data = await response.json();
+    return { success: true, data };
+  } catch (error) {
+    return {
+      success: false,
+      error: new Error(`Failed to merge: ${error}`),
+    };
+  }
+}
+
 export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
   const [finalizeStatus, setFinalizeStatus] = useState<FinalizeStatus>("notStarted");
 
@@ -22,128 +49,38 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
   const { addAlert } = useAlerts();
 
   const merge = useCallback(async (pollId: number): Promise<TCoordinatorServiceResult<boolean>> => {
-    let response: Response;
-    try {
-      response = await fetch(`${PUBLIC_COORDINATOR_SERVICE_URL}/proof/merge`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          maciContractAddress: PUBLIC_MACI_ADDRESS,
-          pollId,
-          chain: toBackendChainFormat(PUBLIC_CHAIN_NAME),
-        }),
-      });
-    } catch (error) {
-      return {
-        success: false,
-        error: new Error(`Failed to merge: ${error}`),
-      };
-    }
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      const errorMessage = errorData.message
-        ? `${response.status} - ${response.statusText}. ${errorData.message}`
-        : `${response.status} - ${response.statusText}`;
-
-      return {
-        success: false,
-        error: new Error(`Failed to merge: ${errorMessage}`),
-      };
-    }
-
-    const data = await response.json();
-    return {
-      success: true,
-      data: Boolean(data),
-    };
+    return await makeCoordinatorServicePostRequest<boolean>(
+      `${PUBLIC_COORDINATOR_SERVICE_URL}/proof/merge`,
+      JSON.stringify({
+        maciContractAddress: PUBLIC_MACI_ADDRESS,
+        pollId,
+        chain: toBackendChainFormat(PUBLIC_CHAIN_NAME),
+      })
+    );
   }, []);
 
-  const generateProofs = useCallback(
-    async ({ pollId }: IGenerateProofsArgs): Promise<TCoordinatorServiceResult<IGenerateData>> => {
-      let response: Response;
-      try {
-        response = await fetch(`${PUBLIC_COORDINATOR_SERVICE_URL}/proof/generate`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            poll: pollId,
-            maciContractAddress: PUBLIC_MACI_ADDRESS,
-            mode: EMode.NON_QV,
-            blocksPerBatch: 1000,
-            chain: toBackendChainFormat(PUBLIC_CHAIN_NAME),
-          }),
-        });
-      } catch (error) {
-        return {
-          success: false,
-          error: new Error(`Failed to generate proofs: ${error}`),
-        };
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        const partialErrorMessage = errorData.message
-          ? `${response.status} - ${response.statusText}. ${errorData.message}`
-          : `${response.status} - ${response.statusText}`;
-
-        return {
-          success: false,
-          error: new Error(`Failed to generate proofs: ${partialErrorMessage}`),
-        };
-      }
-
-      const data = await response.json();
-      return {
-        success: true,
-        data,
-      };
-    },
-    []
-  );
+  const generateProofs = useCallback(async (pollId: number): Promise<TCoordinatorServiceResult<IGenerateData>> => {
+    return await makeCoordinatorServicePostRequest<IGenerateData>(
+      `${PUBLIC_COORDINATOR_SERVICE_URL}/proof/generate`,
+      JSON.stringify({
+        poll: pollId,
+        maciContractAddress: PUBLIC_MACI_ADDRESS,
+        mode: EMode.NON_QV,
+        blocksPerBatch: 1000,
+        chain: toBackendChainFormat(PUBLIC_CHAIN_NAME),
+      })
+    );
+  }, []);
 
   const submit = useCallback(async (pollId: number): Promise<TCoordinatorServiceResult<ITallyData>> => {
-    let response: Response;
-    try {
-      response = await fetch(`${PUBLIC_COORDINATOR_SERVICE_URL}/proof/submit`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          pollId,
-          maciContractAddress: PUBLIC_MACI_ADDRESS,
-          chain: toBackendChainFormat(PUBLIC_CHAIN_NAME),
-        }),
-      });
-    } catch (error) {
-      return {
-        success: false,
-        error: new Error(`Failed to submit: ${error}`),
-      };
-    }
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      const partialErrorMessage = errorData.message
-        ? `${response.status} - ${response.statusText}. ${errorData.message}`
-        : `${response.status} - ${response.statusText}`;
-
-      return {
-        success: false,
-        error: new Error(`Failed to submit: ${partialErrorMessage}`),
-      };
-    }
-
-    const data = await response.json();
-    return {
-      success: true,
-      data,
-    };
+    return await makeCoordinatorServicePostRequest<ITallyData>(
+      `${PUBLIC_COORDINATOR_SERVICE_URL}/proof/submit`,
+      JSON.stringify({
+        pollId,
+        maciContractAddress: PUBLIC_MACI_ADDRESS,
+        chain: toBackendChainFormat(PUBLIC_CHAIN_NAME),
+      })
+    );
   }, []);
 
   const checkMergeStatus = useCallback(
@@ -159,6 +96,34 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
     [signer]
   );
 
+  const executeStep = useCallback(
+    async <T,>(
+      status: FinalizeStatus,
+      step: "merge" | "prove" | "submit",
+      func: () => Promise<TCoordinatorServiceResult<T>>
+    ) => {
+      setFinalizeStatus(status);
+      const result = await func();
+      if (!result.success) {
+        setFinalizeStatus("notStarted");
+        addAlert(`Failed to ${step}`, {
+          description: `Failed to ${step}. Please try again.`,
+          type: "error",
+        });
+        return;
+      }
+
+      const msg = {
+        merge: ["Votes merged", "The votes have been merged."],
+        prove: ["Votes proved", "The votes have been proved."],
+        submit: ["Votes submitted", "The votes have been submitted."],
+      } as const;
+
+      addAlert(msg[step][0], { description: msg[step][1], type: "success" });
+    },
+    [addAlert]
+  );
+
   const finalizeProposal = useCallback(
     async (pollId: number) => {
       if (!signer) {
@@ -167,69 +132,26 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // check if poll was already finalized
-      // TODO: what should we do here?
       const pollContracts = await getPollContracts({
         maciAddress: PUBLIC_MACI_ADDRESS,
         pollId,
         signer,
-      }).catch(() => setFinalizeStatus("notStarted"));
-      if (!pollContracts) {
+      });
+
+      const isTallied = await pollContracts.tally.isTallied();
+      if (isTallied) {
+        console.log("Poll already finalized");
+        setFinalizeStatus("notStarted");
         return;
       }
-      const isTallied = await pollContracts.tally.isTallied();
-      // eslint-disable-next-line no-console
-      console.log("isTallied", isTallied);
-      /*if (isTallied) {
-        console.log("Poll already finalized");
-        return;
-      }*/
 
-      setFinalizeStatus("merging");
       const hasMerged = await checkMergeStatus(pollId).catch(() => setFinalizeStatus("notStarted"));
       if (!hasMerged) {
-        const mergeResult = await merge(pollId);
-        if (!mergeResult.success) {
-          setFinalizeStatus("notStarted");
-          addAlert("Failed to merge", {
-            description: "Failed to merge. Please try again.",
-            type: "error",
-          });
-          return;
-        }
+        await executeStep("merging", "merge", () => merge(pollId));
       }
-      addAlert("Votes merged", {
-        description: "The votes have been merged.",
-        type: "success",
-      });
+      await executeStep("proving", "prove", () => generateProofs(pollId));
+      await executeStep("submitting", "submit", () => submit(pollId));
 
-      setFinalizeStatus("proving");
-      const proveResult = await generateProofs({
-        pollId,
-      });
-      if (!proveResult.success) {
-        setFinalizeStatus("notStarted");
-        addAlert("Failed to generate proofs", {
-          description: "The proofs have not been generated. Please try again.",
-          type: "error",
-        });
-        return;
-      }
-      addAlert("Votes proved", {
-        description: "The votes have been proved.",
-        type: "success",
-      });
-
-      setFinalizeStatus("submitting");
-      const submitResult = await submit(pollId);
-      if (!submitResult.success) {
-        setFinalizeStatus("notStarted");
-        addAlert("Failed to submit proofs", {
-          description: "The proofs have not been submitted. Please try again.",
-          type: "error",
-        });
-        return;
-      }
       setFinalizeStatus("submitted");
       addAlert("Votes submitted", {
         description: "The votes have been submitted.",
@@ -237,7 +159,7 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
       });
       return;
     },
-    [addAlert, checkMergeStatus, generateProofs, merge, signer, submit]
+    [addAlert, checkMergeStatus, executeStep, generateProofs, merge, signer, submit]
   );
 
   const value = useMemo<ICoordinatorContextType>(

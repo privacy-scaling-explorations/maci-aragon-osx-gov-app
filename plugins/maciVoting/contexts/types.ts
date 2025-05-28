@@ -14,10 +14,6 @@ export interface IGenerateData {
 }
 export type TCoordinatorServiceResult<T, E = Error> = { success: true; data: T } | { success: false; error: E };
 
-export interface IGenerateProofsArgs {
-  pollId: number;
-}
-
 export type FinalizeStatus = "notStarted" | "merging" | "proving" | "submitting" | "submitted";
 
 export interface ICoordinatorContextType {
