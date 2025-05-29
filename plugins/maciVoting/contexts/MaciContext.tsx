@@ -237,8 +237,8 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      if (!stateIndex) {
-        setError("State index not found");
+      if (!pollStateIndex) {
+        setError("Poll state index not found");
         setIsLoading(false);
         return;
       }
@@ -264,7 +264,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
 
       await publish({
         publicKey: maciKeypair.publicKey.serialize(),
-        stateIndex: BigInt(stateIndex),
+        stateIndex: BigInt(pollStateIndex),
         voteOptionIndex,
         nonce: 1n,
         pollId,
@@ -282,7 +282,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         type: "success",
       });
     },
-    [addAlert, hasJoinedPoll, maciKeypair, pollId, signer, stateIndex]
+    [addAlert, hasJoinedPoll, maciKeypair, pollId, signer, pollStateIndex]
   );
 
   // check if user is connected
