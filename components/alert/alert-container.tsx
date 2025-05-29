@@ -41,13 +41,9 @@ function resolveDescription(alert: IAlert) {
   return (
     <>
       <span className="mt-1 block text-sm">{alert.description}</span>
-      <a href={alert.explorerLink} target="_blank">
-        <div className="flex flex-row text-xs text-primary-200 underline">
-          <div className="">Show transaction</div>
-          <div>
-            <Icon className="ml-2 mt-1" size="sm" icon={IconType.LINK_EXTERNAL} />
-          </div>
-        </div>
+      <a href={alert.explorerLink} target="_blank" className="flex items-center text-xs text-primary-200 underline">
+        <span>Show transaction</span>
+        <Icon className="ml-2" size="sm" icon={IconType.LINK_EXTERNAL} />
       </a>
     </>
   );

@@ -318,7 +318,6 @@ export default function Create() {
                 disabled={!actions.length}
                 onClick={() => submitProposal()}
               >
-                {/* TODO: This shows up in a non loading state inbetween submitting transaction and loading to new page */}
                 {isLoading ? <PleaseWaitSpinner fullMessage="Submitting proposal..." /> : "Submit proposal"}
               </Button>
             </div>

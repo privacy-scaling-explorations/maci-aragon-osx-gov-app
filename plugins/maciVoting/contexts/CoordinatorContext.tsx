@@ -15,6 +15,7 @@ import { useAlerts } from "@/context/Alerts";
 export const CoordinatorContext = createContext<ICoordinatorContextType | undefined>(undefined);
 
 async function makeCoordinatorServicePostRequest<T>(url: string, body: string): Promise<TCoordinatorServiceResult<T>> {
+  const type = url.split("/").pop() ?? "finalize";
   try {
     const response = await fetch(url, {
       method: "POST",
@@ -29,7 +30,7 @@ async function makeCoordinatorServicePostRequest<T>(url: string, body: string): 
       const errorMessage = errorData.message
         ? `${response.status} - ${response.statusText}. ${errorData.message}`
         : `${response.status} - ${response.statusText}`;
-      return { success: false, error: new Error(`Failed to submit: ${errorMessage}`) };
+      return { success: false, error: new Error(`Failed to ${type} proofs: ${errorMessage}`) };
     }
 
     const data = await response.json();
@@ -37,7 +38,7 @@ async function makeCoordinatorServicePostRequest<T>(url: string, body: string): 
   } catch (error) {
     return {
       success: false,
-      error: new Error(`Failed to merge: ${error}`),
+      error: new Error(`Failed to ${type}: ${error}`),
     };
   }
 }

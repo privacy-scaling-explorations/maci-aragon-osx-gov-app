@@ -16,7 +16,9 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
   const [voteStartDate, setVoteStartDate] = useState(0);
   const [voteEnded, setVoteEnded] = useState(false);
 
-  const disabled = isLoading || voteEnded;
+  const disabled = useMemo(() => {
+    return isLoading || voteEnded;
+  }, [isLoading, voteEnded]);
 
   useEffect(() => {
     setError(maciError);
@@ -77,7 +79,6 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
       return <PleaseWaitSpinner fullMessage="Joining poll..." />;
     }
     return "Join poll";
-    // TODO: hide Join poll if we can finalize / or after the sign up window closes whenever that is
   }, [hasJoinedPoll, isLoading]);
 
   if (voteEnded)
@@ -111,8 +112,8 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
         </div>
         <div className="flex flex-col justify-between gap-y-2">
           <p>
-            In order to submit your vote you need to join the poll using your locally generated MACI public key and any
-            wallet you want.
+            In order to submit your vote you need to join the poll using your locally generated MACI public key and your
+            authorized wallet.
           </p>
           <Button onClick={onClickJoinPoll} disabled={hasJoinedPoll || isLoading}>
             {buttonMessage}
@@ -129,7 +130,10 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
           <p className="text-sm text-critical-500">{error}</p>
         </div>
         <div className="flex flex-col justify-between gap-y-2">
-          <p>Submit your vote anonymously to the poll. Results will be tallied after the voting period ends.</p>
+          <p>
+            Submit your vote anonymously to the poll using any wallet. Results will be tallied after the voting period
+            ends.
+          </p>
           {voteStartDate > Math.round(Date.now() / 1000) &&
             `The vote will start on ${unixTimestampToDate(voteStartDate)}`}
           <div className="flex flex-row gap-x-1">
