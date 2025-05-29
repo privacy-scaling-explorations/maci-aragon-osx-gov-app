@@ -76,9 +76,7 @@ export default function Create() {
       txHash: createTxHash,
     });
 
-    setTimeout(() => {
-      push("#/");
-    }, 1000 * 2);
+    push("#/");
     // adding addAlert causes multiple re-renders of the toast messeage
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, createTxHash, isConfirming, isConfirmed, error, push]);
@@ -320,6 +318,7 @@ export default function Create() {
                 disabled={!actions.length}
                 onClick={() => submitProposal()}
               >
+                {/* TODO: This shows up in a non loading state inbetween submitting transaction and loading to new page */}
                 {isLoading ? <PleaseWaitSpinner fullMessage="Submitting proposal..." /> : "Submit proposal"}
               </Button>
             </div>

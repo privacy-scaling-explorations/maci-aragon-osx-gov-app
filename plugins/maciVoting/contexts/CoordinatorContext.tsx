@@ -1,5 +1,5 @@
 import { EMode } from "@maci-protocol/core";
-import { getPoll, getPollContracts, type ITallyData, Poll__factory as PollFactory } from "@maci-protocol/sdk/browser";
+import { getPoll, type ITallyData, Poll__factory as PollFactory } from "@maci-protocol/sdk/browser";
 import { PUBLIC_CHAIN_NAME, PUBLIC_COORDINATOR_SERVICE_URL, PUBLIC_MACI_ADDRESS } from "@/constants";
 import { createContext, type ReactNode, useCallback, useMemo, useState } from "react";
 import {
@@ -96,70 +96,78 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
     [signer]
   );
 
-  const executeStep = useCallback(
-    async <T,>(
-      status: FinalizeStatus,
-      step: "merge" | "prove" | "submit",
-      func: () => Promise<TCoordinatorServiceResult<T>>
-    ) => {
-      setFinalizeStatus(status);
-      const result = await func();
-      if (!result.success) {
-        setFinalizeStatus("notStarted");
-        addAlert(`Failed to ${step}`, {
-          description: `Failed to ${step}. Please try again.`,
-          type: "error",
-        });
-        return;
-      }
-
-      const msg = {
-        merge: ["Votes merged", "The votes have been merged."],
-        prove: ["Votes proved", "The votes have been proved."],
-        submit: ["Votes submitted", "The votes have been submitted."],
-      } as const;
-
-      addAlert(msg[step][0], { description: msg[step][1], type: "success" });
-    },
-    [addAlert]
-  );
-
   const finalizeProposal = useCallback(
     async (pollId: number) => {
       if (!signer) {
         // eslint-disable-next-line no-console
         console.log("No signer");
-        return;
       }
 
-      const pollContracts = await getPollContracts({
-        maciAddress: PUBLIC_MACI_ADDRESS,
-        pollId,
-        signer,
-      });
-
-      const isTallied = await pollContracts.tally.isTallied();
-      if (isTallied) {
-        console.log("Poll already finalized");
-        setFinalizeStatus("notStarted");
-        return;
-      }
+      // TODO: update to latest sdk to use latest tally functionality
+      // const pollContracts = await getPollContracts({
+      //   maciAddress: PUBLIC_MACI_ADDRESS,
+      //   pollId,
+      //   signer,
+      // });
+      // const isTallied = await pollContracts.tally.isTallied();
+      // if (isTallied) {
+      //   console.log("Poll already finalized");
+      //   setFinalizeStatus("notStarted");
+      //   return;
+      // }
 
       const hasMerged = await checkMergeStatus(pollId).catch(() => setFinalizeStatus("notStarted"));
       if (!hasMerged) {
-        await executeStep("merging", "merge", () => merge(pollId));
+        setFinalizeStatus("merging");
+        const mergeResult = await merge(pollId);
+        if (!mergeResult.success) {
+          setFinalizeStatus("notStarted");
+          addAlert("Failed to merge", {
+            description: "Failed to merge. Please try again.",
+            type: "error",
+          });
+          return;
+        }
+        addAlert("Poll merged", {
+          description: "The poll has been merged.",
+          type: "success",
+        });
       }
-      await executeStep("proving", "prove", () => generateProofs(pollId));
-      await executeStep("submitting", "submit", () => submit(pollId));
 
-      setFinalizeStatus("submitted");
+      setFinalizeStatus("proving");
+      const proveResult = await generateProofs(pollId);
+      if (!proveResult.success) {
+        setFinalizeStatus("notStarted");
+        addAlert("Failed to generate proofs", {
+          description: "Failed to generate proofs. Please try again.",
+          type: "error",
+        });
+        return;
+      }
+      addAlert("Proofs generated", {
+        description: "The proofs have been generated.",
+        type: "success",
+      });
+
+      setFinalizeStatus("submitting");
+      const submitResult = await submit(pollId);
+      if (!submitResult.success) {
+        setFinalizeStatus("notStarted");
+        addAlert("Failed to submit proofs", {
+          description: "Failed to submit proofs. Please try again.",
+          type: "error",
+        });
+        return;
+      }
       addAlert("Votes submitted", {
         description: "The votes have been submitted.",
         type: "success",
       });
+
+      setFinalizeStatus("submitted");
       return;
     },
-    [addAlert, checkMergeStatus, executeStep, generateProofs, merge, signer, submit]
+    [addAlert, checkMergeStatus, generateProofs, merge, signer, submit]
   );
 
   const value = useMemo<ICoordinatorContextType>(
