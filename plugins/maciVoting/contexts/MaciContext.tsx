@@ -5,7 +5,6 @@ import {
   signup,
   generateKeypair,
   getJoinedUserData,
-  MACI__factory as MACIFactory,
   generateMaciStateTreeWithEndKey,
   downloadPollJoiningArtifactsBrowser,
   joinPoll,
@@ -51,7 +50,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
   const [pollStateIndex, setPollStateIndex] = useState<string | undefined>(undefined);
 
   // Wallet variables
-  const { address, isConnected } = useAccount();
+  const { isConnected } = useAccount();
   const { signMessageAsync } = useSignMessage();
   const signer = useEthersSigner();
   const publicClient = usePublicClient();
@@ -77,7 +76,6 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
 
       // save private key in localStorage
       localStorage.setItem("maciPrivateKey", keypair.privateKey.serialize());
-      localStorage.setItem("address", address ?? "");
 
       setMaciKeypair(keypair);
       setIsLoading(false);
@@ -91,7 +89,14 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
       return;
     }
-  }, [address, isConnected, signMessageAsync]);
+  }, [isConnected, signMessageAsync]);
+
+  const deleteKeypair = useCallback(() => {
+    localStorage.removeItem("maciPrivateKey");
+    setMaciKeypair(undefined);
+    setIsRegistered(false);
+    setError(undefined);
+  }, []);
 
   const onSignup = useCallback(async () => {
     setError(undefined);
@@ -191,13 +196,19 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         sgDataArg: DEFAULT_SG_DATA,
         ivcpDataArg: DEFAULT_IVCP_DATA,
       }).catch((error) => {
+        if (error.message.includes("0xa3281672")) {
+          // 0xa3281672 -> signature of BalanceTooLow()
+          setError(`Address balance is too low to join the poll`);
+          setIsLoading(false);
+          return;
+        }
         // eslint-disable-next-line no-console
         console.log("Error joining poll", error);
+        setError("Error joining poll");
         return;
       });
 
       if (!joinedPoll) {
-        setError("Error joining poll");
         setIsLoading(false);
         return;
       }
@@ -318,7 +329,6 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     setError(undefined);
     if (!isConnected) {
-      setMaciKeypair(undefined);
       setIsRegistered(false);
       setStateIndex(undefined);
     }
@@ -365,16 +375,6 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
   // check if maci private key is in localStorage
   useEffect(() => {
     (async () => {
-      const savedAddress = localStorage.getItem("address");
-      if (savedAddress !== address) {
-        localStorage.removeItem("maciPrivateKey");
-        localStorage.removeItem("address");
-        setMaciKeypair(undefined);
-        setIsRegistered(false);
-        setError(undefined);
-        return;
-      }
-
       const maciPrivateKey = localStorage.getItem("maciPrivateKey");
       if (!maciPrivateKey) {
         await createKeypair();
@@ -384,7 +384,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       const keypair = new Keypair(PrivateKey.deserialize(maciPrivateKey));
       setMaciKeypair(keypair);
     })();
-  }, [address, createKeypair]);
+  }, [createKeypair]);
 
   // check if user is registered
   useEffect(() => {
@@ -435,9 +435,8 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
-        const maciContract = MACIFactory.connect(PUBLIC_MACI_ADDRESS, signer);
         const stateTree = await generateMaciStateTreeWithEndKey({
-          maciContract,
+          maciContractAddress: PUBLIC_MACI_ADDRESS,
           signer,
           userPublicKey: maciKeypair.publicKey,
           startBlock: PUBLIC_MACI_DEPLOYMENT_BLOCK,
@@ -526,6 +525,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       maciKeypair,
       stateIndex,
       createKeypair,
+      deleteKeypair,
       onSignup,
       onJoinPoll,
       onVote,
@@ -541,6 +541,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       maciKeypair,
       stateIndex,
       createKeypair,
+      deleteKeypair,
       onSignup,
       onJoinPoll,
       onVote,

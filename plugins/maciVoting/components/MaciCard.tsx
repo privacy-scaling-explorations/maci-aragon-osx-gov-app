@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMaci } from "../hooks/useMaci";
 
 const MaciCard = () => {
-  const { onSignup, maciKeypair, isRegistered, isLoading, createKeypair, error: maciError } = useMaci();
+  const { onSignup, maciKeypair, isRegistered, isLoading, createKeypair, deleteKeypair, error: maciError } = useMaci();
   const [error, setError] = useState<string | undefined>(undefined);
 
   useEffect(() => {
@@ -41,6 +41,11 @@ const MaciCard = () => {
       <Button onClick={onClick} disabled={isRegistered ?? isLoading}>
         {buttonMessage}
       </Button>
+      {!!maciKeypair && (
+        <Button size="sm" variant="secondary" disabled={!maciKeypair} onClick={deleteKeypair}>
+          Delete keys
+        </Button>
+      )}
     </Card>
   );
 };
