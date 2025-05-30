@@ -17,8 +17,8 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
   const [voteEnded, setVoteEnded] = useState(false);
 
   const disabled = useMemo(() => {
-    return isLoading || voteEnded;
-  }, [isLoading, voteEnded]);
+    return isLoading || voteEnded || voteStartDate > Math.round(Date.now() / 1000);
+  }, [isLoading, voteEnded, voteStartDate]);
 
   useEffect(() => {
     setError(maciError);

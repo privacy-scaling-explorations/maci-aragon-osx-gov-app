@@ -14,11 +14,11 @@ const MaciCard = () => {
     if (isLoading) {
       return <Spinner size="sm" variant="neutral" className="-m-[2px] inline-block" />;
     }
-    if (isRegistered) {
+    if (isRegistered && maciKeypair) {
       return "Already signed up";
     }
     return "Sign up";
-  }, [isRegistered, isLoading]);
+  }, [isLoading, isRegistered, maciKeypair]);
 
   const onClick = useCallback(async () => {
     await onSignup();
@@ -34,7 +34,7 @@ const MaciCard = () => {
       <Button onClick={onClick} disabled={isRegistered ?? isLoading}>
         {buttonMessage}
       </Button>
-      {!!maciKeypair && (
+      {!!maciKeypair && isRegistered && (
         <Button size="sm" variant="secondary" disabled={!maciKeypair} onClick={deleteKeypair}>
           Delete keys
         </Button>

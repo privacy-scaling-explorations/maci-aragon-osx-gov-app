@@ -32,12 +32,11 @@ export default function Create() {
   const [endDate, setEndDate] = useState<string>("");
   const [endTime, setEndTime] = useState<string>("");
   const [actions, setActions] = useState<Action[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const { addAlert } = useAlerts();
   const { writeContract: createProposalWrite, data: createTxHash, status, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: createTxHash });
   const [actionType, setActionType] = useState<ActionType>(ActionType.Signaling);
-
-  const isLoading = status === "pending" || isConfirming;
 
   const changeActionType = (actionType: ActionType) => {
     setActions([]);
@@ -82,71 +81,77 @@ export default function Create() {
   }, [status, createTxHash, isConfirming, isConfirmed, error, push]);
 
   const submitProposal = async () => {
-    // Check metadata
-    if (!title.trim())
-      return addAlert("Invalid proposal details", {
-        description: "Please, enter a title",
-        type: "error",
+    try {
+      setIsLoading(true);
+      // Check metadata
+      if (!title.trim())
+        return addAlert("Invalid proposal details", {
+          description: "Please, enter a title",
+          type: "error",
+        });
+
+      if (!summary.trim())
+        return addAlert("Invalid proposal details", {
+          description: "Please, enter a summary of what the proposal is about",
+          type: "error",
+        });
+
+      // Check the action
+      switch (actionType) {
+        case ActionType.Signaling:
+          break;
+        case ActionType.Withdrawal:
+          if (!actions.length) {
+            return addAlert("Invalid proposal details", {
+              description: "Please ensure that the withdrawal address and the amount to transfer are valid",
+              type: "error",
+            });
+          }
+          break;
+        default:
+          if (!actions.length || !actions[0].data || actions[0].data === "0x") {
+            return addAlert("Invalid proposal details", {
+              description: "Please ensure that the values of the action to execute are complete and correct",
+              type: "error",
+            });
+          }
+      }
+
+      const proposalMetadataJsonObject = {
+        title,
+        summary,
+        description,
+        resources: [{ name: "Aragon", url: "https://aragon.org" }],
+      };
+      const blob = new Blob([JSON.stringify(proposalMetadataJsonObject)], {
+        type: "application/json",
       });
 
-    if (!summary.trim())
-      return addAlert("Invalid proposal details", {
-        description: "Please, enter a summary of what the proposal is about",
-        type: "error",
-      });
+      const ipfsPin = await uploadToPinata(blob);
 
-    // Check the action
-    switch (actionType) {
-      case ActionType.Signaling:
-        break;
-      case ActionType.Withdrawal:
-        if (!actions.length) {
-          return addAlert("Invalid proposal details", {
-            description: "Please ensure that the withdrawal address and the amount to transfer are valid",
-            type: "error",
-          });
-        }
-        break;
-      default:
-        if (!actions.length || !actions[0].data || actions[0].data === "0x") {
-          return addAlert("Invalid proposal details", {
-            description: "Please ensure that the values of the action to execute are complete and correct",
-            type: "error",
-          });
-        }
+      if (!startDate || !endDate) {
+        addAlert("You need to specify the start date and end date of the voting period", {
+          timeout: 4 * 1000,
+        });
+        return;
+      }
+
+      const startDateTime = Math.floor(new Date(`${startDate}T${startTime ? startTime : "00:00:00"}`).getTime() / 1000);
+      const endDateTime = Math.floor(new Date(`${endDate}T${endTime ? endTime : "00:00:00"}`).getTime() / 1000);
+
+      if (chainId !== PUBLIC_CHAIN.id) await switchChainAsync({ chainId: PUBLIC_CHAIN.id });
+      createProposalWrite({
+        chainId: PUBLIC_CHAIN.id,
+        abi: MaciVotingAbi,
+        address: PUBLIC_MACI_VOTING_PLUGIN_ADDRESS,
+        functionName: "createProposal",
+        // args: _metadata, _actions, _allowFailureMap, _startDate, _endDate
+        args: [toHex(ipfsPin), actions, BigInt(0), BigInt(startDateTime), BigInt(endDateTime)],
+      });
+      setIsLoading(false);
+    } catch {
+      setIsLoading(false);
     }
-
-    const proposalMetadataJsonObject = {
-      title,
-      summary,
-      description,
-      resources: [{ name: "Aragon", url: "https://aragon.org" }],
-    };
-    const blob = new Blob([JSON.stringify(proposalMetadataJsonObject)], {
-      type: "application/json",
-    });
-
-    const ipfsPin = await uploadToPinata(blob);
-
-    if (!startDate || !endDate) {
-      addAlert("You need to specify the start date and end date of the voting period", {
-        timeout: 4 * 1000,
-      });
-      return;
-    }
-
-    const startDateTime = Math.floor(new Date(`${startDate}T${startTime ? startTime : "00:00:00"}`).getTime() / 1000);
-    const endDateTime = Math.floor(new Date(`${endDate}T${endTime ? endTime : "00:00:00"}`).getTime() / 1000);
-
-    if (chainId !== PUBLIC_CHAIN.id) await switchChainAsync({ chainId: PUBLIC_CHAIN.id });
-    createProposalWrite({
-      chainId: PUBLIC_CHAIN.id,
-      abi: MaciVotingAbi,
-      address: PUBLIC_MACI_VOTING_PLUGIN_ADDRESS,
-      functionName: "createProposal",
-      // args: _metadata, _actions, _allowFailureMap, _startDate, _endDate
-      args: [toHex(ipfsPin), actions, BigInt(0), BigInt(startDateTime), BigInt(endDateTime)],
-    });
   };
 
   const handleTitleInput = (event: React.ChangeEvent<HTMLInputElement>) => {
