@@ -56,41 +56,6 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
   const publicClient = usePublicClient();
 
   // Functions
-  const createKeypair = useCallback(async () => {
-    setError(undefined);
-    setIsLoading(true);
-
-    if (!isConnected) {
-      setError("Wallet not connected");
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      const signature = await signMessageAsync({
-        message: `Sign to generate MACI keypair at ${window.location.origin}`,
-      });
-      const signatureHash = keccak256(stringToHex(signature));
-      const { privateKey } = generateKeypair({ seed: BigInt(signatureHash) });
-      const keypair = new Keypair(PrivateKey.deserialize(privateKey));
-
-      // save private key in localStorage
-      localStorage.setItem("maciPrivateKey", keypair.privateKey.serialize());
-
-      setMaciKeypair(keypair);
-      setIsLoading(false);
-      setError(undefined);
-      return keypair;
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Error creating keypair", error);
-      setMaciKeypair(undefined);
-      setError("Error creating keypair");
-      setIsLoading(false);
-      return;
-    }
-  }, [isConnected, signMessageAsync]);
-
   const deleteKeypair = useCallback(() => {
     localStorage.removeItem("maciPrivateKey");
     setMaciKeypair(undefined);
@@ -101,6 +66,12 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
   const onSignup = useCallback(async () => {
     setError(undefined);
     setIsLoading(true);
+
+    if (!isConnected) {
+      setError("Wallet not connected");
+      setIsLoading(false);
+      return;
+    }
 
     if (isRegistered) {
       setError("Already registered");
@@ -114,36 +85,69 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    if (!maciKeypair) {
-      setError("Keypair not found");
+    let keypair = maciKeypair;
+    if (!keypair) {
+      try {
+        const signature = await signMessageAsync({
+          message: `Sign to generate MACI keypair at ${window.location.origin}`,
+        });
+        const signatureHash = keccak256(stringToHex(signature));
+        const { privateKey } = generateKeypair({ seed: BigInt(signatureHash) });
+        keypair = new Keypair(PrivateKey.deserialize(privateKey));
+        localStorage.setItem("maciPrivateKey", keypair.privateKey.serialize());
+
+        setMaciKeypair(keypair);
+      } catch (error) {
+        setError("Error creating keypair");
+        setIsLoading(false);
+        return;
+      }
+    }
+
+    let isUserRegistered = false;
+    try {
+      const { isRegistered: _isRegistered } = await getSignedupUserData({
+        maciAddress: PUBLIC_MACI_ADDRESS,
+        maciPublicKey: keypair.publicKey.serialize(),
+        signer,
+      });
+
+      isUserRegistered = _isRegistered;
+      setIsRegistered(_isRegistered);
+    } catch (error) {
+      setError("Error checking if user is registered");
       setIsLoading(false);
+      return;
+    }
+
+    if (isUserRegistered) {
+      setIsLoading(false);
+      addAlert("You're already signed up to MACI contract", {
+        description: "Now you can join any poll of this MACI contract",
+        type: "success",
+      });
       return;
     }
 
     try {
       const { stateIndex: _stateIndex } = await signup({
         maciAddress: PUBLIC_MACI_ADDRESS,
-        maciPublicKey: maciKeypair.publicKey.serialize(),
+        maciPublicKey: keypair.publicKey.serialize(),
         sgData: DEFAULT_SG_DATA,
         signer,
       });
       setStateIndex(_stateIndex);
       setIsRegistered(true);
       setIsLoading(false);
-      setError(undefined);
-
       addAlert("Signed up to MACI contract", {
         description: "Now you can join any poll of this MACI contract",
         type: "success",
       });
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.log(error);
-      setIsRegistered(false);
       setError("Error signing up");
       setIsLoading(false);
     }
-  }, [addAlert, isRegistered, maciKeypair, signer]);
+  }, [addAlert, isConnected, isRegistered, maciKeypair, signMessageAsync, signer]);
 
   const onJoinPoll = useCallback(
     async (pollId: bigint) => {
@@ -377,14 +381,13 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
     (async () => {
       const maciPrivateKey = localStorage.getItem("maciPrivateKey");
       if (!maciPrivateKey) {
-        await createKeypair();
         return;
       }
 
       const keypair = new Keypair(PrivateKey.deserialize(maciPrivateKey));
       setMaciKeypair(keypair);
     })();
-  }, [createKeypair]);
+  }, []);
 
   // check if user is registered
   useEffect(() => {
@@ -445,8 +448,6 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         const localInclusionProof = stateTree.signUpTree.generateProof(Number(stateIndex));
 
         setInclusionProof(localInclusionProof);
-
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
         // eslint-disable-next-line no-console
         console.log(error);
@@ -491,8 +492,6 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         setHasJoinedPoll(isJoined);
         setInitialVoiceCredits(Number(voiceCredits));
         setPollStateIndex(pollStateIndex);
-
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
         // eslint-disable-next-line no-console
         console.log(error);
@@ -524,7 +523,6 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       isRegistered,
       maciKeypair,
       stateIndex,
-      createKeypair,
       deleteKeypair,
       onSignup,
       onJoinPoll,
@@ -540,7 +538,6 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       isRegistered,
       maciKeypair,
       stateIndex,
-      createKeypair,
       deleteKeypair,
       onSignup,
       onJoinPoll,
