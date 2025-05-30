@@ -19,6 +19,7 @@ import { useEthersSigner } from "../hooks/useEthersSigner";
 import { keccak256, stringToHex, type Hex } from "viem";
 import { VoteOption } from "../utils/types";
 import { useAlerts } from "@/context/Alerts";
+import { unixTimestampToDate } from "../utils/formatPollDate";
 
 export const DEFAULT_SG_DATA = "0x0000000000000000000000000000000000000000000000000000000000000000";
 export const DEFAULT_IVCP_DATA = "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -262,27 +263,55 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
           break;
       }
 
-      await publish({
-        publicKey: maciKeypair.publicKey.serialize(),
-        stateIndex: BigInt(pollStateIndex),
-        voteOptionIndex,
-        nonce: 1n,
-        pollId,
-        newVoteWeight: 1n,
+      const poll = await getPoll({
         maciAddress: PUBLIC_MACI_ADDRESS,
-        privateKey: maciKeypair.privateKey.serialize(),
+        pollId,
         signer,
       });
+      if (!poll) {
+        return;
+      }
+
+      try {
+        await publish({
+          publicKey: maciKeypair.publicKey.serialize(),
+          stateIndex: BigInt(pollStateIndex),
+          voteOptionIndex,
+          nonce: 1n,
+          pollId,
+          newVoteWeight: 1n,
+          maciAddress: PUBLIC_MACI_ADDRESS,
+          privateKey: maciKeypair.privateKey.serialize(),
+          signer,
+        });
+      } catch (error: any) {
+        let message: string | undefined;
+        if (error.message.includes("0xa47dcd48")) {
+          const endDate = poll.endDate;
+          message = `The voting period finished at ${unixTimestampToDate(endDate)}. You can no longer submit a vote.`;
+        }
+        if (error.message.includes("0x256eadc8")) {
+          const startDate = poll.startDate;
+          message = `The voting period has not begun. It will start at ${unixTimestampToDate(startDate)}`;
+        }
+
+        setIsLoading(false);
+        setError(message ?? "There was an error submitting your vote");
+        addAlert("Failure submitting vote", {
+          description: message ?? "Error submitting vote",
+          type: "error",
+        });
+        return;
+      }
 
       setIsLoading(false);
       setError(undefined);
-
       addAlert("Vote submitted", {
         description: "Your vote is in the ballot. You can submit another vote to override it.",
         type: "success",
       });
     },
-    [addAlert, hasJoinedPoll, maciKeypair, pollId, signer, pollStateIndex]
+    [signer, maciKeypair, pollId, pollStateIndex, hasJoinedPoll, addAlert]
   );
 
   // check if user is connected
