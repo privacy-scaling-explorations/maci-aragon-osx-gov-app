@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMaci } from "../hooks/useMaci";
 
 const MaciCard = () => {
-  const { onSignup, maciKeypair, isRegistered, isLoading, createKeypair, deleteKeypair, error: maciError } = useMaci();
+  const { onSignup, maciKeypair, isRegistered, isLoading, deleteKeypair, error: maciError } = useMaci();
   const [error, setError] = useState<string | undefined>(undefined);
 
   useEffect(() => {
@@ -17,19 +17,12 @@ const MaciCard = () => {
     if (isRegistered) {
       return "Already signed up";
     }
-    if (!maciKeypair) {
-      return "Generate keys";
-    }
     return "Sign up";
-  }, [maciKeypair, isRegistered, isLoading]);
+  }, [isRegistered, isLoading]);
 
   const onClick = useCallback(async () => {
-    if (!maciKeypair) {
-      await createKeypair();
-    } else {
-      await onSignup();
-    }
-  }, [createKeypair, maciKeypair, onSignup]);
+    await onSignup();
+  }, [onSignup]);
 
   return (
     <Card className="flex flex-col gap-y-4 p-6 shadow-neutral">

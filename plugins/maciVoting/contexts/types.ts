@@ -32,7 +32,6 @@ export interface IMaciContextType {
   isRegistered?: boolean;
   maciKeypair?: Keypair;
   stateIndex?: string;
-  createKeypair: () => Promise<Keypair | undefined>;
   deleteKeypair: () => void;
   onSignup: () => Promise<void>;
   onJoinPoll: (pollId: bigint) => Promise<void>;
