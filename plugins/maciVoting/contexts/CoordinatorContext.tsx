@@ -66,7 +66,7 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
       JSON.stringify({
         poll: pollId,
         maciContractAddress: PUBLIC_MACI_ADDRESS,
-        mode: EMode.NON_QV,
+        mode: EMode.FULL,
         blocksPerBatch: 1000,
         chain: toBackendChainFormat(PUBLIC_CHAIN_NAME),
       })
