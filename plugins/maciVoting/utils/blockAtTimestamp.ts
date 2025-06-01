@@ -5,8 +5,19 @@ import { mainnet } from "viem/chains";
 import { type usePublicClient } from "wagmi";
 import type { Block } from "viem";
 
-/* This is the optimized version that uses the latest block to avoid redundant RPC calls. 
-But there's aspects of the problem that should be taken into account. */
+/*
+ * Optimized binary search algorithm to find the closest block number to a given timestamp,
+ * using the latest block as a starting point to minimize redundant RPC calls.
+ *
+ * ⚠️ However, this approach becomes less efficient when querying timestamps far in the past.
+ * The binary search always starts from the latest block, so for very old timestamps, it may
+ * need to scan through a large number of blocks, resulting in many slow RPC calls.
+ *
+ * 💡 To improve performance in these cases, a cache or index of known block timestamps (e.g.,
+ * weekly checkpoints or a simple block → timestamp map) could be used as a smarter starting
+ * point for the binary search. This would allow the algorithm to skip large ranges of blocks
+ * and converge much faster on the correct result.
+ */
 export async function getPastBlockNumberAtTimestamp(
   timestamp: bigint,
   client: ReturnType<typeof usePublicClient>,
