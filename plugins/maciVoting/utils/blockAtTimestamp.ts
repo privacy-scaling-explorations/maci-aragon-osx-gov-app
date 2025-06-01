@@ -3,21 +3,26 @@ import { config } from "@/context/Web3Modal";
 import { getBlock } from "@wagmi/core";
 import { mainnet } from "viem/chains";
 import { type usePublicClient } from "wagmi";
+import type { Block } from "viem";
 
 /* This is the optimized version that uses the latest block to avoid redundant RPC calls. 
 But there's aspects of the problem that should be taken into account. */
 export async function getPastBlockNumberAtTimestamp(
   timestamp: bigint,
   client: ReturnType<typeof usePublicClient>,
-  latestBlock: any
+  latestBlock: Block
 ): Promise<bigint> {
   const latestTimestamp = latestBlock.timestamp;
   const latestNumber = latestBlock.number;
 
+  if (!latestNumber) {
+    throw new Error("Latest block number is null");
+  }
+
   const secondsAgo = Number(latestTimestamp - timestamp);
   const estimatedBlocksAgo = Math.floor(secondsAgo / NEXT_PUBLIC_SECONDS_PER_BLOCK);
   const margin = Math.floor(Math.max(50, estimatedBlocksAgo * 0.2));
-  let start = latestBlock.number - BigInt(estimatedBlocksAgo + margin);
+  let start = latestNumber - BigInt(estimatedBlocksAgo + margin);
 
   if (start < 0n) start = 0n;
   let end = latestNumber;
