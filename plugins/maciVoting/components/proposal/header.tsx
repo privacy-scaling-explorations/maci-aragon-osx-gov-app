@@ -15,6 +15,7 @@ import classNames from "classnames";
 import { type ReactNode } from "react";
 import { Publisher } from "@/components/publisher";
 import { getSimpleRelativeTimeFromDate } from "@/utils/dates";
+import { unixTimestampToDate } from "../../utils/formatPollDate";
 
 interface ProposalHeaderProps {
   proposalNumber: number;
@@ -42,18 +43,55 @@ const ProposalHeader: React.FC<ProposalHeaderProps> = ({ proposal }) => {
           <p className="text-lg leading-normal text-neutral-500">{proposal.summary}</p>
         </div>
         {/* Metadata */}
-        <div className="flex flex-wrap gap-x-10 gap-y-2">
+        <div className="flex flex-wrap items-start gap-x-10 gap-y-2">
           <div className="flex items-center gap-x-2">
             <AvatarIcon icon={IconType.APP_MEMBERS} size="sm" variant="primary" />
             <Publisher publisher={[{ address: proposal.creator }]} />
           </div>
-          <div className="flex items-center gap-x-2">
-            <AvatarIcon icon={IconType.APP_MEMBERS} size="sm" variant="primary" />
-            <div className="flex gap-x-1 text-base leading-tight ">
-              <span className="text-neutral-800">
-                {getSimpleRelativeTimeFromDate(dayjs(Number(proposal.parameters.endDate) * 1000))}
-              </span>
-              <span className="text-neutral-500">left until expiration</span>
+
+          <div className="flex flex-col items-start gap-y-2">
+            <div className="flex items-center gap-x-2">
+              <AvatarIcon icon={IconType.CALENDAR} size="sm" variant="primary" />
+              <div className="flex gap-x-1 text-base leading-tight ">
+                <span className="text-neutral-500">Start date: </span>
+                <span className="text-neutral-800">{unixTimestampToDate(proposal.parameters.startDate)}</span>
+              </div>
+            </div>
+            {proposal.parameters.startDate > Date.now() / 1000 && (
+              <div className="flex items-center">
+                <span className="w-8"></span>
+                <span className="text-neutral-500">
+                  In {getSimpleRelativeTimeFromDate(dayjs(Number(proposal.parameters.startDate) * 1000))} minutes
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col items-start gap-y-2">
+            <div className="flex items-center gap-x-2">
+              <AvatarIcon icon={IconType.CALENDAR} size="sm" variant="primary" />
+              <div className="flex gap-x-1 text-base leading-tight ">
+                <span className="text-neutral-500">End date: </span>
+                <span className="text-neutral-800">{unixTimestampToDate(proposal.parameters.endDate)}</span>
+              </div>
+            </div>
+            {proposal.parameters.endDate > Date.now() / 1000 && (
+              <div className="flex items-center">
+                <span className="w-8"></span>
+                <span className="text-neutral-500">
+                  In {getSimpleRelativeTimeFromDate(dayjs(Number(proposal.parameters.endDate) * 1000))} minutes
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col items-start gap-y-2">
+            <div className="flex items-center gap-x-2">
+              <AvatarIcon icon={IconType.APP_PROPOSALS} size="sm" variant={tagVariant} />
+              <div className="flex gap-x-1 text-base leading-tight ">
+                <span className="text-neutral-500">Proposal status: </span>
+                <span className="text-neutral-800">{status}</span>
+              </div>
             </div>
           </div>
         </div>
