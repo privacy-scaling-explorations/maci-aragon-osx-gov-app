@@ -14,11 +14,11 @@ const MaciCard = () => {
     if (isLoading) {
       return <Spinner size="sm" variant="neutral" className="-m-[2px] inline-block" />;
     }
-    if (isRegistered) {
+    if (isRegistered && maciKeypair) {
       return "Already signed up";
     }
     return "Sign up";
-  }, [isRegistered, isLoading]);
+  }, [isLoading, isRegistered, maciKeypair]);
 
   const onClick = useCallback(async () => {
     await onSignup();
