@@ -36,4 +36,5 @@ export interface IMaciContextType {
   onSignup: () => Promise<void>;
   onJoinPoll: (pollId: bigint) => Promise<void>;
   onVote: (option: VoteOption) => Promise<void>;
+  onInvalidateVote: (pollId: bigint) => Promise<void>;
 }

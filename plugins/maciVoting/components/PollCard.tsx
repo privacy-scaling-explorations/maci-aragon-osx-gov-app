@@ -1,25 +1,29 @@
-import { Button, Card, Heading } from "@aragon/ods";
+import { Button, Card, Heading, Tooltip } from "@aragon/ods";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMaci } from "../hooks/useMaci";
 import { PleaseWaitSpinner } from "@/components/please-wait";
 import { unixTimestampToDate } from "../utils/formatPollDate";
 import VoteOptions from "./VoteOptions";
 import { PUBLIC_MACI_ADDRESS } from "@/constants";
-import { getPoll, invalidateVotes } from "@maci-protocol/sdk/browser";
+import { getPoll } from "@maci-protocol/sdk/browser";
 import { useEthersSigner } from "../hooks/useEthersSigner";
-import { PrivateKey } from "@maci-protocol/domainobjs";
 
 const PollCard = ({ pollId }: { pollId: bigint }) => {
   // check if the user joined the poll
-  const { setPollId, onJoinPoll, isRegistered, hasJoinedPoll, isLoading, error: maciError } = useMaci();
+  const {
+    setPollId,
+    onJoinPoll,
+    onInvalidateVote,
+    isRegistered,
+    hasJoinedPoll,
+    isLoading,
+    error: maciError,
+  } = useMaci();
   const signer = useEthersSigner();
 
   const [error, setError] = useState<string | undefined>(undefined);
   const [voteStartDate, setVoteStartDate] = useState(0);
   const [voteEnded, setVoteEnded] = useState(false);
-
-  // FIXME: use correct value
-  const hasVoted = true;
 
   useEffect(() => {
     setError(maciError);
@@ -65,25 +69,14 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
     await onJoinPoll(pollId);
   }, [hasJoinedPoll, isRegistered, onJoinPoll, pollId]);
 
-  // FIXME: test
-  const onInvalidateVote = useCallback(async () => {
-    if (!signer) {
+  const onClickInvalidateVote = useCallback(async () => {
+    if (!hasJoinedPoll) {
+      setError("You need to join first");
       return;
     }
 
-    // FIXME: use correct value
-    const maciPrivateKey = PrivateKey.deserialize("privateKey");
-    // FIXME: use correct value
-    const stateIndex = 0n;
-
-    await invalidateVotes({
-      maciAddress: PUBLIC_MACI_ADDRESS,
-      pollId,
-      signer,
-      maciPrivateKey,
-      stateIndex,
-    });
-  }, []);
+    await onInvalidateVote(pollId);
+  }, [hasJoinedPoll, onInvalidateVote, pollId]);
 
   const buttonMessage = useMemo(() => {
     if (hasJoinedPoll) {
@@ -151,12 +144,14 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
           {voteStartDate > Math.round(Date.now() / 1000) &&
             `The vote will start on ${unixTimestampToDate(voteStartDate)}`}
           <VoteOptions voteEnded={voteEnded} voteStartDate={voteStartDate} />
-          {isRegistered && hasJoinedPoll && hasVoted && (
+          {isRegistered && hasJoinedPoll && (
             <div>
-              <p>Once you have voted, you can invalidate your vote</p>
-              <Button onClick={onInvalidateVote} disabled={isLoading}>
-                Invalidate vote
-              </Button>
+              <p>Once you have voted, you can invalidate your vote if you believe you have been compromised</p>
+              <Tooltip content="Invalidating your vote will remove your vote from the poll. Use this functionality if you believe your key has been compromised or you have been bribed.">
+                <Button onClick={onClickInvalidateVote} disabled={isLoading} className="mt-3" variant="critical">
+                  Invalidate vote
+                </Button>
+              </Tooltip>
             </div>
           )}
         </div>

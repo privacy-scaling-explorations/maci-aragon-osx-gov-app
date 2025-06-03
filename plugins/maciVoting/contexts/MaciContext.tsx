@@ -11,6 +11,7 @@ import {
   getPoll,
   publish,
   getSignedupUserData,
+  invalidateVotes,
 } from "@maci-protocol/sdk/browser";
 import { PUBLIC_MACI_ADDRESS, PUBLIC_MACI_DEPLOYMENT_BLOCK } from "@/constants";
 import { useAccount, usePublicClient, useSignMessage } from "wagmi";
@@ -294,7 +295,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
           voteOptionIndex,
           nonce: 1n,
           pollId,
-          newVoteWeight: 1n,
+          newVoteWeight: BigInt(initialVoiceCredits),
           maciAddress: PUBLIC_MACI_ADDRESS,
           privateKey: maciKeypair.privateKey.serialize(),
           signer,
@@ -325,6 +326,81 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         description: "Your vote is in the ballot. You can submit another vote to override it.",
         type: "success",
       });
+    },
+    [signer, maciKeypair, pollId, pollStateIndex, hasJoinedPoll, addAlert]
+  );
+
+  /**
+   * Callback that calls invalidateVotes
+   */
+  const onInvalidateVote = useCallback(
+    async (pollId: bigint) => {
+      setError(undefined);
+      setIsLoading(true);
+
+      if (!signer) {
+        setError("Signer not found");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!maciKeypair) {
+        setError("Keypair not found");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!pollStateIndex) {
+        setError("Poll state index not found");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!hasJoinedPoll) {
+        setError("User has not joined the poll");
+        setIsLoading(false);
+        return;
+      }
+
+      const poll = await getPoll({
+        maciAddress: PUBLIC_MACI_ADDRESS,
+        pollId,
+        signer,
+      });
+
+      if (!poll) {
+        return;
+      }
+
+      try {
+        await invalidateVotes({
+          maciAddress: PUBLIC_MACI_ADDRESS,
+          pollId,
+          signer,
+          maciPrivateKey: maciKeypair.privateKey,
+          stateIndex: BigInt(pollStateIndex),
+        });
+
+        addAlert("Vote invalidated", {
+          description: "Your vote was invalidated. You can submit a new vote or pass this proposal.",
+          type: "success",
+        });
+        setIsLoading(false);
+      } catch (error: any) {
+        let message: string | undefined;
+        if (error.message.includes("0xa47dcd48")) {
+          const endDate = poll.endDate;
+          message = `The voting period finished at ${unixTimestampToDate(endDate)}. You can no longer invalidate your vote.`;
+        }
+        if (error.message.includes("0x256eadc8")) {
+          const startDate = poll.startDate;
+          message = `The voting period has not begun. It will start at ${unixTimestampToDate(startDate)}`;
+        }
+
+        setIsLoading(false);
+        setError(message ?? "There was an error invalidating your vote");
+        return;
+      }
     },
     [signer, maciKeypair, pollId, pollStateIndex, hasJoinedPoll, addAlert]
   );
@@ -527,6 +603,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       onSignup,
       onJoinPoll,
       onVote,
+      onInvalidateVote,
     }),
     [
       isLoading,
@@ -542,6 +619,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       onSignup,
       onJoinPoll,
       onVote,
+      onInvalidateVote,
     ]
   );
 
