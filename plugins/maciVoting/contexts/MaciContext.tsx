@@ -294,7 +294,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
           voteOptionIndex,
           nonce: 1n,
           pollId,
-          newVoteWeight: 1n,
+          newVoteWeight: BigInt(initialVoiceCredits),
           maciAddress: PUBLIC_MACI_ADDRESS,
           privateKey: maciKeypair.privateKey.serialize(),
           signer,
@@ -326,7 +326,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         type: "success",
       });
     },
-    [signer, maciKeypair, pollId, pollStateIndex, hasJoinedPoll, addAlert]
+    [signer, maciKeypair, pollId, pollStateIndex, hasJoinedPoll, addAlert, initialVoiceCredits]
   );
 
   // check if user is connected
