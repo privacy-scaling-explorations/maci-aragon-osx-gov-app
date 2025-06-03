@@ -1,24 +1,25 @@
 import { Button, Card, Heading } from "@aragon/ods";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMaci } from "../hooks/useMaci";
-import { VoteOption } from "../utils/types";
 import { PleaseWaitSpinner } from "@/components/please-wait";
-import { PUBLIC_MACI_ADDRESS } from "@/constants";
-import { getPoll } from "@maci-protocol/sdk/browser";
-import { useEthersSigner } from "../hooks/useEthersSigner";
 import { unixTimestampToDate } from "../utils/formatPollDate";
+import VoteOptions from "./VoteOptions";
+import { PUBLIC_MACI_ADDRESS } from "@/constants";
+import { getPoll, invalidateVotes } from "@maci-protocol/sdk/browser";
+import { useEthersSigner } from "../hooks/useEthersSigner";
+import { PrivateKey } from "@maci-protocol/domainobjs";
 
 const PollCard = ({ pollId }: { pollId: bigint }) => {
   // check if the user joined the poll
-  const { setPollId, onJoinPoll, onVote, isRegistered, hasJoinedPoll, isLoading, error: maciError } = useMaci();
+  const { setPollId, onJoinPoll, isRegistered, hasJoinedPoll, isLoading, error: maciError } = useMaci();
   const signer = useEthersSigner();
+
   const [error, setError] = useState<string | undefined>(undefined);
   const [voteStartDate, setVoteStartDate] = useState(0);
   const [voteEnded, setVoteEnded] = useState(false);
 
-  const disabled = useMemo(() => {
-    return isLoading || voteEnded || voteStartDate > Math.round(Date.now() / 1000);
-  }, [isLoading, voteEnded, voteStartDate]);
+  // FIXME: use correct value
+  const hasVoted = true;
 
   useEffect(() => {
     setError(maciError);
@@ -64,12 +65,25 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
     await onJoinPoll(pollId);
   }, [hasJoinedPoll, isRegistered, onJoinPoll, pollId]);
 
-  const onClickVote = useCallback(
-    async (option: VoteOption) => {
-      await onVote(option);
-    },
-    [onVote]
-  );
+  // FIXME: test
+  const onInvalidateVote = useCallback(async () => {
+    if (!signer) {
+      return;
+    }
+
+    // FIXME: use correct value
+    const maciPrivateKey = PrivateKey.deserialize("privateKey");
+    // FIXME: use correct value
+    const stateIndex = 0n;
+
+    await invalidateVotes({
+      maciAddress: PUBLIC_MACI_ADDRESS,
+      pollId,
+      signer,
+      maciPrivateKey,
+      stateIndex,
+    });
+  }, []);
 
   const buttonMessage = useMemo(() => {
     if (hasJoinedPoll) {
@@ -136,32 +150,15 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
           </p>
           {voteStartDate > Math.round(Date.now() / 1000) &&
             `The vote will start on ${unixTimestampToDate(voteStartDate)}`}
-          <div className="flex flex-row gap-x-1">
-            <Button
-              onClick={() => onClickVote(VoteOption.Yes)}
-              disabled={disabled}
-              size="sm"
-              variant={disabled ? "tertiary" : "success"}
-            >
-              Yes
-            </Button>
-            <Button
-              onClick={() => onClickVote(VoteOption.No)}
-              disabled={disabled}
-              size="sm"
-              variant={disabled ? "tertiary" : "critical"}
-            >
-              No
-            </Button>
-            <Button
-              onClick={() => onClickVote(VoteOption.Abstain)}
-              disabled={disabled}
-              size="sm"
-              variant={disabled ? "tertiary" : "warning"}
-            >
-              Abstain
-            </Button>
-          </div>
+          <VoteOptions voteEnded={voteEnded} voteStartDate={voteStartDate} />
+          {isRegistered && hasJoinedPoll && hasVoted && (
+            <div>
+              <p>Once you have voted, you can invalidate your vote</p>
+              <Button onClick={onInvalidateVote} disabled={isLoading}>
+                Invalidate vote
+              </Button>
+            </div>
+          )}
         </div>
       </Card>
     );

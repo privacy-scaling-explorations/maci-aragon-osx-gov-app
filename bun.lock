@@ -8,8 +8,8 @@
         "@layerzerolabs/lz-definitions": "^2.3.27",
         "@layerzerolabs/lz-v2-utilities": "^2.3.27",
         "@layerzerolabs/scan-client": "^0.0.8",
-        "@maci-protocol/domainobjs": "0.0.0-ci.8198a70",
-        "@maci-protocol/sdk": "0.0.0-ci.8198a70",
+        "@maci-protocol/domainobjs": "0.0.0-ci.7cbf9c7",
+        "@maci-protocol/sdk": "0.0.0-ci.7cbf9c7",
         "@react-native-async-storage/async-storage": "^1.23.1",
         "@shazow/whatsabi": "0.11.0",
         "@tanstack/query-async-storage-persister": "^5.49.1",
@@ -312,15 +312,15 @@
 
     "@lit/reactive-element": ["@lit/reactive-element@2.1.0", "", { "dependencies": { "@lit-labs/ssr-dom-shim": "^1.2.0" } }, "sha512-L2qyoZSQClcBmq0qajBVbhYEcG6iK0XfLn66ifLe/RfC0/ihpc+pl0Wdn8bJ8o+hj38cG0fGXRgSS20MuXn7qA=="],
 
-    "@maci-protocol/contracts": ["@maci-protocol/contracts@0.0.0-ci.8198a70", "", { "dependencies": { "@excubiae/contracts": "^0.11.0", "@maci-protocol/core": "0.0.0-ci.8198a70", "@maci-protocol/crypto": "0.0.0-ci.8198a70", "@maci-protocol/domainobjs": "0.0.0-ci.8198a70", "@nomicfoundation/hardhat-ethers": "^3.0.8", "@nomicfoundation/hardhat-toolbox": "^5.0.0", "@nomicfoundation/hardhat-verify": "^2.0.14", "@openzeppelin/contracts": "^5.3.0", "@openzeppelin/merkle-tree": "^1.0.8", "@pcd/util": "^0.9.0", "@zk-kit/imt.sol": "2.0.0-beta.12", "@zk-kit/lean-imt": "^2.2.3", "circomlibjs": "^0.1.7", "ethers": "^6.14.0", "hardhat": "^2.24.1", "lowdb": "^1.0.0", "snarkjs": "^0.7.5", "solady": "^0.1.18", "solidity-docgen": "^0.6.0-beta.36", "uuid": "^11.1.0" }, "bin": { "maci-contracts": "./build/ts/index.js" } }, "sha512-fTRyrL/R32r2nDlKAqdyvPd/szGQgHxz071HgZwbnA0OX1cnF5e/p0B2nM+eYn/Ztz8aYRROggGiyTbLBK771w=="],
+    "@maci-protocol/contracts": ["@maci-protocol/contracts@0.0.0-ci.7cbf9c7", "", { "dependencies": { "@excubiae/contracts": "^0.11.0", "@maci-protocol/core": "0.0.0-ci.7cbf9c7", "@maci-protocol/crypto": "0.0.0-ci.7cbf9c7", "@maci-protocol/domainobjs": "0.0.0-ci.7cbf9c7", "@nomicfoundation/hardhat-ethers": "^3.0.8", "@nomicfoundation/hardhat-toolbox": "^5.0.0", "@nomicfoundation/hardhat-verify": "^2.0.14", "@openzeppelin/contracts": "^5.3.0", "@openzeppelin/merkle-tree": "^1.0.8", "@pcd/util": "^0.9.0", "@zk-kit/imt.sol": "2.0.0-beta.12", "@zk-kit/lean-imt": "^2.2.3", "circomlibjs": "^0.1.7", "ethers": "^6.14.0", "hardhat": "^2.24.1", "lowdb": "^1.0.0", "snarkjs": "^0.7.5", "solady": "^0.1.18", "solidity-docgen": "^0.6.0-beta.36", "uuid": "^11.1.0" }, "bin": { "maci-contracts": "./build/ts/index.js" } }, "sha512-nSO0O72dD1UbrDpxp7oXweHm/6o9ZOXwUxyTBo4LpnJIzLHofR1zuwC9anMVtyfuneR6xhpNwpSq9252lH3p+A=="],
 
-    "@maci-protocol/core": ["@maci-protocol/core@0.0.0-ci.8198a70", "", { "dependencies": { "@maci-protocol/crypto": "0.0.0-ci.8198a70", "@maci-protocol/domainobjs": "0.0.0-ci.8198a70", "@zk-kit/lean-imt": "^2.2.3", "lodash": "^4.17.21" } }, "sha512-uMsnOmcD1mP3+KPOMbj1LZYVted5oSgMO5glK7lSaXMHkNnNMXwYwv2whcy2uNB6lBp/VtcFpbqKWwvmp7CaLw=="],
+    "@maci-protocol/core": ["@maci-protocol/core@0.0.0-ci.7cbf9c7", "", { "dependencies": { "@maci-protocol/crypto": "0.0.0-ci.7cbf9c7", "@maci-protocol/domainobjs": "0.0.0-ci.7cbf9c7", "@zk-kit/lean-imt": "^2.2.3", "lodash": "^4.17.21" } }, "sha512-B4TUHklTPJi9XkE4s90PNBjF5ctH0DbIt8mXLeH9s9+FfSYt9eSUh9RwPBAiWZBDKn/WThMcMbKJcONU/7SesA=="],
 
-    "@maci-protocol/crypto": ["@maci-protocol/crypto@0.0.0-ci.8198a70", "", { "dependencies": { "@zk-kit/baby-jubjub": "^1.0.3", "@zk-kit/eddsa-poseidon": "^1.1.0", "@zk-kit/poseidon-cipher": "^0.3.2", "ethers": "^6.14.0" } }, "sha512-kPTdcVqOlG9BJ5Dwp84whfT7can6yWG+fJ42KXIHHILa8/JZ1N1QyvImkTW9lnfeGvf9Sd6t48u55Eh3zEoIOA=="],
+    "@maci-protocol/crypto": ["@maci-protocol/crypto@0.0.0-ci.7cbf9c7", "", { "dependencies": { "@zk-kit/baby-jubjub": "^1.0.3", "@zk-kit/eddsa-poseidon": "^1.1.0", "@zk-kit/poseidon-cipher": "^0.3.2", "ethers": "^6.14.0" } }, "sha512-7/F0zni5JTkz0a6N+iA4IoZMRUCsczVta3DCJFACm5LsibjDXkVbnYDGIK/8O87lYo9PUC1W4MKcqDajhUSp9A=="],
 
-    "@maci-protocol/domainobjs": ["@maci-protocol/domainobjs@0.0.0-ci.8198a70", "", { "dependencies": { "@maci-protocol/crypto": "0.0.0-ci.8198a70" } }, "sha512-VwNFpylA3kyUW2fir8oCBCbo4wXSw9oY3kpxN+qpM0k0siLWLrINRt1o/H2/2CT+LDhciTMM3KS5p01LPp3o+Q=="],
+    "@maci-protocol/domainobjs": ["@maci-protocol/domainobjs@0.0.0-ci.7cbf9c7", "", { "dependencies": { "@maci-protocol/crypto": "0.0.0-ci.7cbf9c7" } }, "sha512-xzjpzQEsvKyeYnHYYz18hvoANj86b3lYMyGfvMdZXHGcXOsSiLl2rshDccYlq1VnkiE98DAG6EvMQpUtjohx6Q=="],
 
-    "@maci-protocol/sdk": ["@maci-protocol/sdk@0.0.0-ci.8198a70", "", { "dependencies": { "@maci-protocol/contracts": "0.0.0-ci.8198a70", "@maci-protocol/core": "0.0.0-ci.8198a70", "@maci-protocol/crypto": "0.0.0-ci.8198a70", "@maci-protocol/domainobjs": "0.0.0-ci.8198a70", "@zk-kit/lean-imt": "^2.2.3", "ethers": "^6.14.0", "multiformats": "9.9.0", "snarkjs": "^0.7.5" }, "bin": { "maci-sdk": "./build/ts/index.js" } }, "sha512-uK+eUhrYqgR7CanzZKU/TDr9T1VrgdS67JxXQmmsODD6/Yan6sCU+yg4SjRotUwHHCrxwtM4aNUAp51X0EBIxg=="],
+    "@maci-protocol/sdk": ["@maci-protocol/sdk@0.0.0-ci.7cbf9c7", "", { "dependencies": { "@maci-protocol/contracts": "0.0.0-ci.7cbf9c7", "@maci-protocol/core": "0.0.0-ci.7cbf9c7", "@maci-protocol/crypto": "0.0.0-ci.7cbf9c7", "@maci-protocol/domainobjs": "0.0.0-ci.7cbf9c7", "@zk-kit/lean-imt": "^2.2.3", "ethers": "^6.14.0", "multiformats": "9.9.0", "snarkjs": "^0.7.5" }, "bin": { "maci-sdk": "./build/ts/index.js" } }, "sha512-8J84DsFlUW6ekjdaLvChgjX9pKjD+A1CpX8vC5lJpIFIv/bvCIoVROJLk57PjZhINuKrd38uDDzCi+oUXcK4uQ=="],
 
     "@metamask/abi-utils": ["@metamask/abi-utils@2.0.4", "", { "dependencies": { "@metamask/superstruct": "^3.1.0", "@metamask/utils": "^9.0.0" } }, "sha512-StnIgUB75x7a7AgUhiaUZDpCsqGp7VkNnZh2XivXkJ6mPkE83U8ARGQj5MbRis7VJY8BC5V1AbB1fjdh0hupPQ=="],
 
