@@ -20,8 +20,6 @@ export function useProposalExecute(proposalId: string) {
     functionName: "canExecute",
     args: [BigInt(proposalId)],
   });
-  console.log("useProposalExecute proposalId", proposalId);
-  console.log("useProposalExecute canExecute", canExecute);
 
   const {
     writeContract: executeWrite,

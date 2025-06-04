@@ -101,7 +101,7 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
     async (pollId: number) => {
       if (!signer) {
         // eslint-disable-next-line no-console
-        console.log("checkIsTallied No signer");
+        console.log("No signer");
         return false;
       }
 
@@ -111,7 +111,6 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
         signer,
       });
       const isTallied = await pollContracts.tally.isTallied();
-      console.log("checkIsTallied isTallied", isTallied);
       return isTallied;
     },
     [signer]

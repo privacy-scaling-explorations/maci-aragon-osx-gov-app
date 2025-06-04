@@ -10,11 +10,7 @@ import PollCard from "../components/PollCard";
 import { FinalizeAction } from "../components/finalize/finalizeAction";
 import { useCoordinator } from "../hooks/useCoordinator";
 import { useCanFinalize } from "../hooks/useCanFinalize";
-import { useEffect } from "react";
-import { getPollContracts } from "@maci-protocol/sdk/browser";
-import { PUBLIC_MACI_ADDRESS, PUBLIC_MACI_VOTING_PLUGIN_ADDRESS } from "@/constants";
 import { useEthersSigner } from "../hooks/useEthersSigner";
-import { MaciVotingAbi } from "../artifacts/MaciVoting.sol";
 import { usePublicClient } from "wagmi";
 
 export default function ProposalDetail({ id: proposalId }: { id: string }) {
@@ -22,93 +18,10 @@ export default function ProposalDetail({ id: proposalId }: { id: string }) {
   const showProposalLoading = getShowProposalLoading(proposal, status);
   const hasAction = proposal?.actions?.length ?? 0 > 0;
 
-  const { finalizeStatus, checkIsTallied } = useCoordinator();
+  const { finalizeStatus } = useCoordinator();
   const canFinalize = useCanFinalize(proposal?.pollId);
-  const signer = useEthersSigner();
-  const publicClient = usePublicClient();
 
   const { executeProposal, canExecute, isConfirming: isConfirmingExecution } = useProposalExecute(proposalId);
-
-  useEffect(() => {
-    const checkCanExecute = async () => {
-      console.log("proposalId", proposalId);
-      if (!proposalId) {
-        console.log("No proposalId");
-        return false;
-      }
-      console.log("proposal?.pollId", proposal?.pollId);
-      if (!proposal?.pollId) {
-        console.log("No proposal.pollId");
-        return false;
-      }
-
-      if (proposal.executed) {
-        console.log("Proposal already executed");
-        return false;
-      }
-
-      // Verify that the proposal poll has ended.
-      const isTallied = await checkIsTallied(Number(proposal.pollId));
-      console.log("useEffect isTallied", isTallied);
-      if (!isTallied) {
-        console.log("Poll not tallied");
-        return false;
-      }
-      if (!signer) {
-        // eslint-disable-next-line no-console
-        console.log("No signer");
-        return false;
-      }
-
-      const pollContracts = await getPollContracts({
-        maciAddress: PUBLIC_MACI_ADDRESS,
-        pollId: Number(proposal.pollId),
-        signer,
-      });
-      const totalSpent = await pollContracts.tally.totalSpent();
-
-      // // Check if the minimum participation threshold has been reached based on final voting results.
-      // if (proposal?.parameters.minVotingPower && proposal.parameters.minVotingPower < totalSpent) {
-      const minVP = BigInt(proposal?.parameters.minVotingPower ?? 0n); // always defined
-      console.log("minVP", minVP);
-      console.log("totalSpent", totalSpent);
-      if (minVP < totalSpent) {
-        // run the test even when minVP == 0
-        console.log("Minimum participation threshold not reached");
-        return false;
-      }
-
-      const results1 = await pollContracts.tally.tallyResults(0);
-      const results2 = await pollContracts.tally.tallyResults(1);
-
-      if (!results1[1] || !results2[1]) {
-        console.log("no results");
-        return false;
-      }
-
-      if (results2[0] < results1[0]) {
-        console.log("no support");
-
-        return false;
-      }
-
-      console.log("useEffect Can execute");
-
-      if (!publicClient) {
-        console.log("no publicClient");
-        return false;
-      }
-
-      const canExecute = await publicClient.readContract({
-        address: PUBLIC_MACI_VOTING_PLUGIN_ADDRESS,
-        abi: MaciVotingAbi,
-        functionName: "canExecute",
-        args: [BigInt(proposalId)],
-      });
-      console.log("useEffect WAGMI read contract Can execute", canExecute);
-    };
-    checkCanExecute();
-  }, [signer, proposal]);
 
   if (!proposal || showProposalLoading) {
     return (
