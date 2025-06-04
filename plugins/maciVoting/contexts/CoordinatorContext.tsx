@@ -1,5 +1,5 @@
 import { EMode } from "@maci-protocol/core";
-import { getPoll, getPollContracts, type ITallyData, Poll__factory as PollFactory } from "@maci-protocol/sdk/browser";
+import { getPoll, isTallied, type ITallyData, Poll__factory as PollFactory } from "@maci-protocol/sdk/browser";
 import { PUBLIC_CHAIN_NAME, PUBLIC_COORDINATOR_SERVICE_URL, PUBLIC_MACI_ADDRESS } from "@/constants";
 import { createContext, type ReactNode, useCallback, useMemo, useState } from "react";
 import {
@@ -105,13 +105,12 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
 
-      const pollContracts = await getPollContracts({
+      const isPollTallied = await isTallied({
         maciAddress: PUBLIC_MACI_ADDRESS,
-        pollId,
+        pollId: pollId.toString(),
         signer,
       });
-      const isTallied = await pollContracts.tally.isTallied();
-      return isTallied;
+      return isPollTallied;
     },
     [signer]
   );
@@ -124,6 +123,7 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const isTallied = await checkIsTallied(pollId);
+
       if (isTallied) {
         setFinalizeStatus("notStarted");
         return;
