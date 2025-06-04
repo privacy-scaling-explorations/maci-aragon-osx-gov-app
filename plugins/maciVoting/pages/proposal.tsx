@@ -30,7 +30,7 @@ export default function ProposalDetail({ id: proposalId }: { id: string }) {
   }
 
   return (
-    <section className=" flex w-screen min-w-full max-w-full flex-col items-center">
+    <section className="flex w-screen min-w-full max-w-full flex-col items-center">
       <ProposalHeader
         proposalNumber={Number(proposalId)}
         proposal={proposal}

@@ -18,6 +18,7 @@ export type FinalizeStatus = "notStarted" | "merging" | "proving" | "submitting"
 
 export interface ICoordinatorContextType {
   finalizeStatus: FinalizeStatus;
+  checkIsTallied: (pollId: number) => Promise<boolean>;
   finalizeProposal: (pollId: number) => Promise<void>;
 }
 
