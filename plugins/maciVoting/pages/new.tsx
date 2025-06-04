@@ -251,6 +251,7 @@ export default function Create() {
               />
               <span className="text-center text-sm text-neutral-400">Signaling</span>
             </div>
+
             <div
               onClick={() => changeActionType(ActionType.Withdrawal)}
               className={`flex cursor-pointer flex-col items-center rounded-xl border-2 border-solid bg-neutral-0 hover:bg-neutral-50 ${
@@ -266,6 +267,7 @@ export default function Create() {
               />
               <span className="text-center text-sm text-neutral-400">DAO Payment</span>
             </div>
+
             <div
               onClick={() => changeActionType(ActionType.Custom)}
               className={`flex cursor-pointer flex-col items-center rounded-xl border-2 border-solid bg-neutral-0 hover:bg-neutral-50 ${

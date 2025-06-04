@@ -1,5 +1,5 @@
 import { EMode } from "@maci-protocol/core";
-import { getPoll, type ITallyData, Poll__factory as PollFactory } from "@maci-protocol/sdk/browser";
+import { getPoll, getPollContracts, type ITallyData, Poll__factory as PollFactory } from "@maci-protocol/sdk/browser";
 import { PUBLIC_CHAIN_NAME, PUBLIC_COORDINATOR_SERVICE_URL, PUBLIC_MACI_ADDRESS } from "@/constants";
 import { createContext, type ReactNode, useCallback, useMemo, useState } from "react";
 import {
@@ -97,6 +97,26 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
     [signer]
   );
 
+  const checkIsTallied = useCallback(
+    async (pollId: number) => {
+      if (!signer) {
+        // eslint-disable-next-line no-console
+        console.log("checkIsTallied No signer");
+        return false;
+      }
+
+      const pollContracts = await getPollContracts({
+        maciAddress: PUBLIC_MACI_ADDRESS,
+        pollId,
+        signer,
+      });
+      const isTallied = await pollContracts.tally.isTallied();
+      console.log("checkIsTallied isTallied", isTallied);
+      return isTallied;
+    },
+    [signer]
+  );
+
   const finalizeProposal = useCallback(
     async (pollId: number) => {
       if (!signer) {
@@ -104,18 +124,11 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
         console.log("No signer");
       }
 
-      // TODO: update to latest sdk to use latest tally functionality
-      // const pollContracts = await getPollContracts({
-      //   maciAddress: PUBLIC_MACI_ADDRESS,
-      //   pollId,
-      //   signer,
-      // });
-      // const isTallied = await pollContracts.tally.isTallied();
-      // if (isTallied) {
-      //   console.log("Poll already finalized");
-      //   setFinalizeStatus("notStarted");
-      //   return;
-      // }
+      const isTallied = await checkIsTallied(pollId);
+      if (isTallied) {
+        setFinalizeStatus("notStarted");
+        return;
+      }
 
       const hasMerged = await checkMergeStatus(pollId).catch(() => setFinalizeStatus("notStarted"));
       if (!hasMerged) {
@@ -168,15 +181,16 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
       setFinalizeStatus("submitted");
       return;
     },
-    [addAlert, checkMergeStatus, generateProofs, merge, signer, submit]
+    [addAlert, checkIsTallied, checkMergeStatus, generateProofs, merge, signer, submit]
   );
 
   const value = useMemo<ICoordinatorContextType>(
     () => ({
       finalizeStatus,
+      checkIsTallied,
       finalizeProposal,
     }),
-    [finalizeStatus, finalizeProposal]
+    [finalizeStatus, checkIsTallied, finalizeProposal]
   );
 
   return <CoordinatorContext.Provider value={value as ICoordinatorContextType}>{children}</CoordinatorContext.Provider>;

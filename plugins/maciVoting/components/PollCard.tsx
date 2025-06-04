@@ -15,6 +15,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
   const [error, setError] = useState<string | undefined>(undefined);
   const [voteStartDate, setVoteStartDate] = useState(0);
   const [voteEnded, setVoteEnded] = useState(false);
+  const [voteOption, setVoteOption] = useState<VoteOption | undefined>(undefined);
 
   const disabled = useMemo(() => {
     return isLoading || voteEnded || voteStartDate > Math.round(Date.now() / 1000);
@@ -66,7 +67,8 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
 
   const onClickVote = useCallback(
     async (option: VoteOption) => {
-      await onVote(option);
+      setVoteOption(option);
+      await onVote(option).finally(() => setVoteOption(undefined));
     },
     [onVote]
   );
@@ -143,7 +145,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
               size="sm"
               variant={disabled ? "tertiary" : "success"}
             >
-              Yes
+              {isLoading && voteOption === VoteOption.Yes ? <PleaseWaitSpinner fullMessage="Yes" /> : "Yes"}
             </Button>
             <Button
               onClick={() => onClickVote(VoteOption.No)}
@@ -151,7 +153,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
               size="sm"
               variant={disabled ? "tertiary" : "critical"}
             >
-              No
+              {isLoading && voteOption === VoteOption.No ? <PleaseWaitSpinner fullMessage="No" /> : "No"}
             </Button>
             <Button
               onClick={() => onClickVote(VoteOption.Abstain)}
@@ -159,7 +161,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
               size="sm"
               variant={disabled ? "tertiary" : "warning"}
             >
-              Abstain
+              {isLoading && voteOption === VoteOption.Abstain ? <PleaseWaitSpinner fullMessage="Abstain" /> : "Abstain"}
             </Button>
           </div>
         </div>
