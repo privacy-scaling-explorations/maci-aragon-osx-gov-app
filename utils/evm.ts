@@ -1,4 +1,4 @@
-import { type Address, type PublicClient } from "viem";
+import { Address, PublicClient } from "viem";
 
 export const isAddress = (maybeAddress: any) => {
   if (!maybeAddress || typeof maybeAddress !== "string") return false;
@@ -6,13 +6,19 @@ export const isAddress = (maybeAddress: any) => {
   return true;
 };
 
+export function equalAddresses(value1?: string, value2?: string): boolean {
+  if (!value1 || !value2) return false;
+  else if (!isAddress(value1) || !isAddress(value2)) return false;
+  return value1.toLowerCase().trim() === value2.toLocaleLowerCase().trim();
+}
+
 export function formatHexString(address: string): string {
   if (!address || address.length < 12) {
     return address || "";
   }
 
   // Take the first 5 characters (including '0x') and the last 4 characters
-  return `${address.substring(0, 5)}...${address.substring(address.length - 4)}`;
+  return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
 }
 
 export function isContract(address: Address, publicClient: PublicClient) {

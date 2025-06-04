@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { type RawAction } from "@/utils/types";
-import { type AbiFunction, type Address, type Hex, decodeFunctionData, toFunctionSelector } from "viem";
+import { RawAction } from "@/utils/types";
+import { AbiFunction, Address, Hex, decodeFunctionData, toFunctionSelector } from "viem";
 import { useAbi } from "./useAbi";
 
 type EvmValue = string | Hex | Address | number | bigint | boolean;
 
 export function useAction(action: RawAction) {
-  const { abi, isLoading } = useAbi(action.to);
+  const { abi, isLoading } = useAbi(action.to as Address);
   const [functionName, setFunctionName] = useState<string | null>(null);
   const [functionAbi, setFunctionAbi] = useState<AbiFunction | null>(null);
   const [actionArgs, setActionArgs] = useState<EvmValue[]>([]);
@@ -27,7 +27,7 @@ export function useAction(action: RawAction) {
     setFunctionAbi(func);
     setFunctionName(functionName);
     setActionArgs((args as any as EvmValue[]) || []);
-  }, [abi, action.data, action.to, isLoading]);
+  }, [action.data, action.to, isLoading]);
 
   return {
     to: action.to,

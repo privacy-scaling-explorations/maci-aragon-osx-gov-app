@@ -1,13 +1,13 @@
-import { type Address } from "viem";
+import { Address } from "viem";
 import { whatsabi } from "@shazow/whatsabi";
 import { usePublicClient } from "wagmi";
-import { type AbiFunction } from "abitype";
+import { AbiFunction } from "abitype";
 import { useQuery } from "@tanstack/react-query";
 import { ADDRESS_ZERO, isAddress, isContract } from "@/utils/evm";
 import { PUBLIC_CHAIN, PUBLIC_ETHERSCAN_API_KEY } from "@/constants";
 import { useAlerts } from "@/context/Alerts";
 import { getImplementation } from "@/utils/proxies";
-import { type ChainName } from "@/utils/chains";
+import { ChainName } from "@/utils/chains";
 
 const CHAIN_NAME = PUBLIC_CHAIN.name.toLowerCase() as ChainName;
 
