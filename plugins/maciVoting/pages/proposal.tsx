@@ -10,8 +10,6 @@ import PollCard from "../components/PollCard";
 import { FinalizeAction } from "../components/finalize/finalizeAction";
 import { useCoordinator } from "../hooks/useCoordinator";
 import { useCanFinalize } from "../hooks/useCanFinalize";
-import { useEthersSigner } from "../hooks/useEthersSigner";
-import { usePublicClient } from "wagmi";
 
 export default function ProposalDetail({ id: proposalId }: { id: string }) {
   const { proposal, status } = useProposal(proposalId, true);
