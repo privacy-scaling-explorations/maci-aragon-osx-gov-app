@@ -199,6 +199,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         pollWasm: artifacts.wasm as unknown as string,
         sgDataArg: DEFAULT_SG_DATA,
         ivcpDataArg: DEFAULT_IVCP_DATA,
+        blocksPerBatch: 1000,
       }).catch((error) => {
         if (error.message.includes("0xa3281672")) {
           // 0xa3281672 -> signature of BalanceTooLow()
