@@ -70,7 +70,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
     if (tallied) {
       getPollResults();
     }
-  }, [voteEnded, setVoteEnded, pollId, signer, checkIsTallied, tallied, getResults]);
+  }, [voteEnded, setVoteEnded, pollId, signer, checkIsTallied, tallied]);
 
   useEffect(() => {
     setPollId(pollId);
