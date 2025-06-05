@@ -4,10 +4,11 @@ import { useMaci } from "../hooks/useMaci";
 import { VoteOption } from "../utils/types";
 import { PleaseWaitSpinner } from "@/components/please-wait";
 import { PUBLIC_MACI_ADDRESS } from "@/constants";
-import { getPoll, getResults, type IResult } from "@maci-protocol/sdk/browser";
+import { getPoll } from "@maci-protocol/sdk/browser";
 import { useEthersSigner } from "../hooks/useEthersSigner";
 import { unixTimestampToDate } from "../utils/formatPollDate";
 import { useCoordinator } from "../hooks/useCoordinator";
+import { useResults } from "../hooks/useResults";
 
 const PollCard = ({ pollId }: { pollId: bigint }) => {
   // check if the user joined the poll
@@ -18,8 +19,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
   const [voteStartDate, setVoteStartDate] = useState(0);
   const [voteEnded, setVoteEnded] = useState(false);
   const [voteOption, setVoteOption] = useState<VoteOption | undefined>(undefined);
-  const [results, setResults] = useState<IResult[] | undefined>(undefined);
-  const [tallied, setTallied] = useState(false);
+  const { results, tallied } = useResults(pollId);
 
   const disabled = useMemo(() => {
     return isLoading || voteEnded || voteStartDate > Math.round(Date.now() / 1000);
@@ -47,30 +47,8 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
       setVoteEnded(endDate < now);
     };
 
-    const checkPollTallied = async () => {
-      const isTallied = await checkIsTallied(Number(pollId));
-      setTallied(isTallied);
-    };
-
-    const getPollResults = async () => {
-      const contractResults = await getResults({
-        maciAddress: PUBLIC_MACI_ADDRESS,
-        pollId: pollId.toString(),
-        signer,
-      });
-      setResults(contractResults);
-    };
-
     checkVoteEnded();
-
-    if (voteEnded) {
-      checkPollTallied();
-    }
-
-    if (tallied) {
-      getPollResults();
-    }
-  }, [voteEnded, setVoteEnded, pollId, signer, checkIsTallied, tallied, getResults]);
+  }, [voteEnded, setVoteEnded, pollId, signer, checkIsTallied, tallied]);
 
   useEffect(() => {
     setPollId(pollId);
