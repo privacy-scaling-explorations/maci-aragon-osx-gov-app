@@ -3,6 +3,7 @@ import { type Proposal } from "@/plugins/maciVoting/utils/types";
 import { type ProposalStatus } from "@aragon/ods";
 import dayjs from "dayjs";
 import { useCoordinator } from "./useCoordinator";
+import { useResults } from "./useResults";
 
 export const useProposalVariantStatus = (proposal: Proposal) => {
   const [status, setStatus] = useState({ variant: "", label: "" });
@@ -26,6 +27,7 @@ export const useProposalVariantStatus = (proposal: Proposal) => {
 export const useProposalStatus = (proposal: Proposal) => {
   const [status, setStatus] = useState<ProposalStatus>();
   const { checkIsTallied } = useCoordinator();
+  const { results } = useResults(proposal ? proposal.pollId : undefined);
 
   useEffect(() => {
     (async () => {
@@ -42,13 +44,30 @@ export const useProposalStatus = (proposal: Proposal) => {
         setStatus("active");
       } else if (!isTallied) {
         setStatus("pending");
-      } else if (!isActive) {
-        setStatus("rejected");
-      } else {
-        setStatus("accepted");
+      } else if (isTallied) {
+        if (!results) {
+          setStatus("pending");
+          return;
+        }
+
+        const yesFlag = results[0].isSet;
+        const noFlag = results[1].isSet;
+
+        if (!yesFlag && !noFlag) {
+          setStatus("pending");
+        }
+
+        const yesVotes = results[0].value;
+        const noVotes = results[1].value;
+
+        if (yesVotes > noVotes) {
+          setStatus("accepted");
+        } else {
+          setStatus("rejected");
+        }
       }
     })();
-  }, [proposal, proposal?.tally, proposal.executed, checkIsTallied]);
+  }, [proposal, checkIsTallied, results]);
 
   return status;
 };
