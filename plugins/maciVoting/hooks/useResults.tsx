@@ -17,21 +17,28 @@ export const useResults = (pollId?: bigint) => {
         return;
       }
 
-      const { endDate } = await getPoll({
-        maciAddress: PUBLIC_MACI_ADDRESS,
-        pollId,
-        signer,
-      });
-      const now = Math.round(Date.now() / 1000);
+      try {
+        const { endDate } = await getPoll({
+          maciAddress: PUBLIC_MACI_ADDRESS,
+          pollId,
+          signer,
+        });
+        const now = Math.round(Date.now() / 1000);
+        const voteEnded = Number(endDate) < now;
+        if (!voteEnded) {
+          setTallied(false);
+          return;
+        }
 
-      const voteEnded = Number(endDate) < now;
-      if (!voteEnded) {
-        setTallied(false);
+        const isTallied = await checkIsTallied(Number(pollId));
+        setTallied(isTallied);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.log(error);
+        // TODO: handle error if poll does not exist
+        //console.log(error.message);
         return;
       }
-
-      const isTallied = await checkIsTallied(Number(pollId));
-      setTallied(isTallied);
     })();
   }, [checkIsTallied, pollId, signer]);
 

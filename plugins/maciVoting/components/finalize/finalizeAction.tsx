@@ -1,14 +1,16 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useCoordinator } from "../../hooks/useCoordinator";
 import { Button } from "@aragon/ods";
 import { PleaseWaitSpinner } from "@/components/please-wait";
 import { If } from "@/components/if";
+import { useRouter } from "next/router";
 
 interface IFinalizeActionProps {
   pollId: number;
 }
 
 export const FinalizeAction: React.FC<IFinalizeActionProps> = ({ pollId }) => {
+  const router = useRouter();
   const { finalizeStatus, finalizeProposal } = useCoordinator();
 
   const finalizationMessage = useMemo(() => {
@@ -28,13 +30,18 @@ export const FinalizeAction: React.FC<IFinalizeActionProps> = ({ pollId }) => {
     }
   }, [finalizeStatus]);
 
+  const onClickFinalize = useCallback(async () => {
+    await finalizeProposal(pollId);
+    router.reload();
+  }, [finalizeProposal, pollId, router]);
+
   return (
     <div className="overflow-hidden rounded-xl bg-neutral-0 pb-2 shadow-neutral">
       <If condition={finalizeStatus !== "submitted"}>
         <div className="flex flex-col gap-y-2 px-4 py-4 md:gap-y-3 md:px-6 md:py-6">
           <div className="flex justify-between gap-x-2 gap-y-2">
             <p className="text-xl leading-tight text-neutral-800 md:text-2xl">Finalize Poll</p>
-            <Button size="md" disabled={finalizeStatus !== "notStarted"} onClick={() => finalizeProposal(pollId)}>
+            <Button size="md" disabled={finalizeStatus !== "notStarted"} onClick={onClickFinalize}>
               Finalize
             </Button>
           </div>
