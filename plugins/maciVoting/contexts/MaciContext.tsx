@@ -476,7 +476,8 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      if (!pollId) {
+      // if it is the first poll then !pollId = false because !0n = false
+      if (!pollId && pollId !== 0n) {
         return;
       }
 
