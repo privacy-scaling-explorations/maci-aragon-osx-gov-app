@@ -61,7 +61,7 @@ const ProposalHeader: React.FC<ProposalHeaderProps> = ({ proposal }) => {
               <div className="flex items-center">
                 <span className="w-8"></span>
                 <span className="text-neutral-500">
-                  In {getSimpleRelativeTimeFromDate(dayjs(Number(proposal.parameters.startDate) * 1000))} minutes
+                  In {getSimpleRelativeTimeFromDate(dayjs(Number(proposal.parameters.startDate) * 1000))}
                 </span>
               </div>
             )}
@@ -79,7 +79,7 @@ const ProposalHeader: React.FC<ProposalHeaderProps> = ({ proposal }) => {
               <div className="flex items-center">
                 <span className="w-8"></span>
                 <span className="text-neutral-500">
-                  In {getSimpleRelativeTimeFromDate(dayjs(Number(proposal.parameters.endDate) * 1000))} minutes
+                  In {getSimpleRelativeTimeFromDate(dayjs(Number(proposal.parameters.endDate) * 1000))}
                 </span>
               </div>
             )}
