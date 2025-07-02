@@ -43,11 +43,19 @@ export function useProposal(proposalId: string, autoRefresh = false) {
     abi: MaciVotingAbi,
     functionName: "getProposal",
     args: [BigInt(proposalId)],
+    query: {
+      refetchOnWindowFocus: true,
+      refetchInterval: (data) => {
+        return autoRefresh ? 10000 : false;
+      },
+    },
   });
 
+  /* TODO: replace with refetchInterval
   useEffect(() => {
     if (autoRefresh) proposalRefetch();
   }, [autoRefresh, blockNumber, proposalRefetch]);
+*/
 
   // Creation event
   useEffect(() => {
@@ -119,6 +127,7 @@ export function useProposal(proposalId: string, autoRefresh = false) {
   return {
     proposal,
     proposalQueryKey,
+    proposalRefetch,
     status: {
       proposalReady: proposalFetchStatus === "idle",
       proposalLoading: proposalFetchStatus === "fetching",
