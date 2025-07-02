@@ -9,7 +9,10 @@ export function getProposalStatusVariant(proposal: Proposal) {
   if (!proposal?.tally) return { variant: "info", label: "(Loading)" };
   else if (proposal.executed) return { variant: "primary", label: "Executed" };
 
-  if (!proposal.active) {
+  const now = BigInt(Math.floor(Date.now() / 1000));
+  const isActive = proposal.parameters.startDate <= now && now <= proposal.parameters.endDate;
+
+  if (!isActive) {
     // Defeated or executable?
     const yesNoVotes = proposal.tally.no + proposal.tally.yes;
     if (!yesNoVotes) return { variant: "critical", label: "Defeated" };

@@ -12,8 +12,8 @@ import { useCoordinator } from "../hooks/useCoordinator";
 import { useCanFinalize } from "../hooks/useCanFinalize";
 
 export default function ProposalDetail({ id: proposalId }: { id: string }) {
-  const { proposal, status } = useProposal(proposalId, true);
-  const showProposalLoading = getShowProposalLoading(proposal, status);
+  const { proposal, proposalMetadata, creator, status } = useProposal(proposalId, true);
+  const showProposalLoading = getShowProposalLoading(proposal, proposalMetadata, status);
   const hasAction = proposal?.actions?.length ?? 0 > 0;
 
   const { finalizeStatus } = useCoordinator();
@@ -21,7 +21,7 @@ export default function ProposalDetail({ id: proposalId }: { id: string }) {
 
   const { executeProposal, canExecute, isConfirming: isConfirmingExecution } = useProposalExecute(proposalId);
 
-  if (!proposal || showProposalLoading) {
+  if (!proposal || !proposalMetadata || !creator || showProposalLoading) {
     return (
       <section className="justify-left items-left flex w-screen min-w-full max-w-full">
         <PleaseWaitSpinner />
@@ -34,6 +34,8 @@ export default function ProposalDetail({ id: proposalId }: { id: string }) {
       <ProposalHeader
         proposalNumber={Number(proposalId)}
         proposal={proposal}
+        proposalMetadata={proposalMetadata}
+        creator={creator}
         canExecute={canExecute}
         onExecutePressed={() => executeProposal()}
       />
@@ -41,7 +43,7 @@ export default function ProposalDetail({ id: proposalId }: { id: string }) {
       <div className="mx-auto w-full max-w-screen-xl px-4 py-6 md:px-16 md:pb-20 md:pt-10">
         <div className="flex w-full flex-col gap-x-12 gap-y-6 md:flex-row">
           <div className="flex flex-col gap-y-6 md:w-[63%] md:shrink-0">
-            <BodySection body={proposal.description || "No description was provided"} />
+            <BodySection body={proposalMetadata?.description || "No description was provided"} />
             <If condition={canFinalize && finalizeStatus !== "submitted"}>
               <FinalizeAction pollId={Number(proposal.pollId)} />
             </If>
@@ -56,7 +58,7 @@ export default function ProposalDetail({ id: proposalId }: { id: string }) {
           </div>
           <div className="flex flex-col gap-y-6 md:w-[33%]">
             <PollCard pollId={proposal.pollId} />
-            <CardResources resources={proposal.resources} title="Resources" />
+            <CardResources resources={proposalMetadata?.resources} title="Resources" />
           </div>
         </div>
       </div>
@@ -66,11 +68,12 @@ export default function ProposalDetail({ id: proposalId }: { id: string }) {
 
 function getShowProposalLoading(
   proposal: ReturnType<typeof useProposal>["proposal"],
+  proposalMetadata: ReturnType<typeof useProposal>["proposalMetadata"],
   status: ReturnType<typeof useProposal>["status"]
 ) {
   if (!proposal && status.proposalLoading) return true;
   else if (status.metadataLoading && !status.metadataError) return true;
-  else if (!proposal?.title && !status.metadataError) return true;
+  else if (!proposalMetadata?.title && !status.metadataError) return true;
 
   return false;
 }

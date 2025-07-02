@@ -43,10 +43,10 @@ const LinkAsDiv = ({
 };
 
 export default function ProposalCard(props: ProposalInputs) {
-  const { proposal, status } = useProposal(props.proposalId.toString());
+  const { proposal, proposalMetadata, creator, status } = useProposal(props.proposalId.toString());
 
   const proposalVariant = useProposalStatus(proposal!);
-  const showLoading = getShowProposalLoading(proposal, status);
+  const showLoading = getShowProposalLoading(proposal, proposalMetadata, creator, status);
   const hasVoted = false;
   const winningOption = getWinningOption(proposal?.tally as Tally);
 
@@ -60,7 +60,7 @@ export default function ProposalCard(props: ProposalInputs) {
         </Card>
       </section>
     );
-  } else if (!proposal?.title && !proposal?.summary) {
+  } else if (!proposalMetadata?.title && !proposalMetadata?.summary) {
     // We have the proposal but no metadata yet
     return (
       <LinkAsDiv href={`#/proposals/${props.proposalId}`} className="mb-4 w-full">
@@ -71,7 +71,7 @@ export default function ProposalCard(props: ProposalInputs) {
         </Card>
       </LinkAsDiv>
     );
-  } else if (status.metadataReady && !proposal?.title) {
+  } else if (status.metadataReady && !proposalMetadata?.title) {
     return (
       <LinkAsDiv href={`#/proposals/${props.proposalId}`} className="mb-4 w-full">
         <Card className="p-4">
@@ -89,15 +89,15 @@ export default function ProposalCard(props: ProposalInputs) {
   return (
     <LinkAsDiv href={`#/proposals/${props.proposalId}`} className="mb-4 w-full cursor-pointer">
       <ProposalDataListItem.Structure
-        title={proposal.title}
-        summary={proposal.summary}
+        title={proposalMetadata.title}
+        summary={proposalMetadata.summary}
         voted={hasVoted}
         result={{
           option: winningOption?.option,
           voteAmount: winningOption?.voteAmount.toString(),
           votePercentage: winningOption?.votePercentage,
         }}
-        publisher={[{ address: proposal.creator }]} // Fix: Pass an object of type IPublisher instead of a string
+        publisher={[{ address: creator! }]} // Fix: Pass an object of type IPublisher instead of a string
         status={proposalVariant!}
         type={"majorityVoting"}
       />
@@ -107,11 +107,14 @@ export default function ProposalCard(props: ProposalInputs) {
 
 function getShowProposalLoading(
   proposal: ReturnType<typeof useProposal>["proposal"],
+  proposalMetadata: ReturnType<typeof useProposal>["proposalMetadata"],
+  creator: ReturnType<typeof useProposal>["creator"],
   status: ReturnType<typeof useProposal>["status"]
 ) {
   if (!proposal || status.proposalLoading) return true;
+  else if (!proposalMetadata?.title && !status.metadataError) return true;
+  else if (!creator) return true;
   else if (status.metadataLoading && !status.metadataError) return true;
-  else if (!proposal?.title && !status.metadataError) return true;
 
   return false;
 }

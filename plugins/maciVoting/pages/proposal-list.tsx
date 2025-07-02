@@ -1,5 +1,5 @@
-import { useAccount, useBlockNumber, useReadContract } from "wagmi";
-import { type ReactNode, useEffect } from "react";
+import { useAccount, useBlockNumber, usePublicClient } from "wagmi";
+import { type ReactNode, useEffect, useState, useCallback } from "react";
 import ProposalCard from "@/plugins/maciVoting/components/proposal";
 import {
   Button,
@@ -12,51 +12,77 @@ import {
 import { useCanCreateProposal } from "@/plugins/maciVoting/hooks/useCanCreateProposal";
 import Link from "next/link";
 import { Else, If, Then } from "@/components/if";
-import { PUBLIC_MACI_VOTING_PLUGIN_ADDRESS, PUBLIC_CHAIN } from "@/constants";
+import { PUBLIC_MACI_VOTING_PLUGIN_ADDRESS, PUBLIC_MACI_DEPLOYMENT_BLOCK } from "@/constants";
 
 import MaciCard from "../components/MaciCard";
-import { MaciVotingAbi } from "../artifacts/MaciVoting.sol";
+import { ProposalCreatedEvent } from "../hooks/useProposal";
 
 const DEFAULT_PAGE_SIZE = 6;
 
 export default function Proposals() {
   const { isConnected } = useAccount();
   const canCreate = useCanCreateProposal();
+  const publicClient = usePublicClient();
+  const [proposalIds, setProposalIds] = useState<bigint[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const { data: blockNumber } = useBlockNumber({ watch: true });
 
-  const {
-    data: proposalCountResponse,
-    error: isError,
-    isLoading,
-    isFetching: isFetchingNextPage,
-    refetch,
-  } = useReadContract({
-    address: PUBLIC_MACI_VOTING_PLUGIN_ADDRESS,
-    abi: MaciVotingAbi,
-    functionName: "proposalCount",
-    chainId: PUBLIC_CHAIN.id,
-    query: {
-      refetchOnWindowFocus: true,
-    },
-  });
+  const fetchProposals = useCallback(async () => {
+    if (!publicClient || !blockNumber) return;
 
-  const proposalCount = Number(proposalCountResponse);
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const logs = await publicClient.getLogs({
+        address: PUBLIC_MACI_VOTING_PLUGIN_ADDRESS,
+        event: ProposalCreatedEvent,
+        fromBlock: BigInt(PUBLIC_MACI_DEPLOYMENT_BLOCK),
+        toBlock: blockNumber,
+      });
+
+      if (!logs || !logs.length) {
+        setProposalIds([]);
+        return;
+      }
+
+      const ids = logs
+        .map((log) => {
+          const args = log.args;
+          return args?.proposalId;
+        })
+        .filter((id): id is bigint => id !== undefined)
+        .reverse();
+
+      setProposalIds(ids);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Could not fetch the proposal creation events", error);
+      setError("Failed to load proposals");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [publicClient, blockNumber]);
 
   useEffect(() => {
-    refetch();
-  }, [blockNumber, refetch]);
+    fetchProposals();
+  }, [blockNumber, fetchProposals, publicClient]);
 
+  const refetch = async () => {
+    await fetchProposals();
+  };
+
+  const proposalCount = proposalIds.length;
   const entityLabel = proposalCount === 1 ? "Proposal" : "Proposals";
 
   let dataListState: DataListState = "idle";
   if (isLoading && !proposalCount) {
     dataListState = "initialLoading";
-  } else if (isError) {
+  } else if (error) {
     dataListState = "error";
-  } else if (isFetchingNextPage) {
-    dataListState = "fetchingNextPage";
-  } else {
+  } else if (isLoading) {
     dataListState = "loading";
   }
 
@@ -107,20 +133,16 @@ export default function Proposals() {
                   itemsCount={proposalCount}
                   pageSize={DEFAULT_PAGE_SIZE}
                   state={dataListState}
-                  // onLoadMore={fetchNextPage}
                 >
                   <DataList.Container
                     SkeletonElement={ProposalDataListItemSkeleton}
                     errorState={errorState}
                     emptyFilteredState={emptyFilteredState}
                   >
-                    {proposalCount &&
-                      Array.from(Array(proposalCount)?.keys())
-                        .reverse()
-                        ?.map((proposalIndex) => (
-                          // TODO: update with router agnostic ODS DataListItem
-                          <ProposalCard key={proposalIndex} proposalId={BigInt(proposalIndex)} />
-                        ))}
+                    {proposalIds.map((proposalId) => (
+                      // TODO: update with router agnostic ODS DataListItem
+                      <ProposalCard key={proposalId} proposalId={proposalId} />
+                    ))}
                   </DataList.Container>
                   <DataList.Pagination />
                 </DataList.Root>
