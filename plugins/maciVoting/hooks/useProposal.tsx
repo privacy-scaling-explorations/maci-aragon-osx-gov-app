@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useBlockNumber, usePublicClient, useReadContract } from "wagmi";
+import { usePublicClient, useReadContract } from "wagmi";
 import { fromHex, getAbiItem, type Hex } from "viem";
 import { MaciVotingAbi } from "../artifacts/MaciVoting.sol";
 import { type Action } from "@/utils/types";
@@ -28,7 +28,6 @@ export function useProposal(proposalId: string, autoRefresh = false) {
   const publicClient = usePublicClient({ chainId: PUBLIC_CHAIN.id });
   const [proposalCreationEvent, setProposalCreationEvent] = useState<ProposalCreatedLogResponse["args"]>();
   const [metadataUri, setMetadata] = useState<string>();
-  const { data: blockNumber } = useBlockNumber();
 
   // Proposal on-chain data
   const {
@@ -50,12 +49,6 @@ export function useProposal(proposalId: string, autoRefresh = false) {
       },
     },
   });
-
-  /* TODO: replace with refetchInterval
-  useEffect(() => {
-    if (autoRefresh) proposalRefetch();
-  }, [autoRefresh, blockNumber, proposalRefetch]);
-*/
 
   // Creation event
   useEffect(() => {
