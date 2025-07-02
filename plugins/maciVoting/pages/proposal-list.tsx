@@ -36,6 +36,9 @@ export default function Proposals() {
     abi: MaciVotingAbi,
     functionName: "proposalCount",
     chainId: PUBLIC_CHAIN.id,
+    query: {
+      refetchOnWindowFocus: true,
+    },
   });
 
   const proposalCount = Number(proposalCountResponse);

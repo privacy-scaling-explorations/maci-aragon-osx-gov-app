@@ -1,54 +1,25 @@
 import { Button, Card, Heading } from "@aragon/ods";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useMaci } from "../hooks/useMaci";
 import { VoteOption } from "../utils/types";
 import { PleaseWaitSpinner } from "@/components/please-wait";
-import { PUBLIC_MACI_ADDRESS } from "@/constants";
-import { getPoll } from "@maci-protocol/sdk/browser";
 import { useEthersSigner } from "../hooks/useEthersSigner";
 import { unixTimestampToDate } from "../utils/formatPollDate";
-import { useCoordinator } from "../hooks/useCoordinator";
-import { useResults } from "../hooks/useResults";
+import { useGetPollData } from "../hooks/useGetPollData";
 
 const PollCard = ({ pollId }: { pollId: bigint }) => {
   // check if the user joined the poll
   const { setPollId, onJoinPoll, onVote, isRegistered, hasJoinedPoll, isLoading, error: maciError } = useMaci();
-  const { checkIsTallied } = useCoordinator();
   const signer = useEthersSigner();
   const [error, setError] = useState<string | undefined>(undefined);
-  const [voteStartDate, setVoteStartDate] = useState(0);
-  const [voteEnded, setVoteEnded] = useState(false);
   const [voteOption, setVoteOption] = useState<VoteOption | undefined>(undefined);
-  const { results, tallied } = useResults(pollId);
 
-  const disabled = useMemo(() => {
-    return isLoading || voteEnded || voteStartDate > Math.round(Date.now() / 1000);
-  }, [isLoading, voteEnded, voteStartDate]);
+  const { data: { voteStartDate, tallied, voteEnded, disabled, results } = {}, isLoading: isLoadingPollData } =
+    useGetPollData(pollId);
 
   useEffect(() => {
     setError(maciError);
   }, [maciError]);
-
-  useEffect(() => {
-    if (!signer) {
-      return;
-    }
-
-    const checkVoteEnded = async () => {
-      const poll = await getPoll({
-        maciAddress: PUBLIC_MACI_ADDRESS,
-        pollId,
-        signer,
-      });
-      const endDate = Number(poll.endDate);
-      const startDate = Number(poll.startDate);
-      const now = Math.round(Date.now() / 1000);
-      setVoteStartDate(startDate);
-      setVoteEnded(endDate < now);
-    };
-
-    checkVoteEnded();
-  }, [voteEnded, setVoteEnded, pollId, signer, checkIsTallied, tallied]);
 
   useEffect(() => {
     setPollId(pollId);
@@ -166,7 +137,8 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
             Submit your vote anonymously to the poll using any wallet. Results will be tallied after the voting period
             ends.
           </p>
-          {voteStartDate > Math.round(Date.now() / 1000) &&
+          {voteStartDate &&
+            voteStartDate > Math.round(Date.now() / 1000) &&
             `The vote will start on ${unixTimestampToDate(voteStartDate)}`}
           <div className="flex flex-row gap-x-1">
             <Button
