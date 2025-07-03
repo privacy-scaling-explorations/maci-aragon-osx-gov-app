@@ -95,7 +95,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
           <VoteResultCard
             results={{
               yes: Number(results[0].value),
-              no: 282 || Number(results[1].value),
+              no: Number(results[1].value),
               abstain: Number(results[2].value),
             }}
           />
