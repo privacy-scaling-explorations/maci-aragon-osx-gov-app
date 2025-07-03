@@ -6,6 +6,7 @@ import { PleaseWaitSpinner } from "@/components/please-wait";
 import { useEthersSigner } from "../hooks/useEthersSigner";
 import { unixTimestampToDate } from "../utils/formatPollDate";
 import { useGetPollData } from "../hooks/useGetPollData";
+import { VoteResultCard } from "./VoteResultCard";
 
 const PollCard = ({ pollId }: { pollId: bigint }) => {
   // check if the user joined the poll
@@ -82,16 +83,24 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
 
   if (voteEnded && tallied && results) {
     return (
-      <Card className="flex flex-col gap-y-4 p-6 shadow-neutral">
-        <Heading size="h3">Results</Heading>
-        <div className="flex flex-col justify-between">
-          <p className="text-sm text-critical-500">{error}</p>
-        </div>
-        <p>The voting period has ended. Here are the results:</p>
-        <p style={{ color: "green" }}>Yes: {results[0].value.toString()}</p>
-        <p style={{ color: "red" }}>No: {results[1].value.toString()}</p>
-        <p style={{ color: "blue" }}>Abstain: {results[2].value.toString()}</p>
-      </Card>
+      <div className="flex flex-col gap-10">
+        <Card className="flex flex-col gap-y-4 p-6 shadow-neutral">
+          <Heading size="h3">Results</Heading>
+          {error && (
+            <div className="flex flex-col justify-between">
+              <p className="text-sm text-critical-500">{error}</p>
+            </div>
+          )}
+          <p>The voting period has ended. Here are the results:</p>
+          <VoteResultCard
+            results={{
+              yes: Number(results[0].value),
+              no: 282 || Number(results[1].value),
+              abstain: Number(results[2].value),
+            }}
+          />
+        </Card>
+      </div>
     );
   }
 
