@@ -14,6 +14,7 @@ import { PleaseWaitSpinner } from "@/components/please-wait";
 import { PUBLIC_CHAIN, PUBLIC_MACI_VOTING_PLUGIN_ADDRESS } from "@/constants";
 import { ActionCard } from "@/components/actions/action";
 import { useMutation } from "@tanstack/react-query";
+import classNames from "classnames";
 
 enum ActionType {
   Signaling,
@@ -35,7 +36,6 @@ export default function Create() {
   const [actions, setActions] = useState<Action[]>([]);
   const { addAlert } = useAlerts();
   const { writeContract: createProposalWrite, data: createTxHash, status, error } = useWriteContract();
-  const [isLoading, setIsLoading] = useState(false);
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: createTxHash });
   const [actionType, setActionType] = useState<ActionType>(ActionType.Signaling);
 
@@ -83,7 +83,6 @@ export default function Create() {
 
   const submitProposal = async () => {
     try {
-      setIsLoading(true);
       // Check metadata
       if (!title.trim()) {
         return addAlert("Invalid proposal details", {
@@ -93,7 +92,6 @@ export default function Create() {
       }
 
       if (!summary.trim()) {
-        setIsLoading(false);
         return addAlert("Invalid proposal details", {
           description: "Please, enter a summary of what the proposal is about",
           type: "error",
@@ -106,7 +104,6 @@ export default function Create() {
           break;
         case ActionType.Withdrawal:
           if (!actions.length) {
-            setIsLoading(false);
             return addAlert("Invalid proposal details", {
               description: "Please ensure that the withdrawal address and the amount to transfer are valid",
               type: "error",
@@ -115,7 +112,6 @@ export default function Create() {
           break;
         default:
           if (!actions.length || !actions[0].data || actions[0].data === "0x") {
-            setIsLoading(false);
             return addAlert("Invalid proposal details", {
               description: "Please ensure that the values of the action to execute are complete and correct",
               type: "error",
@@ -139,7 +135,6 @@ export default function Create() {
         addAlert("You need to specify the start date and end date of the voting period", {
           timeout: 4 * 1000,
         });
-        setIsLoading(false);
         return null;
       }
 
@@ -154,7 +149,6 @@ export default function Create() {
           timeout: 4 * 1000,
           type: "error",
         });
-        setIsLoading(false);
         return null;
       }
 
@@ -169,11 +163,18 @@ export default function Create() {
         // args: _metadata, _actions, _allowFailureMap, _startDate, _endDate
         args: [toHex(ipfsPin), actions, BigInt(0), BigInt(startDateTime), BigInt(endDateTime)],
       });
-      setIsLoading(false);
+      return null;
     } catch {
-      setIsLoading(false);
+      return null;
     }
   };
+
+  const submitProposalMutation = useMutation({
+    mutationKey: ["submit-proposal"],
+    mutationFn: async () => {
+      return await submitProposal();
+    },
+  });
 
   const handleTitleInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(event?.target?.value);
@@ -188,7 +189,7 @@ export default function Create() {
   const inputWrapperClassName =
     "focus-within:!outline-none focus-within:!ring-0 focus-within:!border-transparent focus-within:!shadow-none focus-within:!ring-0 focus:border-[#000]";
 
-  const isDisabled = isLoading || isConfirming;
+  const isDisabled = submitProposalMutation.isPending || isConfirming;
   return (
     <section className="container flex w-screen flex-col items-center pt-4 lg:pt-10">
       <div className="mb-6 w-full content-center justify-between">
@@ -276,9 +277,11 @@ export default function Create() {
               onClick={() => {
                 changeActionType(ActionType.Signaling);
               }}
-              className={`flex cursor-pointer flex-col items-center rounded-xl border-2 border-solid bg-neutral-0 hover:bg-neutral-50 ${
-                actionType === ActionType.Signaling ? "border-primary-300" : "border-neutral-100"
-              }`}
+              className={classNames(
+                "flex cursor-pointer flex-col items-center rounded-xl border-2 border-solid bg-neutral-0 hover:bg-neutral-50",
+                actionType === ActionType.Signaling ? "border-primary-300" : "border-neutral-100",
+                submitProposalMutation.isPending ? "!border-neutral-100 !bg-neutral-100" : ""
+              )}
             >
               <Icon
                 className={`mt-2 !h-12 !w-10 p-2 ${
@@ -292,9 +295,11 @@ export default function Create() {
 
             <div
               onClick={() => changeActionType(ActionType.Withdrawal)}
-              className={`flex cursor-pointer flex-col items-center rounded-xl border-2 border-solid bg-neutral-0 hover:bg-neutral-50 ${
-                actionType === ActionType.Withdrawal ? "border-primary-300" : "border-neutral-100"
-              }`}
+              className={classNames(
+                "flex cursor-pointer flex-col items-center rounded-xl border-2 border-solid bg-neutral-0 hover:bg-neutral-50",
+                actionType === ActionType.Withdrawal ? "border-primary-300" : "border-neutral-100",
+                submitProposalMutation.isPending ? "!border-neutral-100 !bg-neutral-100" : ""
+              )}
             >
               <Icon
                 className={`mt-2 !h-12 !w-10 p-2 ${
@@ -308,9 +313,11 @@ export default function Create() {
 
             <div
               onClick={() => changeActionType(ActionType.Custom)}
-              className={`flex cursor-pointer flex-col items-center rounded-xl border-2 border-solid bg-neutral-0 hover:bg-neutral-50 ${
-                actionType === ActionType.Custom ? "border-primary-300" : "border-neutral-100"
-              }`}
+              className={classNames(
+                "flex cursor-pointer flex-col items-center rounded-xl border-2 border-solid bg-neutral-0 hover:bg-neutral-50",
+                actionType === ActionType.Custom ? "border-primary-300" : "border-neutral-100",
+                submitProposalMutation.isPending ? "!border-neutral-100 !bg-neutral-100" : ""
+              )}
             >
               <Icon
                 className={`mt-2 !h-12 !w-10 p-2 ${actionType === ActionType.Custom ? "text-primary-400" : "text-neutral-400"}`}
@@ -335,7 +342,12 @@ export default function Create() {
             </div>
           </Then>
           <ElseIf condition={actionType !== ActionType.Custom}>
-            <Button className="mb-6 mt-14" size="lg" variant="primary" onClick={() => submitProposal()}>
+            <Button
+              className="mb-6 mt-14"
+              size="lg"
+              variant="primary"
+              onClick={async () => await submitProposalMutation.mutateAsync()}
+            >
               Submit proposal
             </Button>
           </ElseIf>
@@ -361,9 +373,13 @@ export default function Create() {
                 size="lg"
                 variant="primary"
                 disabled={!actions.length}
-                onClick={() => submitProposal()}
+                onClick={async () => await submitProposalMutation.mutateAsync()}
               >
-                {isLoading ? <PleaseWaitSpinner fullMessage="Submitting proposal..." /> : "Submit proposal"}
+                {submitProposalMutation.isPending ? (
+                  <PleaseWaitSpinner fullMessage="Submitting proposal..." />
+                ) : (
+                  "Submit proposal"
+                )}
               </Button>
             </div>
           </Else>
