@@ -11,7 +11,7 @@ import { type Action } from "@/utils/types";
 import { useRouter } from "next/router";
 import { Else, ElseIf, If, Then } from "@/components/if";
 import { PleaseWaitSpinner } from "@/components/please-wait";
-import { PUBLIC_CHAIN, PUBLIC_MACI_VOTING_PLUGIN_ADDRESS } from "@/constants";
+import { NEXT_MINIMUM_START_DELAY_IN_SECONDS, PUBLIC_CHAIN, PUBLIC_MACI_VOTING_PLUGIN_ADDRESS } from "@/constants";
 import { ActionCard } from "@/components/actions/action";
 import { useMutation } from "@tanstack/react-query";
 import classNames from "classnames";
@@ -138,14 +138,11 @@ export default function Create() {
         return null;
       }
 
-      // minimum start delay is 5 minutes
-      const MINIMUM_START_DELAY = 5 * 60;
-
       const currentTime = Math.floor(Date.now() / 1000);
       const startDateTime = Math.floor(new Date(`${startDate}T${startTime ? startTime : "00:00:00"}`).getTime() / 1000);
 
-      if (startDateTime - currentTime < MINIMUM_START_DELAY) {
-        addAlert("The start date must be at least 5 minutes in the future", {
+      if (startDateTime - currentTime < NEXT_MINIMUM_START_DELAY_IN_SECONDS) {
+        addAlert(`The start date must be at least ${NEXT_MINIMUM_START_DELAY_IN_SECONDS} seconds in the future`, {
           timeout: 4 * 1000,
           type: "error",
         });
