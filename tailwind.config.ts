@@ -1,5 +1,4 @@
 import type { Config } from "tailwindcss";
-import { VotingMode } from "./plugins/maciVoting/utils/types";
 
 const config: Config = {
   presets: [require("@aragon/ods/tailwind.config")],
@@ -17,6 +16,12 @@ const config: Config = {
           no: "#dc2626",
           abstain: "#94a3b8",
           slate: "#94a3b8",
+        },
+      },
+      container: {
+        center: true,
+        screens: {
+          "2xl": "1200px",
         },
       },
     },

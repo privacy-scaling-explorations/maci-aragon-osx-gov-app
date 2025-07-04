@@ -13,6 +13,7 @@ import { Else, ElseIf, If, Then } from "@/components/if";
 import { PleaseWaitSpinner } from "@/components/please-wait";
 import { PUBLIC_CHAIN, PUBLIC_MACI_VOTING_PLUGIN_ADDRESS } from "@/constants";
 import { ActionCard } from "@/components/actions/action";
+import { useMutation } from "@tanstack/react-query";
 
 enum ActionType {
   Signaling,
@@ -32,7 +33,6 @@ export default function Create() {
   const [endDate, setEndDate] = useState<string>("");
   const [endTime, setEndTime] = useState<string>("");
   const [actions, setActions] = useState<Action[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const { addAlert } = useAlerts();
   const { writeContract: createProposalWrite, data: createTxHash, status, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: createTxHash });
@@ -82,7 +82,6 @@ export default function Create() {
 
   const submitProposal = async () => {
     try {
-      setIsLoading(true);
       // Check metadata
       if (!title.trim())
         return addAlert("Invalid proposal details", {
@@ -133,10 +132,23 @@ export default function Create() {
         addAlert("You need to specify the start date and end date of the voting period", {
           timeout: 4 * 1000,
         });
-        return;
+        return null;
       }
 
+      // minimum start delay is 5 minutes
+      const MINIMUM_START_DELAY = 5 * 60;
+
+      const currentTime = Math.floor(Date.now() / 1000);
       const startDateTime = Math.floor(new Date(`${startDate}T${startTime ? startTime : "00:00:00"}`).getTime() / 1000);
+
+      if (startDateTime - currentTime < MINIMUM_START_DELAY) {
+        addAlert("The start date must be at least 5 minutes in the future", {
+          timeout: 4 * 1000,
+          type: "error",
+        });
+        return null;
+      }
+
       const endDateTime = Math.floor(new Date(`${endDate}T${endTime ? endTime : "00:00:00"}`).getTime() / 1000);
 
       if (chainId !== PUBLIC_CHAIN.id) await switchChainAsync({ chainId: PUBLIC_CHAIN.id });
@@ -148,11 +160,18 @@ export default function Create() {
         // args: _metadata, _actions, _allowFailureMap, _startDate, _endDate
         args: [toHex(ipfsPin), actions, BigInt(0), BigInt(startDateTime), BigInt(endDateTime)],
       });
-      setIsLoading(false);
+      return createTxHash;
     } catch {
-      setIsLoading(false);
+      return null;
     }
   };
+
+  const submitProposalMutation = useMutation({
+    mutationKey: ["submitProposal"],
+    mutationFn: async () => {
+      return await submitProposal();
+    },
+  });
 
   const handleTitleInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(event?.target?.value);
@@ -164,14 +183,18 @@ export default function Create() {
 
   const showLoading = status === "pending" || isConfirming;
 
+  const inputWrapperClassName =
+    "focus-within:!outline-none focus-within:!ring-0 focus-within:!border-transparent focus-within:!shadow-none focus-within:!ring-0 focus:border-[#000]";
+
   return (
-    <section className="flex w-screen min-w-full max-w-full flex-col items-center px-4 py-6 md:w-4/5 md:p-6 lg:w-2/3 xl:py-10 2xl:w-3/5">
+    <section className="container flex w-screen flex-col items-center pt-4 lg:pt-10">
       <div className="mb-6 w-full content-center justify-between">
         <h1 className="mb-10 text-3xl font-semibold text-neutral-900">Create Proposal</h1>
         <div className="mb-6">
           <InputText
-            className=""
             label="Title"
+            wrapperClassName={inputWrapperClassName}
+            className="focus:!border-[#000] focus:!ring-[#000]"
             maxLength={100}
             placeholder="A short title that describes the main purpose"
             variant="default"
@@ -181,7 +204,7 @@ export default function Create() {
         </div>
         <div className="mb-6">
           <InputText
-            className=""
+            wrapperClassName={inputWrapperClassName}
             label="Summary"
             maxLength={240}
             placeholder="A short summary that describes the main purpose"
@@ -193,6 +216,7 @@ export default function Create() {
         <div className="mb-6">
           <TextAreaRichText
             label="Description"
+            wrapperClassName={inputWrapperClassName}
             className="pt-2"
             value={description}
             onChange={setDescription}
@@ -202,6 +226,7 @@ export default function Create() {
         <div className="mb-6 flex flex-row gap-x-5">
           <div className="flex flex-1 flex-col">
             <InputDate
+              wrapperClassName={inputWrapperClassName}
               className="w-full"
               label="Start date"
               variant="default"
@@ -209,6 +234,7 @@ export default function Create() {
               onChange={(e) => setStartDate(e.target.value)}
             />
             <InputTime
+              wrapperClassName={inputWrapperClassName}
               className="w-full"
               variant="default"
               value={startTime}
@@ -217,6 +243,7 @@ export default function Create() {
           </div>
           <div className="flex flex-1 flex-col">
             <InputDate
+              wrapperClassName={inputWrapperClassName}
               className="w-full"
               label="End date"
               variant="default"
@@ -224,6 +251,7 @@ export default function Create() {
               onChange={(e) => setEndDate(e.target.value)}
             />
             <InputTime
+              wrapperClassName={inputWrapperClassName}
               className="w-full"
               variant="default"
               value={endTime}
@@ -297,7 +325,12 @@ export default function Create() {
             </div>
           </Then>
           <ElseIf condition={actionType !== ActionType.Custom}>
-            <Button className="mb-6 mt-14" size="lg" variant="primary" onClick={() => submitProposal()}>
+            <Button
+              className="mb-6 mt-14"
+              size="lg"
+              variant="primary"
+              onClick={() => submitProposalMutation.mutateAsync()}
+            >
               Submit proposal
             </Button>
           </ElseIf>
@@ -323,9 +356,13 @@ export default function Create() {
                 size="lg"
                 variant="primary"
                 disabled={!actions.length}
-                onClick={() => submitProposal()}
+                onClick={() => submitProposalMutation.mutateAsync()}
               >
-                {isLoading ? <PleaseWaitSpinner fullMessage="Submitting proposal..." /> : "Submit proposal"}
+                {submitProposalMutation.isPending ? (
+                  <PleaseWaitSpinner fullMessage="Submitting proposal..." />
+                ) : (
+                  "Submit proposal"
+                )}
               </Button>
             </div>
           </Else>

@@ -161,5 +161,5 @@ function MainSection({ children }: { children: ReactNode }) {
 }
 
 function SectionView({ children }: { children: ReactNode }) {
-  return <div className="mx-auto flex w-full max-w-[1024px] flex-col items-center gap-y-6 md:px-6">{children}</div>;
+  return <div className="container mx-auto flex w-full flex-col items-center gap-y-6 md:px-6">{children}</div>;
 }
