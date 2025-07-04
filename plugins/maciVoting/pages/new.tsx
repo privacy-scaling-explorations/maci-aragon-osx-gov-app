@@ -35,6 +35,7 @@ export default function Create() {
   const [actions, setActions] = useState<Action[]>([]);
   const { addAlert } = useAlerts();
   const { writeContract: createProposalWrite, data: createTxHash, status, error } = useWriteContract();
+  const [isLoading, setIsLoading] = useState(false);
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: createTxHash });
   const [actionType, setActionType] = useState<ActionType>(ActionType.Signaling);
 
@@ -82,18 +83,22 @@ export default function Create() {
 
   const submitProposal = async () => {
     try {
+      setIsLoading(true);
       // Check metadata
-      if (!title.trim())
+      if (!title.trim()) {
         return addAlert("Invalid proposal details", {
           description: "Please, enter a title",
           type: "error",
         });
+      }
 
-      if (!summary.trim())
+      if (!summary.trim()) {
+        setIsLoading(false);
         return addAlert("Invalid proposal details", {
           description: "Please, enter a summary of what the proposal is about",
           type: "error",
         });
+      }
 
       // Check the action
       switch (actionType) {
@@ -101,6 +106,7 @@ export default function Create() {
           break;
         case ActionType.Withdrawal:
           if (!actions.length) {
+            setIsLoading(false);
             return addAlert("Invalid proposal details", {
               description: "Please ensure that the withdrawal address and the amount to transfer are valid",
               type: "error",
@@ -109,6 +115,7 @@ export default function Create() {
           break;
         default:
           if (!actions.length || !actions[0].data || actions[0].data === "0x") {
+            setIsLoading(false);
             return addAlert("Invalid proposal details", {
               description: "Please ensure that the values of the action to execute are complete and correct",
               type: "error",
@@ -132,6 +139,7 @@ export default function Create() {
         addAlert("You need to specify the start date and end date of the voting period", {
           timeout: 4 * 1000,
         });
+        setIsLoading(false);
         return null;
       }
 
@@ -146,6 +154,7 @@ export default function Create() {
           timeout: 4 * 1000,
           type: "error",
         });
+        setIsLoading(false);
         return null;
       }
 
@@ -160,18 +169,11 @@ export default function Create() {
         // args: _metadata, _actions, _allowFailureMap, _startDate, _endDate
         args: [toHex(ipfsPin), actions, BigInt(0), BigInt(startDateTime), BigInt(endDateTime)],
       });
-      return createTxHash;
+      setIsLoading(false);
     } catch {
-      return null;
+      setIsLoading(false);
     }
   };
-
-  const submitProposalMutation = useMutation({
-    mutationKey: ["submitProposal"],
-    mutationFn: async () => {
-      return await submitProposal();
-    },
-  });
 
   const handleTitleInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(event?.target?.value);
@@ -186,6 +188,7 @@ export default function Create() {
   const inputWrapperClassName =
     "focus-within:!outline-none focus-within:!ring-0 focus-within:!border-transparent focus-within:!shadow-none focus-within:!ring-0 focus:border-[#000]";
 
+  const isDisabled = isLoading || isConfirming;
   return (
     <section className="container flex w-screen flex-col items-center pt-4 lg:pt-10">
       <div className="mb-6 w-full content-center justify-between">
@@ -200,6 +203,7 @@ export default function Create() {
             variant="default"
             value={title}
             onChange={handleTitleInput}
+            disabled={isDisabled}
           />
         </div>
         <div className="mb-6">
@@ -211,6 +215,7 @@ export default function Create() {
             variant="default"
             value={summary}
             onChange={handleSummaryInput}
+            disabled={isDisabled}
           />
         </div>
         <div className="mb-6">
@@ -221,6 +226,7 @@ export default function Create() {
             value={description}
             onChange={setDescription}
             placeholder="A description for what the proposal is all about"
+            disabled={isDisabled}
           />
         </div>
         <div className="mb-6 flex flex-row gap-x-5">
@@ -232,6 +238,7 @@ export default function Create() {
               variant="default"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
+              disabled={isDisabled}
             />
             <InputTime
               wrapperClassName={inputWrapperClassName}
@@ -239,6 +246,7 @@ export default function Create() {
               variant="default"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
+              disabled={isDisabled}
             />
           </div>
           <div className="flex flex-1 flex-col">
@@ -249,6 +257,7 @@ export default function Create() {
               variant="default"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
+              disabled={isDisabled}
             />
             <InputTime
               wrapperClassName={inputWrapperClassName}
@@ -256,6 +265,7 @@ export default function Create() {
               variant="default"
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
+              disabled={isDisabled}
             />
           </div>
         </div>
@@ -325,12 +335,7 @@ export default function Create() {
             </div>
           </Then>
           <ElseIf condition={actionType !== ActionType.Custom}>
-            <Button
-              className="mb-6 mt-14"
-              size="lg"
-              variant="primary"
-              onClick={() => submitProposalMutation.mutateAsync()}
-            >
+            <Button className="mb-6 mt-14" size="lg" variant="primary" onClick={() => submitProposal()}>
               Submit proposal
             </Button>
           </ElseIf>
@@ -356,13 +361,9 @@ export default function Create() {
                 size="lg"
                 variant="primary"
                 disabled={!actions.length}
-                onClick={() => submitProposalMutation.mutateAsync()}
+                onClick={() => submitProposal()}
               >
-                {submitProposalMutation.isPending ? (
-                  <PleaseWaitSpinner fullMessage="Submitting proposal..." />
-                ) : (
-                  "Submit proposal"
-                )}
+                {isLoading ? <PleaseWaitSpinner fullMessage="Submitting proposal..." /> : "Submit proposal"}
               </Button>
             </div>
           </Else>
