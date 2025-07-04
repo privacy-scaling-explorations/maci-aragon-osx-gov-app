@@ -162,6 +162,7 @@ export default function Create() {
       });
       return null;
     } catch {
+      addAlert("Could not create the proposal. Please try again", { type: "error" });
       return null;
     }
   };
