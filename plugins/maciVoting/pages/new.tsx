@@ -198,7 +198,6 @@ export default function Create() {
           <InputText
             label="Title"
             wrapperClassName={inputWrapperClassName}
-            className="focus:!border-[#000] focus:!ring-[#000]"
             maxLength={100}
             placeholder="A short title that describes the main purpose"
             variant="default"
