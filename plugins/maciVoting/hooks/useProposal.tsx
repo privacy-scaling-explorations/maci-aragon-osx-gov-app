@@ -7,19 +7,19 @@ import { type Proposal, type ProposalMetadata } from "@/plugins/maciVoting/utils
 import { PUBLIC_CHAIN, PUBLIC_MACI_VOTING_PLUGIN_ADDRESS } from "@/constants";
 import { useMetadata } from "@/hooks/useMetadata";
 
-type ProposalCreatedLogResponse = {
+export type ProposalCreatedLogResponse = {
   args: {
-    actions: Action[];
-    allowFailureMap: bigint;
+    proposalId: bigint;
     creator: string;
     endDate: bigint;
     startDate: bigint;
     metadata: string;
-    proposalId: bigint;
+    actions: Action[];
+    allowFailureMap: bigint;
   };
 };
 
-const ProposalCreatedEvent = getAbiItem({
+export const ProposalCreatedEvent = getAbiItem({
   abi: MaciVotingAbi,
   name: "ProposalCreated",
 });
@@ -94,8 +94,6 @@ export function useProposal(proposalId: string, autoRefresh = false) {
       if (!proposal) return null;
 
       return {
-        actions: [...proposal.actions],
-        active: proposal.active,
         executed: proposal.executed,
         parameters: proposal.parameters,
         tally: {
@@ -103,13 +101,11 @@ export function useProposal(proposalId: string, autoRefresh = false) {
           no: proposal.tally.no ?? 0n,
           abstain: proposal.tally.abstain ?? 0n,
         },
+        actions: [...proposal.actions],
         allowFailureMap: proposal.allowFailureMap,
-        creator: creationEvent?.creator ?? "",
-        title: metadata?.title ?? "",
-        summary: metadata?.summary ?? "",
-        description: metadata?.description ?? "",
-        resources: metadata?.resources ?? [],
+        targetConfig: proposal.targetConfig,
         pollId: proposal.pollId,
+        pollAddress: proposal.pollAddress,
       };
     },
     []
@@ -119,6 +115,8 @@ export function useProposal(proposalId: string, autoRefresh = false) {
 
   return {
     proposal,
+    proposalMetadata: metadataContent,
+    creator: proposalCreationEvent?.creator,
     proposalQueryKey,
     proposalRefetch,
     status: {

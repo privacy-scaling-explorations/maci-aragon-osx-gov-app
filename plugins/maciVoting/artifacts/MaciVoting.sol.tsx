@@ -6,7 +6,7 @@ export const MaciVotingAbi = [
   },
   {
     type: "function",
-    name: "EXECUTE_PERMISSION_ID",
+    name: "CHANGE_COORDINATOR_PUBLIC_KEY_PERMISSION_ID",
     inputs: [],
     outputs: [
       {
@@ -19,26 +19,13 @@ export const MaciVotingAbi = [
   },
   {
     type: "function",
-    name: "INT_STATE_TREE_DEPTH",
+    name: "SET_TARGET_CONFIG_PERMISSION_ID",
     inputs: [],
     outputs: [
       {
         name: "",
-        type: "uint8",
-        internalType: "uint8",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "STATE_TREE_DEPTH",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "uint8",
-        internalType: "uint8",
+        type: "bytes32",
+        internalType: "bytes32",
       },
     ],
     stateMutability: "view",
@@ -52,19 +39,6 @@ export const MaciVotingAbi = [
         name: "",
         type: "bytes32",
         internalType: "bytes32",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "VOTE_OPTION_TREE_DEPTH",
-    inputs: [],
-    outputs: [
-      {
-        name: "",
-        type: "uint8",
-        internalType: "uint8",
       },
     ],
     stateMutability: "view",
@@ -90,6 +64,31 @@ export const MaciVotingAbi = [
   },
   {
     type: "function",
+    name: "changeCoordinatorPublicKey",
+    inputs: [
+      {
+        name: "_coordinatorPublicKey",
+        type: "tuple",
+        internalType: "struct DomainObjs.PublicKey",
+        components: [
+          {
+            name: "x",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "y",
+            type: "uint256",
+            internalType: "uint256",
+          },
+        ],
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
     name: "checkerFactory",
     inputs: [],
     outputs: [
@@ -103,7 +102,7 @@ export const MaciVotingAbi = [
   },
   {
     type: "function",
-    name: "coordinatorPubKey",
+    name: "coordinatorPublicKey",
     inputs: [],
     outputs: [
       {
@@ -131,7 +130,7 @@ export const MaciVotingAbi = [
       {
         name: "_actions",
         type: "tuple[]",
-        internalType: "struct IDAO.Action[]",
+        internalType: "struct Action[]",
         components: [
           {
             name: "to",
@@ -151,11 +150,6 @@ export const MaciVotingAbi = [
         ],
       },
       {
-        name: "_allowFailureMap",
-        type: "uint256",
-        internalType: "uint256",
-      },
-      {
         name: "_startDate",
         type: "uint64",
         internalType: "uint64",
@@ -164,6 +158,11 @@ export const MaciVotingAbi = [
         name: "_endDate",
         type: "uint64",
         internalType: "uint64",
+      },
+      {
+        name: "_data",
+        type: "bytes",
+        internalType: "bytes",
       },
     ],
     outputs: [
@@ -216,6 +215,31 @@ export const MaciVotingAbi = [
   },
   {
     type: "function",
+    name: "getCurrentTargetConfig",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "tuple",
+        internalType: "struct IPlugin.TargetConfig",
+        components: [
+          {
+            name: "target",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "operation",
+            type: "uint8",
+            internalType: "enum IPlugin.Operation",
+          },
+        ],
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "getProposal",
     inputs: [
       {
@@ -228,13 +252,8 @@ export const MaciVotingAbi = [
       {
         name: "proposal_",
         type: "tuple",
-        internalType: "struct MaciVoting.Proposal",
+        internalType: "struct IMaciVoting.Proposal",
         components: [
-          {
-            name: "active",
-            type: "bool",
-            internalType: "bool",
-          },
           {
             name: "executed",
             type: "bool",
@@ -243,7 +262,7 @@ export const MaciVotingAbi = [
           {
             name: "parameters",
             type: "tuple",
-            internalType: "struct MaciVoting.ProposalParameters",
+            internalType: "struct IMaciVoting.ProposalParameters",
             components: [
               {
                 name: "startDate",
@@ -270,7 +289,7 @@ export const MaciVotingAbi = [
           {
             name: "tally",
             type: "tuple",
-            internalType: "struct MaciVoting.TallyResults",
+            internalType: "struct IMaciVoting.TallyResults",
             components: [
               {
                 name: "yes",
@@ -292,7 +311,7 @@ export const MaciVotingAbi = [
           {
             name: "actions",
             type: "tuple[]",
-            internalType: "struct IDAO.Action[]",
+            internalType: "struct Action[]",
             components: [
               {
                 name: "to",
@@ -317,6 +336,23 @@ export const MaciVotingAbi = [
             internalType: "uint256",
           },
           {
+            name: "targetConfig",
+            type: "tuple",
+            internalType: "struct IPlugin.TargetConfig",
+            components: [
+              {
+                name: "target",
+                type: "address",
+                internalType: "address",
+              },
+              {
+                name: "operation",
+                type: "uint8",
+                internalType: "enum IPlugin.Operation",
+              },
+            ],
+          },
+          {
             name: "pollId",
             type: "uint256",
             internalType: "uint256",
@@ -325,6 +361,31 @@ export const MaciVotingAbi = [
             name: "pollAddress",
             type: "address",
             internalType: "address",
+          },
+        ],
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getTargetConfig",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "tuple",
+        internalType: "struct IPlugin.TargetConfig",
+        components: [
+          {
+            name: "target",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "operation",
+            type: "uint8",
+            internalType: "enum IPlugin.Operation",
           },
         ],
       },
@@ -381,83 +442,144 @@ export const MaciVotingAbi = [
     name: "initialize",
     inputs: [
       {
-        name: "_dao",
-        type: "address",
-        internalType: "contract IDAO",
-      },
-      {
-        name: "_maci",
-        type: "address",
-        internalType: "address",
-      },
-      {
-        name: "_coordinatorPubKey",
+        name: "_params",
         type: "tuple",
-        internalType: "struct DomainObjs.PublicKey",
+        internalType: "struct IMaciVoting.InitializationParams",
         components: [
           {
-            name: "x",
-            type: "uint256",
-            internalType: "uint256",
+            name: "dao",
+            type: "address",
+            internalType: "contract IDAO",
           },
           {
-            name: "y",
-            type: "uint256",
-            internalType: "uint256",
+            name: "token",
+            type: "address",
+            internalType: "contract IVotesUpgradeable",
+          },
+          {
+            name: "maci",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "coordinatorPublicKey",
+            type: "tuple",
+            internalType: "struct DomainObjs.PublicKey",
+            components: [
+              {
+                name: "x",
+                type: "uint256",
+                internalType: "uint256",
+              },
+              {
+                name: "y",
+                type: "uint256",
+                internalType: "uint256",
+              },
+            ],
+          },
+          {
+            name: "votingSettings",
+            type: "tuple",
+            internalType: "struct IMaciVoting.VotingSettings",
+            components: [
+              {
+                name: "minParticipation",
+                type: "uint32",
+                internalType: "uint32",
+              },
+              {
+                name: "minDuration",
+                type: "uint64",
+                internalType: "uint64",
+              },
+              {
+                name: "minProposerVotingPower",
+                type: "uint256",
+                internalType: "uint256",
+              },
+              {
+                name: "voteOptions",
+                type: "uint8",
+                internalType: "uint8",
+              },
+              {
+                name: "mode",
+                type: "uint8",
+                internalType: "enum DomainObjs.Mode",
+              },
+            ],
+          },
+          {
+            name: "targetConfig",
+            type: "tuple",
+            internalType: "struct IPlugin.TargetConfig",
+            components: [
+              {
+                name: "target",
+                type: "address",
+                internalType: "address",
+              },
+              {
+                name: "operation",
+                type: "uint8",
+                internalType: "enum IPlugin.Operation",
+              },
+            ],
+          },
+          {
+            name: "verifier",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "verifyingKeysRegistry",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "policyFactory",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "checkerFactory",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "voiceCreditProxyFactory",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "treeDepths",
+            type: "tuple",
+            internalType: "struct Params.TreeDepths",
+            components: [
+              {
+                name: "tallyProcessingStateTreeDepth",
+                type: "uint8",
+                internalType: "uint8",
+              },
+              {
+                name: "voteOptionTreeDepth",
+                type: "uint8",
+                internalType: "uint8",
+              },
+              {
+                name: "stateTreeDepth",
+                type: "uint8",
+                internalType: "uint8",
+              },
+            ],
+          },
+          {
+            name: "messageBatchSize",
+            type: "uint8",
+            internalType: "uint8",
           },
         ],
-      },
-      {
-        name: "_votingSettings",
-        type: "tuple",
-        internalType: "struct IMaciVoting.VotingSettings",
-        components: [
-          {
-            name: "minParticipation",
-            type: "uint32",
-            internalType: "uint32",
-          },
-          {
-            name: "minDuration",
-            type: "uint64",
-            internalType: "uint64",
-          },
-          {
-            name: "minProposerVotingPower",
-            type: "uint256",
-            internalType: "uint256",
-          },
-        ],
-      },
-      {
-        name: "_token",
-        type: "address",
-        internalType: "contract IVotesUpgradeable",
-      },
-      {
-        name: "_verifier",
-        type: "address",
-        internalType: "address",
-      },
-      {
-        name: "_vkRegistry",
-        type: "address",
-        internalType: "address",
-      },
-      {
-        name: "_policyFactory",
-        type: "address",
-        internalType: "address",
-      },
-      {
-        name: "_checkerFactory",
-        type: "address",
-        internalType: "address",
-      },
-      {
-        name: "_voiceCreditProxyFactory",
-        type: "address",
-        internalType: "address",
       },
     ],
     outputs: [],
@@ -472,6 +594,32 @@ export const MaciVotingAbi = [
         name: "",
         type: "address",
         internalType: "contract MACI",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "messageBatchSize",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "uint8",
+        internalType: "uint8",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "minDuration",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "uint64",
+        internalType: "uint64",
       },
     ],
     stateMutability: "view",
@@ -569,6 +717,31 @@ export const MaciVotingAbi = [
   },
   {
     type: "function",
+    name: "setTargetConfig",
+    inputs: [
+      {
+        name: "_targetConfig",
+        type: "tuple",
+        internalType: "struct IPlugin.TargetConfig",
+        components: [
+          {
+            name: "target",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "operation",
+            type: "uint8",
+            internalType: "enum IPlugin.Operation",
+          },
+        ],
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
     name: "supportsInterface",
     inputs: [
       {
@@ -607,16 +780,39 @@ export const MaciVotingAbi = [
   },
   {
     type: "function",
+    name: "treeDepths",
+    inputs: [],
+    outputs: [
+      {
+        name: "tallyProcessingStateTreeDepth",
+        type: "uint8",
+        internalType: "uint8",
+      },
+      {
+        name: "voteOptionTreeDepth",
+        type: "uint8",
+        internalType: "uint8",
+      },
+      {
+        name: "stateTreeDepth",
+        type: "uint8",
+        internalType: "uint8",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "upgradeTo",
     inputs: [
       {
-        name: "newAddress",
+        name: "newImplementation",
         type: "address",
         internalType: "address",
       },
     ],
     outputs: [],
-    stateMutability: "pure",
+    stateMutability: "nonpayable",
   },
   {
     type: "function",
@@ -651,7 +847,7 @@ export const MaciVotingAbi = [
   },
   {
     type: "function",
-    name: "vkRegistry",
+    name: "verifyingKeysRegistry",
     inputs: [],
     outputs: [
       {
@@ -695,6 +891,16 @@ export const MaciVotingAbi = [
         type: "uint256",
         internalType: "uint256",
       },
+      {
+        name: "voteOptions",
+        type: "uint8",
+        internalType: "uint8",
+      },
+      {
+        name: "mode",
+        type: "uint8",
+        internalType: "enum DomainObjs.Mode",
+      },
     ],
     stateMutability: "view",
   },
@@ -726,6 +932,49 @@ export const MaciVotingAbi = [
         type: "address",
         indexed: true,
         internalType: "address",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "CoordinatorKeyChanged",
+    inputs: [
+      {
+        name: "oldCoordinatorPublicKey",
+        type: "tuple",
+        indexed: false,
+        internalType: "struct DomainObjs.PublicKey",
+        components: [
+          {
+            name: "x",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "y",
+            type: "uint256",
+            internalType: "uint256",
+          },
+        ],
+      },
+      {
+        name: "newCoordinatorPublicKey",
+        type: "tuple",
+        indexed: false,
+        internalType: "struct DomainObjs.PublicKey",
+        components: [
+          {
+            name: "x",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "y",
+            type: "uint256",
+            internalType: "uint256",
+          },
+        ],
       },
     ],
     anonymous: false,
@@ -781,7 +1030,7 @@ export const MaciVotingAbi = [
         name: "actions",
         type: "tuple[]",
         indexed: false,
-        internalType: "struct IDAO.Action[]",
+        internalType: "struct Action[]",
         components: [
           {
             name: "to",
@@ -824,6 +1073,31 @@ export const MaciVotingAbi = [
   },
   {
     type: "event",
+    name: "TargetSet",
+    inputs: [
+      {
+        name: "newTargetConfig",
+        type: "tuple",
+        indexed: false,
+        internalType: "struct IPlugin.TargetConfig",
+        components: [
+          {
+            name: "target",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "operation",
+            type: "uint8",
+            internalType: "enum IPlugin.Operation",
+          },
+        ],
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
     name: "Upgraded",
     inputs: [
       {
@@ -834,6 +1108,11 @@ export const MaciVotingAbi = [
       },
     ],
     anonymous: false,
+  },
+  {
+    type: "error",
+    name: "AlreadyInitialized",
+    inputs: [],
   },
   {
     type: "error",
@@ -874,6 +1153,39 @@ export const MaciVotingAbi = [
         name: "actual",
         type: "uint64",
         internalType: "uint64",
+      },
+    ],
+  },
+  {
+    type: "error",
+    name: "DelegateCallFailed",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "FunctionDeprecated",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "InvalidTargetConfig",
+    inputs: [
+      {
+        name: "targetConfig",
+        type: "tuple",
+        internalType: "struct IPlugin.TargetConfig",
+        components: [
+          {
+            name: "target",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "operation",
+            type: "uint8",
+            internalType: "enum IPlugin.Operation",
+          },
+        ],
       },
     ],
   },

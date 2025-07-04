@@ -8,7 +8,7 @@ import {
   Tag,
   type TagVariant,
 } from "@aragon/ods";
-import { type Proposal } from "@/plugins/maciVoting/utils/types";
+import { type ProposalMetadata, type Proposal } from "@/plugins/maciVoting/utils/types";
 import { useProposalStatus } from "@/plugins/maciVoting/hooks/useProposalVariantStatus";
 import dayjs from "dayjs";
 import classNames from "classnames";
@@ -20,11 +20,13 @@ import { unixTimestampToDate } from "../../utils/formatPollDate";
 interface ProposalHeaderProps {
   proposalNumber: number;
   proposal: Proposal;
+  proposalMetadata: ProposalMetadata;
+  creator: string;
   canExecute: boolean;
   onExecutePressed: () => void;
 }
 
-const ProposalHeader: React.FC<ProposalHeaderProps> = ({ proposal }) => {
+const ProposalHeader: React.FC<ProposalHeaderProps> = ({ proposal, proposalMetadata, creator }) => {
   const status = useProposalStatus(proposal);
   const tagVariant = getTagVariantFromStatus(status);
 
@@ -37,16 +39,16 @@ const ProposalHeader: React.FC<ProposalHeaderProps> = ({ proposal }) => {
         {/* Title & description */}
         <div className="flex w-full flex-col gap-y-2">
           <div className="flex w-full items-center gap-x-4">
-            <Heading size="h1">{proposal.title}</Heading>
+            <Heading size="h1">{proposalMetadata.title}</Heading>
             {/* && <Tag label="Emergency" variant="critical" />*/}
           </div>
-          <p className="text-lg leading-normal text-neutral-500">{proposal.summary}</p>
+          <p className="text-lg leading-normal text-neutral-500">{proposalMetadata.summary}</p>
         </div>
         {/* Metadata */}
         <div className="flex flex-wrap items-start gap-x-10 gap-y-2">
           <div className="flex items-center gap-x-2">
             <AvatarIcon icon={IconType.APP_MEMBERS} size="sm" variant="primary" />
-            <Publisher publisher={[{ address: proposal.creator }]} />
+            <Publisher publisher={[{ address: creator }]} />
           </div>
 
           <div className="flex flex-col items-start gap-y-2">

@@ -2,7 +2,7 @@ import { Button, IconType, Icon, InputText, TextAreaRichText, InputDate, InputTi
 import React, { useEffect, useState } from "react";
 import { uploadToPinata } from "@/utils/ipfs";
 import { useChainId, useSwitchChain, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
-import { toHex } from "viem";
+import { encodeAbiParameters, parseAbiParameters, toHex } from "viem";
 import { MaciVotingAbi } from "../artifacts/MaciVoting.sol";
 import { useAlerts } from "@/context/Alerts";
 import WithdrawalInput from "@/components/input/withdrawal";
@@ -151,14 +151,23 @@ export default function Create() {
 
       const endDateTime = Math.floor(new Date(`${endDate}T${endTime ? endTime : "00:00:00"}`).getTime() / 1000);
 
+      const allowFailureMap = 0n;
+      const voteOption = 0;
+      const tryEarlyExecution = false;
+      const data = encodeAbiParameters(parseAbiParameters("uint256, uint8, bool"), [
+        allowFailureMap,
+        voteOption,
+        tryEarlyExecution,
+      ]);
+
       if (chainId !== PUBLIC_CHAIN.id) await switchChainAsync({ chainId: PUBLIC_CHAIN.id });
       createProposalWrite({
         chainId: PUBLIC_CHAIN.id,
         abi: MaciVotingAbi,
         address: PUBLIC_MACI_VOTING_PLUGIN_ADDRESS,
         functionName: "createProposal",
-        // args: _metadata, _actions, _allowFailureMap, _startDate, _endDate
-        args: [toHex(ipfsPin), actions, BigInt(0), BigInt(startDateTime), BigInt(endDateTime)],
+        // args: _metadata, _actions, _startDate, _endDate, _data
+        args: [toHex(ipfsPin), actions, BigInt(startDateTime), BigInt(endDateTime), data],
       });
       return null;
     } catch {

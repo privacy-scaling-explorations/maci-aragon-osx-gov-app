@@ -1,5 +1,5 @@
-import { Address } from "viem";
-import { Action } from "@/utils/types";
+import { type Address } from "viem";
+import { type Action } from "@/utils/types";
 
 export type ProposalInputs = {
   proposalId: bigint;
@@ -29,19 +29,20 @@ export type MetadataResource = {
   url: string;
 };
 
+type TargetConfig = {
+  target: Address;
+  operation: number;
+};
+
 export type Proposal = {
-  active: boolean;
   executed: boolean;
   parameters: ProposalParameters;
   tally: Tally;
   actions: Action[];
   allowFailureMap: bigint;
-  creator: string;
-  title: string;
-  summary: string;
-  description: string;
-  resources: MetadataResource[];
+  targetConfig: TargetConfig;
   pollId: bigint;
+  pollAddress: Address;
 };
 
 export type ProposalMetadata = {
