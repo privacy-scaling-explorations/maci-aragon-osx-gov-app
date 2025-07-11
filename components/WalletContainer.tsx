@@ -38,6 +38,17 @@ const WalletContainer = () => {
     query: { enabled: !!ensName },
   });
 
+  if (!isConnected) {
+    return (
+      <button
+        className="cursor:pointer flex h-[48px] min-w-[112px] flex-row items-center justify-center gap-1 rounded-xl border border-primary-400 bg-primary-400 text-base font-semibold leading-tight text-neutral-0 outline-none transition-all hover:border-primary-500 hover:bg-primary-500 hover:shadow-primary-md focus:outline-none focus-visible:ring focus-visible:ring-primary focus-visible:ring-offset active:border-primary-800 active:bg-primary-800 aria-disabled:border-primary-100 aria-disabled:bg-primary-100 aria-disabled:text-primary-300"
+        onClick={() => open()}
+      >
+        Connect
+      </button>
+    );
+  }
+
   return (
     <button
       className={classNames(
@@ -55,7 +66,7 @@ const WalletContainer = () => {
         </div>
       )}
 
-      {!isConnected && <span>Connect</span>}
+      {!isConnected && <button>Connect</button>}
     </button>
   );
 };

@@ -86,7 +86,7 @@ const ActionItem = ({ index, rawAction }: { index: number; rawAction: RawAction 
               </Link>
             </div>
           </div>
-          <span className="hidden text-sm leading-tight text-neutral-500 sm:block md:text-base">{title}</span>
+          <span className="hidden text-sm leading-tight text-neutral-500 md:text-base">{title}</span>
         </div>
       </AccordionItemHeader>
 

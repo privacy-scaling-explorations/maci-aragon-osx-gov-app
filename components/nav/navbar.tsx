@@ -28,7 +28,7 @@ export const Navbar: React.FC = () => {
           <Link
             href="/"
             className={classNames(
-              "flex items-center gap-x-3 rounded-full md:rounded-lg",
+              "flex cursor-pointer items-center gap-x-3 rounded-full md:rounded-lg",
               "outline-none focus:outline-none focus-visible:ring focus-visible:ring-primary focus-visible:ring-offset" // focus styles
             )}
           >

@@ -100,7 +100,7 @@ export const VoteResultCard = ({ results }: VoteResultCardProps) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 gap-2 lg:grid-cols-3">
             <div className={`p-4 text-center ${bgClass("yes")} rounded-xl border`}>
               <CheckCircle className={classNames(`mx-auto h-5 w-5`, textClass("yes"))} />
               <div

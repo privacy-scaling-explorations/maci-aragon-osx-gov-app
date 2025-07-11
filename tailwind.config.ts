@@ -11,6 +11,8 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        slate: "#CBD5E1",
+        danger: "#e7000b",
         voting: {
           yes: "#10b981",
           no: "#dc2626",
