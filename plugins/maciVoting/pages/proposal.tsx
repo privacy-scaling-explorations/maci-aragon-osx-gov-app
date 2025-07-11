@@ -23,9 +23,20 @@ export default function ProposalDetail({ id: proposalId }: { id: string }) {
 
   if (!proposal || !proposalMetadata || !creator || showProposalLoading) {
     return (
-      <section className="justify-left items-left flex w-screen min-w-full max-w-full">
-        <PleaseWaitSpinner />
-      </section>
+      <div className="flex w-full flex-col gap-10">
+        <div className="h-[250px] w-full bg-slate"></div>
+        <div className="mx-auto grid w-full max-w-screen-xl grid-cols-3 gap-12">
+          <div className="col-span-2 flex flex-col gap-6">
+            <div className="h-[200px] w-full rounded-xl bg-slate"></div>
+            <div className="h-[200px] w-full rounded-xl bg-slate"></div>
+            <div className="h-[200px] w-full rounded-xl bg-slate"></div>
+          </div>
+          <div className="flex flex-col gap-6">
+            <div className="aspect-video w-full rounded-xl bg-slate"></div>
+            <div className="h-[140px] w-full rounded-xl bg-slate"></div>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -41,7 +52,7 @@ export default function ProposalDetail({ id: proposalId }: { id: string }) {
       />
 
       <div className="mx-auto w-full max-w-screen-xl px-4 py-6 md:px-16 md:pb-20 md:pt-10">
-        <div className="flex w-full flex-col gap-x-12 gap-y-6 md:flex-row">
+        <div className="mg:gap-y-6 flex w-full flex-col gap-6 md:flex-row md:gap-x-12">
           <div className="flex flex-col gap-y-6 md:w-[63%] md:shrink-0">
             <BodySection body={proposalMetadata?.description || "No description was provided"} />
             <If condition={canFinalize && finalizeStatus !== "submitted"}>

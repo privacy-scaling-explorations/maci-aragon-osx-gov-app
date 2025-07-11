@@ -51,15 +51,7 @@ export default function ProposalCard(props: ProposalInputs) {
   const winningOption = getWinningOption(proposal?.tally as Tally);
 
   if (!proposal && showLoading) {
-    return (
-      <section className="mb-4 w-full">
-        <Card className="p-4">
-          <span className="xs:px-10 px-4 py-5 md:px-6 lg:px-7">
-            <PleaseWaitSpinner fullMessage="Loading proposal..." />
-          </span>
-        </Card>
-      </section>
-    );
+    return <Card className="mb-4 min-h-[120px] animate-pulse bg-slate p-4" />;
   } else if (!proposalMetadata?.title && !proposalMetadata?.summary) {
     // We have the proposal but no metadata yet
     return (

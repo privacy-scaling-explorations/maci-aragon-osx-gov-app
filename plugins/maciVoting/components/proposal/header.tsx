@@ -16,6 +16,7 @@ import { type ReactNode } from "react";
 import { Publisher } from "@/components/publisher";
 import { getSimpleRelativeTimeFromDate } from "@/utils/dates";
 import { unixTimestampToDate } from "../../utils/formatPollDate";
+import Link from "next/link";
 
 interface ProposalHeaderProps {
   proposalNumber: number;
@@ -36,6 +37,15 @@ const ProposalHeader: React.FC<ProposalHeaderProps> = ({ proposal, proposalMetad
     <div className="flex w-full justify-center bg-neutral-0">
       {/* Wrapper */}
       <MainSection className="flex flex-col gap-y-6 md:px-16 md:py-10">
+        <Link className="mr-auto flex cursor-pointer items-center gap-2" href="/plugins/maci-voting">
+          <svg width="20" height="21" viewBox="0 0 20 21" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M6.52268 9.78578L10.9927 5.31578L9.81435 4.13745L3.33268 10.6191L9.81435 17.1008L10.9927 15.9225L6.52268 11.4525H16.666V9.78578H6.52268Z"
+              fill="currentColor"
+            />
+          </svg>
+          <span className="text-base">Back</span>
+        </Link>
         {/* Title & description */}
         <div className="flex w-full flex-col gap-y-2">
           <div className="flex w-full items-center gap-x-4">
