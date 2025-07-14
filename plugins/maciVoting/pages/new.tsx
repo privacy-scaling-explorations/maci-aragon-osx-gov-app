@@ -15,6 +15,7 @@ import { NEXT_MINIMUM_START_DELAY_IN_SECONDS, PUBLIC_CHAIN, PUBLIC_MACI_VOTING_P
 import { ActionCard } from "@/components/actions/action";
 import { useMutation } from "@tanstack/react-query";
 import classNames from "classnames";
+import Link from "next/link";
 
 enum ActionType {
   Signaling,
@@ -38,6 +39,15 @@ export default function Create() {
   const { writeContract: createProposalWrite, data: createTxHash, status, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: createTxHash });
   const [actionType, setActionType] = useState<ActionType>(ActionType.Signaling);
+  const [errors, setErrors] = useState<{
+    title?: string;
+    summary?: string;
+    description?: string;
+    startDate?: string;
+    endDate?: string;
+    withdrawal?: string;
+    custom?: string;
+  }>({});
 
   const changeActionType = (actionType: ActionType) => {
     setActions([]);
@@ -82,20 +92,21 @@ export default function Create() {
   }, [status, createTxHash, isConfirming, isConfirmed, error, push]);
 
   const submitProposal = async () => {
+    let formErrors = {};
     try {
       // Check metadata
       if (!title.trim()) {
-        return addAlert("Invalid proposal details", {
-          description: "Please, enter a title",
-          type: "error",
-        });
+        formErrors = {
+          ...formErrors,
+          title: "Please, enter a title",
+        };
       }
 
       if (!summary.trim()) {
-        return addAlert("Invalid proposal details", {
-          description: "Please, enter a summary of what the proposal is about",
-          type: "error",
-        });
+        formErrors = {
+          ...formErrors,
+          summary: "Please, enter a summary of what the proposal is about",
+        };
       }
 
       // Check the action
@@ -104,18 +115,18 @@ export default function Create() {
           break;
         case ActionType.Withdrawal:
           if (!actions.length) {
-            return addAlert("Invalid proposal details", {
-              description: "Please ensure that the withdrawal address and the amount to transfer are valid",
-              type: "error",
-            });
+            formErrors = {
+              ...formErrors,
+              withdrawal: "Please ensure that the withdrawal address and the amount to transfer are valid",
+            };
           }
           break;
         default:
           if (!actions.length || !actions[0].data || actions[0].data === "0x") {
-            return addAlert("Invalid proposal details", {
-              description: "Please ensure that the values of the action to execute are complete and correct",
-              type: "error",
-            });
+            formErrors = {
+              ...formErrors,
+              custom: "Please ensure that the values of the action to execute are complete and correct",
+            };
           }
       }
 
@@ -132,21 +143,20 @@ export default function Create() {
       const ipfsPin = await uploadToPinata(blob);
 
       if (!startDate || !endDate) {
-        addAlert("You need to specify the start date and end date of the voting period", {
-          timeout: 4 * 1000,
-        });
-        return null;
+        formErrors = {
+          ...formErrors,
+          startDate: "You need to specify the start date and end date of the voting period",
+        };
       }
 
       const currentTime = Math.floor(Date.now() / 1000);
       const startDateTime = Math.floor(new Date(`${startDate}T${startTime ? startTime : "00:00:00"}`).getTime() / 1000);
 
       if (startDateTime - currentTime < NEXT_MINIMUM_START_DELAY_IN_SECONDS) {
-        addAlert(`The start date must be at least ${NEXT_MINIMUM_START_DELAY_IN_SECONDS} seconds in the future`, {
-          timeout: 4 * 1000,
-          type: "error",
-        });
-        return null;
+        formErrors = {
+          ...formErrors,
+          startDate: `The start date must be at least ${NEXT_MINIMUM_START_DELAY_IN_SECONDS} seconds in the future`,
+        };
       }
 
       const endDateTime = Math.floor(new Date(`${endDate}T${endTime ? endTime : "00:00:00"}`).getTime() / 1000);
@@ -159,6 +169,11 @@ export default function Create() {
         voteOption,
         tryEarlyExecution,
       ]);
+
+      if (Object.keys(formErrors).length > 0) {
+        setErrors(formErrors);
+        return;
+      }
 
       if (chainId !== PUBLIC_CHAIN.id) await switchChainAsync({ chainId: PUBLIC_CHAIN.id });
       createProposalWrite({
@@ -199,11 +214,20 @@ export default function Create() {
   const isDisabled = submitProposalMutation.isPending || isConfirming;
   return (
     <section className="container flex w-screen flex-col items-center pt-4 lg:pt-10">
+      <Link className="mb-6 mr-auto flex cursor-pointer items-center gap-2" href="/plugins/maci-voting">
+        <svg width="20" height="21" viewBox="0 0 20 21" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M6.52268 9.78578L10.9927 5.31578L9.81435 4.13745L3.33268 10.6191L9.81435 17.1008L10.9927 15.9225L6.52268 11.4525H16.666V9.78578H6.52268Z"
+            fill="currentColor"
+          />
+        </svg>
+        <span className="text-base">Back</span>
+      </Link>
       <div className="mb-6 w-full content-center justify-between">
         <h1 className="mb-10 text-3xl font-semibold text-neutral-900">Create Proposal</h1>
         <div className="mb-6">
           <InputText
-            label="Title"
+            label="Title *"
             wrapperClassName={inputWrapperClassName}
             maxLength={100}
             placeholder="A short title that describes the main purpose"
@@ -216,7 +240,7 @@ export default function Create() {
         <div className="mb-6">
           <InputText
             wrapperClassName={inputWrapperClassName}
-            label="Summary"
+            label="Summary *"
             maxLength={240}
             placeholder="A short summary that describes the main purpose"
             variant="default"
@@ -227,7 +251,7 @@ export default function Create() {
         </div>
         <div className="mb-6">
           <TextAreaRichText
-            label="Description"
+            label="Description *"
             wrapperClassName={inputWrapperClassName}
             className="pt-2"
             value={description}
@@ -241,7 +265,7 @@ export default function Create() {
             <InputDate
               wrapperClassName={inputWrapperClassName}
               className="w-full"
-              label="Start date"
+              label="Start date *"
               variant="default"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
@@ -260,7 +284,7 @@ export default function Create() {
             <InputDate
               wrapperClassName={inputWrapperClassName}
               className="w-full"
-              label="End date"
+              label="End date *"
               variant="default"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
@@ -339,6 +363,14 @@ export default function Create() {
               <FunctionCallForm onAddAction={(action) => setActions(actions.concat([action]))} />
             )}
           </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          {Object.entries(errors).map(([key, value]) => (
+            <div key={key} className="text-danger">
+              {value}
+            </div>
+          ))}
         </div>
 
         <If condition={showLoading}>
