@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { type Proposal } from "@/plugins/maciVoting/utils/types";
 import { type ProposalStatus } from "@aragon/ods";
 import dayjs from "dayjs";
-import { useCoordinator } from "./useCoordinator";
 import { useGetPollData } from "./useGetPollData";
+import { useMaci } from "./useMaci";
 
 export const useProposalVariantStatus = (proposal: Proposal) => {
   const [status, setStatus] = useState({ variant: "", label: "" });
@@ -26,7 +26,7 @@ export const useProposalVariantStatus = (proposal: Proposal) => {
 
 export const useProposalStatus = (proposal: Proposal) => {
   const [status, setStatus] = useState<ProposalStatus>();
-  const { checkIsTallied } = useCoordinator();
+  const { checkIsTallied } = useMaci();
   const { data: { results } = {} } = useGetPollData(proposal ? proposal.pollId : undefined);
 
   useEffect(() => {

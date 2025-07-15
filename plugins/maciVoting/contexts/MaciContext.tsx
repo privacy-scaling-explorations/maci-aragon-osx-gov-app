@@ -11,6 +11,8 @@ import {
   getPoll,
   publish,
   getSignedupUserData,
+  Poll__factory as PollFactory,
+  isTallied,
 } from "@maci-protocol/sdk/browser";
 import { PUBLIC_MACI_ADDRESS, PUBLIC_MACI_DEPLOYMENT_BLOCK } from "@/constants";
 import { useAccount, usePublicClient, useSignMessage } from "wagmi";
@@ -330,6 +332,37 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
     [signer, maciKeypair, pollId, pollStateIndex, hasJoinedPoll, addAlert, initialVoiceCredits]
   );
 
+  const checkIsTallied = useCallback(
+    async (pollId: number) => {
+      if (!signer) {
+        // eslint-disable-next-line no-console
+        console.log("No signer");
+        return false;
+      }
+
+      const isPollTallied = await isTallied({
+        maciAddress: PUBLIC_MACI_ADDRESS,
+        pollId: pollId.toString(),
+        signer,
+      });
+      return isPollTallied;
+    },
+    [signer]
+  );
+
+  const checkMergeStatus = useCallback(
+    async (pollId: number) => {
+      const { address: pollAddress } = await getPoll({
+        maciAddress: PUBLIC_MACI_ADDRESS,
+        pollId,
+        signer,
+      });
+      const poll = PollFactory.connect(pollAddress, signer);
+      return await poll.stateMerged();
+    },
+    [signer]
+  );
+
   // check if user is connected
   useEffect(() => {
     setError(undefined);
@@ -529,6 +562,8 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       onSignup,
       onJoinPoll,
       onVote,
+      checkIsTallied,
+      checkMergeStatus,
     }),
     [
       isLoading,
@@ -544,6 +579,8 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       onSignup,
       onJoinPoll,
       onVote,
+      checkIsTallied,
+      checkMergeStatus,
     ]
   );
 

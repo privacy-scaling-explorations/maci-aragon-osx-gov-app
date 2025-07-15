@@ -1,16 +1,17 @@
 import { EMode } from "@maci-protocol/core";
-import { getPoll, isTallied, type ITallyData, Poll__factory as PollFactory } from "@maci-protocol/sdk/browser";
+import { type ITallyData } from "@maci-protocol/sdk/browser";
 import { PUBLIC_CHAIN_NAME, PUBLIC_COORDINATOR_SERVICE_URL, PUBLIC_MACI_ADDRESS } from "@/constants";
-import { createContext, type ReactNode, useCallback, useMemo, useState } from "react";
+import { createContext, type ReactNode, useCallback, useMemo } from "react";
 import {
   type TCoordinatorServiceResult,
   type IGenerateData,
   type ICoordinatorContextType,
-  type FinalizeStatus,
+  type IFinalizeProposalArgs,
 } from "./types";
 import { useEthersSigner } from "../hooks/useEthersSigner";
 import { toBackendChainFormat } from "../utils/chains";
 import { useAlerts } from "@/context/Alerts";
+import { useMaci } from "../hooks/useMaci";
 
 export const CoordinatorContext = createContext<ICoordinatorContextType | undefined>(undefined);
 
@@ -44,8 +45,7 @@ async function makeCoordinatorServicePostRequest<T>(url: string, body: string): 
 }
 
 export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
-  const [finalizeStatus, setFinalizeStatus] = useState<FinalizeStatus>("notStarted");
-
+  const { checkMergeStatus, checkIsTallied } = useMaci();
   const signer = useEthersSigner();
   const { addAlert } = useAlerts();
 
@@ -84,42 +84,12 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
     );
   }, []);
 
-  const checkMergeStatus = useCallback(
-    async (pollId: number) => {
-      const { address: pollAddress } = await getPoll({
-        maciAddress: PUBLIC_MACI_ADDRESS,
-        pollId,
-        signer,
-      });
-      const poll = PollFactory.connect(pollAddress, signer);
-      return await poll.stateMerged();
-    },
-    [signer]
-  );
-
-  const checkIsTallied = useCallback(
-    async (pollId: number) => {
-      if (!signer) {
-        // eslint-disable-next-line no-console
-        console.log("No signer");
-        return false;
-      }
-
-      const isPollTallied = await isTallied({
-        maciAddress: PUBLIC_MACI_ADDRESS,
-        pollId: pollId.toString(),
-        signer,
-      });
-      return isPollTallied;
-    },
-    [signer]
-  );
-
   const finalizeProposal = useCallback(
-    async (pollId: number) => {
+    async ({ pollId, setFinalizeStatus }: IFinalizeProposalArgs) => {
       if (!signer) {
         // eslint-disable-next-line no-console
         console.log("No signer");
+        return;
       }
 
       const isTallied = await checkIsTallied(pollId);
@@ -185,11 +155,9 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
 
   const value = useMemo<ICoordinatorContextType>(
     () => ({
-      finalizeStatus,
-      checkIsTallied,
       finalizeProposal,
     }),
-    [finalizeStatus, checkIsTallied, finalizeProposal]
+    [finalizeProposal]
   );
 
   return <CoordinatorContext.Provider value={value as ICoordinatorContextType}>{children}</CoordinatorContext.Provider>;

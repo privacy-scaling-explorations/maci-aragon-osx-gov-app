@@ -1,35 +1,36 @@
 "use client";
 
-import { CheckCircle, XCircle, MinusCircle, Trophy, Sparkles, AlertTriangle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { CheckCircle, XCircle, MinusCircle } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import classNames from "classnames";
+import { useGetPollData } from "../hooks/useGetPollData";
 
 type WinnerType = "yes" | "no" | "abstain" | "tie";
 
 interface VoteResultCardProps {
-  results: {
-    yes: number;
-    no: number;
-    abstain: number;
-  };
+  pollId: bigint;
 }
 
-export const VoteResultCard = ({ results }: VoteResultCardProps) => {
+export const VoteResultCard = ({ pollId }: VoteResultCardProps) => {
+  const { data: { results } = {} } = useGetPollData(pollId);
   const [isVisible, setIsVisible] = useState(false);
 
-  const total = results.yes + results.no + results.abstain;
-  const yesPercentage = total > 0 ? (results.yes / total) * 100 : 0;
-  const noPercentage = total > 0 ? (results.no / total) * 100 : 0;
+  const yes = results ? Number(results[0].value) : 0;
+  const no = results ? Number(results[1].value) : 0;
+  const abstain = results ? Number(results[2].value) : 0;
 
-  const getWinner = () => {
-    if (results.yes > results.no) return "yes";
-    if (results.no > results.yes) return "no";
+  const total = yes + no + abstain;
+
+  const yesPercentage = total > 0 ? (yes / total) * 100 : 0;
+  const noPercentage = total > 0 ? (no / total) * 100 : 0;
+
+  const winner = useMemo<WinnerType>(() => {
+    if (yes > no) return "yes";
+    if (no > yes) return "no";
     return "tie";
-  };
+  }, [yes, no]);
 
-  const winner: WinnerType = getWinner();
-
-  const getWinnerConfig = () => {
+  const config = useMemo(() => {
     switch (winner) {
       case "yes":
         return {
@@ -44,9 +45,7 @@ export const VoteResultCard = ({ results }: VoteResultCardProps) => {
           percentage: 50,
         };
     }
-  };
-
-  const config = getWinnerConfig();
+  }, [noPercentage, winner, yesPercentage]);
 
   useEffect(() => {
     setIsVisible(true);
@@ -109,7 +108,7 @@ export const VoteResultCard = ({ results }: VoteResultCardProps) => {
                   fontWeight: winner === "yes" ? 700 : winner === "no" ? 700 : 400,
                 }}
               >
-                {results.yes}
+                {yes}
               </div>
               <div className={`text-sm ${textClass("yes")}`}>Yes</div>
             </div>
@@ -122,7 +121,7 @@ export const VoteResultCard = ({ results }: VoteResultCardProps) => {
                   fontWeight: winner === "no" ? 700 : winner === "yes" ? 700 : 400,
                 }}
               >
-                {results.no}
+                {no}
               </div>
               <div className={`text-sm ${textClass("no")}`}>No</div>
             </div>
@@ -135,7 +134,7 @@ export const VoteResultCard = ({ results }: VoteResultCardProps) => {
                   fontWeight: 400,
                 }}
               >
-                {results.abstain}
+                {abstain}
               </div>
               <div className={`text-sm ${textClass("abstain")}`}>Abstain</div>
             </div>
