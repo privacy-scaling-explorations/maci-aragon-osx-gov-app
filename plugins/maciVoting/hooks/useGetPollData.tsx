@@ -1,11 +1,11 @@
-import { Query, useQuery } from "@tanstack/react-query";
+import { type Query, useQuery } from "@tanstack/react-query";
 import { getPoll, getResults, type IResult } from "@maci-protocol/sdk/browser";
 import { PUBLIC_MACI_ADDRESS } from "@/constants";
-import { useCoordinator } from "./useCoordinator";
 import { useEthersSigner } from "./useEthersSigner";
+import { useMaci } from "./useMaci";
 
 export const useGetPollData = (pollId?: string | bigint) => {
-  const { checkIsTallied } = useCoordinator();
+  const { checkIsTallied } = useMaci();
   const signer = useEthersSigner();
 
   return useQuery({
@@ -56,7 +56,7 @@ export const useGetPollData = (pollId?: string | bigint) => {
         now,
         voteEnded,
         disabled,
-        tallied: true,
+        tallied,
         results,
       };
     },

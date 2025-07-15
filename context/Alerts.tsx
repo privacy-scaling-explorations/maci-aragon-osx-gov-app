@@ -36,6 +36,8 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Update the existing one
       setAlerts((curAlerts) => {
         const [prevAlert] = curAlerts.splice(idx, 1);
+        if (!prevAlert) return curAlerts;
+
         clearTimeout(prevAlert.dismissTimeout);
         const timeout = alertOptions?.timeout ?? DEFAULT_ALERT_TIMEOUT;
         prevAlert.dismissTimeout = setTimeout(() => removeAlert(prevAlert.id), timeout);

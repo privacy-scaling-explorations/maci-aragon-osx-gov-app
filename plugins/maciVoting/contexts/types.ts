@@ -16,10 +16,13 @@ export type TCoordinatorServiceResult<T, E = Error> = { success: true; data: T }
 
 export type FinalizeStatus = "notStarted" | "merging" | "proving" | "submitting" | "submitted";
 
+export interface IFinalizeProposalArgs {
+  pollId: number;
+  setFinalizeStatus: (status: FinalizeStatus) => void;
+}
+
 export interface ICoordinatorContextType {
-  finalizeStatus: FinalizeStatus;
-  checkIsTallied: (pollId: number) => Promise<boolean>;
-  finalizeProposal: (pollId: number) => Promise<void>;
+  finalizeProposal: (args: IFinalizeProposalArgs) => Promise<void>;
 }
 
 export interface IMaciContextType {
@@ -37,4 +40,6 @@ export interface IMaciContextType {
   onSignup: () => Promise<void>;
   onJoinPoll: (pollId: bigint) => Promise<void>;
   onVote: (option: VoteOption) => Promise<void>;
+  checkIsTallied: (pollId: number) => Promise<boolean>;
+  checkMergeStatus: (pollId: number) => Promise<boolean>;
 }

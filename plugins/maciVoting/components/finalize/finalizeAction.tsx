@@ -1,17 +1,15 @@
 import { useCallback, useMemo } from "react";
-import { useCoordinator } from "../../hooks/useCoordinator";
 import { Button } from "@aragon/ods";
 import { PleaseWaitSpinner } from "@/components/please-wait";
 import { If } from "@/components/if";
-import { useRouter } from "next/router";
+import { useCoordinatorFinalize } from "../../hooks/useCoordinatorFinalize";
 
 interface IFinalizeActionProps {
   pollId: number;
 }
 
 export const FinalizeAction: React.FC<IFinalizeActionProps> = ({ pollId }) => {
-  const router = useRouter();
-  const { finalizeStatus, finalizeProposal } = useCoordinator();
+  const { finalizeStatus, finalizeProposal } = useCoordinatorFinalize(pollId);
 
   const finalizationMessage = useMemo(() => {
     switch (finalizeStatus) {
@@ -31,9 +29,8 @@ export const FinalizeAction: React.FC<IFinalizeActionProps> = ({ pollId }) => {
   }, [finalizeStatus]);
 
   const onClickFinalize = useCallback(async () => {
-    await finalizeProposal(pollId);
-    router.reload();
-  }, [finalizeProposal, pollId, router]);
+    await finalizeProposal();
+  }, [finalizeProposal]);
 
   return (
     <div className="overflow-hidden rounded-xl bg-neutral-0 pb-2 shadow-neutral">

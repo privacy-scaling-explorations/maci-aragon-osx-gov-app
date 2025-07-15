@@ -1,9 +1,8 @@
 import { Button, Card, Heading } from "@aragon/ods";
-import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMaci } from "../hooks/useMaci";
 import { VoteOption } from "../utils/types";
 import { PleaseWaitSpinner } from "@/components/please-wait";
-import { useEthersSigner } from "../hooks/useEthersSigner";
 import { unixTimestampToDate } from "../utils/formatPollDate";
 import { useGetPollData } from "../hooks/useGetPollData";
 import { VoteResultCard } from "./VoteResultCard";
@@ -11,12 +10,11 @@ import { VoteResultCard } from "./VoteResultCard";
 const PollCard = ({ pollId }: { pollId: bigint }) => {
   // check if the user joined the poll
   const { setPollId, onJoinPoll, onVote, isRegistered, hasJoinedPoll, isLoading, error: maciError } = useMaci();
-  const signer = useEthersSigner();
+
   const [error, setError] = useState<string | undefined>(undefined);
   const [voteOption, setVoteOption] = useState<VoteOption | undefined>(undefined);
 
-  const { data: { voteStartDate, tallied, voteEnded, disabled, results } = {}, isLoading: isLoadingPollData } =
-    useGetPollData(pollId);
+  const { data: { voteStartDate, tallied, voteEnded, disabled, results } = {} } = useGetPollData(pollId);
 
   useEffect(() => {
     setError(maciError);
@@ -92,13 +90,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
             </div>
           )}
           <p>The voting period has ended. Here are the results:</p>
-          <VoteResultCard
-            results={{
-              yes: Number(results[0].value),
-              no: Number(results[1].value),
-              abstain: Number(results[2].value),
-            }}
-          />
+          <VoteResultCard pollId={pollId} />
         </Card>
       </div>
     );
