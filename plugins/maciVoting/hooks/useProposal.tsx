@@ -60,14 +60,16 @@ export function useProposal(proposalId: string, autoRefresh = false) {
       try {
         const logs = await publicClient.getLogs({
           address: PUBLIC_MACI_VOTING_PLUGIN_ADDRESS,
-          event: ProposalCreatedEvent as any,
+          event: ProposalCreatedEvent,
           fromBlock: snapshotBlock,
           toBlock: snapshotBlock + 1n,
         });
 
         if (!logs || !logs.length) throw new Error("No creation logs");
 
-        const log: ProposalCreatedLogResponse = logs[0] as any;
+        const filteredLogs = logs.filter((log) => log.args.proposalId === BigInt(proposalId));
+        if (!filteredLogs.length) return;
+        const log: ProposalCreatedLogResponse = filteredLogs[0] as any;
 
         setProposalCreationEvent(log.args);
         setMetadata(fromHex(log.args.metadata as Hex, "string"));
@@ -76,7 +78,7 @@ export function useProposal(proposalId: string, autoRefresh = false) {
         console.error("Could not fetch the proposal details", error);
       }
     })();
-  }, [proposalData, publicClient]);
+  }, [proposalData, proposalId, publicClient]);
 
   // JSON metadata
   const {
