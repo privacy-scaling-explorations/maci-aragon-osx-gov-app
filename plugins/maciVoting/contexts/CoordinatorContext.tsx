@@ -7,6 +7,8 @@ import {
   type IGenerateData,
   type ICoordinatorContextType,
   type IFinalizeProposalArgs,
+  type ISchedulePollArgs,
+  type ISchedulePollFinalizationData,
 } from "./types";
 import { useEthersSigner } from "../hooks/useEthersSigner";
 import { toBackendChainFormat } from "../utils/chains";
@@ -153,11 +155,28 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
     [addAlert, checkIsTallied, checkMergeStatus, generateProofs, merge, signer, submit]
   );
 
+  const schedulePollFinalization = useCallback(
+    async (poll: ISchedulePollArgs): Promise<TCoordinatorServiceResult<ISchedulePollFinalizationData>> => {
+      return await makeCoordinatorServicePostRequest<ISchedulePollFinalizationData>(
+        `${PUBLIC_COORDINATOR_SERVICE_URL}/poll/register`,
+        JSON.stringify({
+          maciContractAddress: PUBLIC_MACI_ADDRESS,
+          pollId: poll.pollId,
+          chain: toBackendChainFormat(PUBLIC_CHAIN_NAME),
+          deploymentBlockNumber: poll.deploymentBlockNumber,
+          mode: EMode.FULL,
+        })
+      );
+    },
+    []
+  );
+
   const value = useMemo<ICoordinatorContextType>(
     () => ({
       finalizeProposal,
+      schedulePollFinalization,
     }),
-    [finalizeProposal]
+    [finalizeProposal, schedulePollFinalization]
   );
 
   return <CoordinatorContext.Provider value={value as ICoordinatorContextType}>{children}</CoordinatorContext.Provider>;

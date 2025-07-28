@@ -21,8 +21,20 @@ export interface IFinalizeProposalArgs {
   setFinalizeStatus: (status: FinalizeStatus) => void;
 }
 
+export interface ISchedulePollArgs {
+  pollId: number;
+  deploymentBlockNumber: number;
+}
+
+export interface ISchedulePollFinalizationData {
+  isScheduled: boolean;
+}
+
 export interface ICoordinatorContextType {
   finalizeProposal: (args: IFinalizeProposalArgs) => Promise<void>;
+  schedulePollFinalization: (
+    poll: ISchedulePollArgs
+  ) => Promise<TCoordinatorServiceResult<ISchedulePollFinalizationData>>;
 }
 
 export interface IMaciContextType {

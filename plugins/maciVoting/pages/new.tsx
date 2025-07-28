@@ -16,6 +16,7 @@ import { ActionCard } from "@/components/actions/action";
 import { useMutation } from "@tanstack/react-query";
 import classNames from "classnames";
 import Link from "next/link";
+import { useCoordinator } from "../hooks/useCoordinator";
 
 enum ActionType {
   Signaling,
@@ -36,6 +37,7 @@ export default function Create() {
   const [endTime, setEndTime] = useState<string>("");
   const [actions, setActions] = useState<Action[]>([]);
   const { addAlert } = useAlerts();
+  const { schedulePollFinalization } = useCoordinator();
   const { writeContract: createProposalWrite, data: createTxHash, status, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: createTxHash });
   const [actionType, setActionType] = useState<ActionType>(ActionType.Signaling);
@@ -184,6 +186,15 @@ export default function Create() {
         // args: _metadata, _actions, _startDate, _endDate, _data
         args: [toHex(ipfsPin), actions, BigInt(startDateTime), BigInt(endDateTime), data],
       });
+
+      const { isScheduled } = await schedulePollFinalization({
+        pollId: 0, // TOOD: where do I get this?
+        deploymentBlockNumber: 0, // TODO: where do I get this?
+      });
+
+      if (!isScheduled) {
+        addAlert("Poll finalization scheduling failed. Please try manually.", { type: "error" });
+      }
       return null;
     } catch {
       addAlert("Could not create the proposal. Please try again", { type: "error" });
