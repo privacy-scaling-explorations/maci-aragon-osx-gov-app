@@ -157,6 +157,7 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
 
   const schedulePollFinalization = useCallback(
     async (poll: ISchedulePollArgs): Promise<TCoordinatorServiceResult<ISchedulePollFinalizationData>> => {
+      console.log("Scheduling poll finalization for poll:", poll);
       return await makeCoordinatorServicePostRequest<ISchedulePollFinalizationData>(
         `${PUBLIC_COORDINATOR_SERVICE_URL}/poll/register`,
         JSON.stringify({
