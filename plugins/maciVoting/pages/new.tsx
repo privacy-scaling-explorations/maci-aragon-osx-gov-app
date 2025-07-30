@@ -1,8 +1,8 @@
 import { Button, IconType, Icon, InputText, TextAreaRichText, InputDate, InputTime } from "@aragon/ods";
 import React, { useEffect, useState } from "react";
 import { uploadToPinata } from "@/utils/ipfs";
-import { useChainId, usePublicClient, useSwitchChain, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
-import { decodeEventLog, encodeAbiParameters, Log, parseAbiParameters, toHex, zeroAddress } from "viem";
+import { useChainId, useSwitchChain, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { encodeAbiParameters, parseAbiParameters, toHex } from "viem";
 import { MaciVotingAbi } from "../artifacts/MaciVoting.sol";
 import { useAlerts } from "@/context/Alerts";
 import WithdrawalInput from "@/components/input/withdrawal";
@@ -16,8 +16,7 @@ import { ActionCard } from "@/components/actions/action";
 import { useMutation } from "@tanstack/react-query";
 import classNames from "classnames";
 import Link from "next/link";
-import { useCoordinator } from "../hooks/useCoordinator";
-import { useProposal } from "../hooks/useProposal";
+import { useScheduler } from "../hooks/useScheduler";
 
 enum ActionType {
   Signaling,
@@ -38,11 +37,7 @@ export default function Create() {
   const [endTime, setEndTime] = useState<string>("");
   const [actions, setActions] = useState<Action[]>([]);
   const { addAlert } = useAlerts();
-  const publicClient = usePublicClient({ chainId: PUBLIC_CHAIN.id });
-  const [proposalId, setProposalId] = useState<string>("0");
-  const [deploymentBlockNumber, setDeploymentBlockNumber] = useState<number | null>(null);
-  const { proposal } = useProposal(proposalId);
-  const { schedulePollFinalization } = useCoordinator();
+  const { setTxHash, isScheduled, error: schedulerError } = useScheduler();
   const { writeContract: createProposalWrite, data: createTxHash, status, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: createTxHash });
   const [actionType, setActionType] = useState<ActionType>(ActionType.Signaling);
@@ -93,70 +88,25 @@ export default function Create() {
       txHash: createTxHash,
     });
 
+    setTxHash(createTxHash);
+
     // adding addAlert causes multiple re-renders of the toast messeage
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, createTxHash, isConfirming, isConfirmed, error, push]);
+  }, [status, createTxHash, isConfirming, isConfirmed, error, setTxHash]);
 
   useEffect(() => {
-    (async () => {
-      if (!createTxHash || !isConfirmed || !publicClient) return;
-      if (proposalId !== "0") return;
-
-      const receipt = await publicClient?.getTransactionReceipt({ hash: createTxHash });
-      if (!receipt) {
-        addAlert("Could not retrieve the transaction receipt", { type: "error" });
-        return;
-      }
-
-      for (const log of receipt.logs) {
-        try {
-          const decodedArgs = decodeEventLog({
-            abi: MaciVotingAbi,
-            data: log.data,
-            topics: log.topics,
-          }).args;
-
-          if ("proposalId" in decodedArgs) {
-            setProposalId(decodedArgs.proposalId.toString());
-            setDeploymentBlockNumber(Number(receipt.blockNumber));
-            break;
-          }
-        } catch (error) {
-          continue;
-        }
-      }
-    })();
-  }, [addAlert, createTxHash, isConfirmed, proposalId, publicClient]);
+    if (!schedulerError) return;
+    addAlert("Could not schedule the poll finalization.", {
+      description: schedulerError,
+      type: "error",
+    });
+  }, [addAlert, schedulerError]);
 
   useEffect(() => {
-    if (!proposal) return;
-
-    const { pollId } = proposal;
-
-    // If the proposal is already created, we can schedule the poll
-    if (pollId && proposal.pollAddress !== zeroAddress) {
-      console.log("before scheduling");
-      schedulePollFinalization({
-        pollId: Number(pollId),
-        deploymentBlockNumber: deploymentBlockNumber ?? 0,
-      })
-        .then((result) => {
-          console.log("after then");
-          if (result.success && result.data.isScheduled) {
-            addAlert("Poll finalization scheduled successfully", { type: "success" });
-
-            setTimeout(() => {
-              push("#/");
-            }, 3000);
-          } else {
-            addAlert("Poll finalization scheduling failed. Please try manually.", { type: "error" });
-          }
-        })
-        .catch(() => {
-          addAlert("Error scheduling poll finalization", { type: "error" });
-        });
+    if (isScheduled) {
+      push("#/");
     }
-  }, [proposal, schedulePollFinalization, addAlert, deploymentBlockNumber, push]);
+  }, [isScheduled, push]);
 
   const submitProposal = async () => {
     let formErrors = {};
@@ -243,13 +193,6 @@ export default function Create() {
       }
 
       if (chainId !== PUBLIC_CHAIN.id) await switchChainAsync({ chainId: PUBLIC_CHAIN.id });
-
-      if (!publicClient) {
-        addAlert("Could not create the proposal because wallet is not connected. Please connect it and try again", {
-          type: "error",
-        });
-        return;
-      }
 
       createProposalWrite({
         chainId: PUBLIC_CHAIN.id,
