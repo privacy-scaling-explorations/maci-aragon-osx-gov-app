@@ -44,7 +44,7 @@ export function useProposal(proposalId: string, autoRefresh = false) {
     args: [BigInt(proposalId)],
     query: {
       refetchOnWindowFocus: true,
-      refetchInterval: (data) => {
+      refetchInterval: () => {
         return autoRefresh ? 10000 : false;
       },
     },
@@ -74,8 +74,11 @@ export function useProposal(proposalId: string, autoRefresh = false) {
         setProposalCreationEvent(log.args);
         setMetadata(fromHex(log.args.metadata as Hex, "string"));
       } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Could not fetch the proposal details", error);
+        // we use proposalId = 0 for starting proposal creation
+        if (proposalId !== "0") {
+          // eslint-disable-next-line no-console
+          console.error("Could not fetch the proposal details", error);
+        }
       }
     })();
   }, [proposalData, proposalId, publicClient]);

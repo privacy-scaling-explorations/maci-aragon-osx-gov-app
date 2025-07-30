@@ -1,15 +1,8 @@
 import { Button, IconType, Icon, InputText, TextAreaRichText, InputDate, InputTime } from "@aragon/ods";
 import React, { useEffect, useState } from "react";
 import { uploadToPinata } from "@/utils/ipfs";
-import {
-  useAccount,
-  useChainId,
-  usePublicClient,
-  useSwitchChain,
-  useWaitForTransactionReceipt,
-  useWriteContract,
-} from "wagmi";
-import { encodeAbiParameters, parseAbiParameters, toHex } from "viem";
+import { useChainId, usePublicClient, useSwitchChain, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { decodeEventLog, encodeAbiParameters, Log, parseAbiParameters, toHex, zeroAddress } from "viem";
 import { MaciVotingAbi } from "../artifacts/MaciVoting.sol";
 import { useAlerts } from "@/context/Alerts";
 import WithdrawalInput from "@/components/input/withdrawal";
@@ -45,11 +38,10 @@ export default function Create() {
   const [endTime, setEndTime] = useState<string>("");
   const [actions, setActions] = useState<Action[]>([]);
   const { addAlert } = useAlerts();
-  const { address } = useAccount();
-  const publicClient = usePublicClient();
-  const [createdProposalId, setCreatedProposalId] = useState<string | null>(null);
+  const publicClient = usePublicClient({ chainId: PUBLIC_CHAIN.id });
+  const [proposalId, setProposalId] = useState<string>("0");
   const [deploymentBlockNumber, setDeploymentBlockNumber] = useState<number | null>(null);
-  const { proposal } = useProposal(createdProposalId ?? "0", !!createdProposalId);
+  const { proposal } = useProposal(proposalId);
   const { schedulePollFinalization } = useCoordinator();
   const { writeContract: createProposalWrite, data: createTxHash, status, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: createTxHash });
@@ -101,43 +93,70 @@ export default function Create() {
       txHash: createTxHash,
     });
 
-    // push("#/");
     // adding addAlert causes multiple re-renders of the toast messeage
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, createTxHash, isConfirming, isConfirmed, error, push]);
 
   useEffect(() => {
-    console.log("initializing use effect");
+    (async () => {
+      if (!createTxHash || !isConfirmed || !publicClient) return;
+      if (proposalId !== "0") return;
+
+      const receipt = await publicClient?.getTransactionReceipt({ hash: createTxHash });
+      if (!receipt) {
+        addAlert("Could not retrieve the transaction receipt", { type: "error" });
+        return;
+      }
+
+      for (const log of receipt.logs) {
+        try {
+          const decodedArgs = decodeEventLog({
+            abi: MaciVotingAbi,
+            data: log.data,
+            topics: log.topics,
+          }).args;
+
+          if ("proposalId" in decodedArgs) {
+            setProposalId(decodedArgs.proposalId.toString());
+            setDeploymentBlockNumber(Number(receipt.blockNumber));
+            break;
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+    })();
+  }, [addAlert, createTxHash, isConfirmed, proposalId, publicClient]);
+
+  useEffect(() => {
     if (!proposal) return;
 
-    console.log("before if");
-    console.log(createdProposalId);
-    console.log(proposal);
-    console.log(proposal.pollId);
-    console.log(createdProposalId && proposal.pollId);
+    const { pollId } = proposal;
+
     // If the proposal is already created, we can schedule the poll
-    if (createdProposalId && proposal.pollId) {
+    if (pollId && proposal.pollAddress !== zeroAddress) {
       console.log("before scheduling");
       schedulePollFinalization({
-        pollId: Number(proposal.pollId),
+        pollId: Number(pollId),
         deploymentBlockNumber: deploymentBlockNumber ?? 0,
       })
         .then((result) => {
           console.log("after then");
           if (result.success && result.data.isScheduled) {
             addAlert("Poll finalization scheduled successfully", { type: "success" });
-            push("#/");
+
+            setTimeout(() => {
+              push("#/");
+            }, 3000);
           } else {
             addAlert("Poll finalization scheduling failed. Please try manually.", { type: "error" });
           }
         })
-        .catch((e) => {
-          console.log("after catch");
-          console.log(e);
+        .catch(() => {
           addAlert("Error scheduling poll finalization", { type: "error" });
         });
     }
-  }, [createdProposalId, proposal, schedulePollFinalization, addAlert, deploymentBlockNumber, push]);
+  }, [proposal, schedulePollFinalization, addAlert, deploymentBlockNumber, push]);
 
   const submitProposal = async () => {
     let formErrors = {};
@@ -231,20 +250,6 @@ export default function Create() {
         });
         return;
       }
-
-      const blockNumber = await publicClient.getBlockNumber();
-
-      const { result } = await publicClient.simulateContract({
-        abi: MaciVotingAbi,
-        address: PUBLIC_MACI_VOTING_PLUGIN_ADDRESS,
-        account: address,
-        functionName: "createProposal",
-        // args: _metadata, _actions, _startDate, _endDate, _data
-        args: [toHex(ipfsPin), actions, BigInt(startDateTime), BigInt(endDateTime), data],
-      });
-
-      setDeploymentBlockNumber(Number(blockNumber));
-      setCreatedProposalId(result.toString());
 
       createProposalWrite({
         chainId: PUBLIC_CHAIN.id,
@@ -455,6 +460,7 @@ export default function Create() {
               className="mb-6 mt-14"
               size="lg"
               variant="primary"
+              disabled={isDisabled}
               onClick={async () => await submitProposalMutation.mutateAsync()}
             >
               Submit proposal

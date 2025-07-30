@@ -157,11 +157,10 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
 
   const schedulePollFinalization = useCallback(
     async (poll: ISchedulePollArgs): Promise<TCoordinatorServiceResult<ISchedulePollFinalizationData>> => {
-      console.log("Scheduling poll finalization for poll:", poll);
       return await makeCoordinatorServicePostRequest<ISchedulePollFinalizationData>(
-        `${PUBLIC_COORDINATOR_SERVICE_URL}/poll/register`,
+        `${PUBLIC_COORDINATOR_SERVICE_URL}/scheduler/register`,
         JSON.stringify({
-          maciContractAddress: PUBLIC_MACI_ADDRESS,
+          maciAddress: PUBLIC_MACI_ADDRESS,
           pollId: poll.pollId,
           chain: toBackendChainFormat(PUBLIC_CHAIN_NAME),
           deploymentBlockNumber: poll.deploymentBlockNumber,
