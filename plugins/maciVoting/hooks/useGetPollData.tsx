@@ -62,7 +62,7 @@ export const useGetPollData = (pollId?: string | bigint) => {
     },
     // refetch every 10 seconds if the vote is not ended
     refetchInterval: ({ state }: Query<any, any, any, any>) => {
-      return state?.data?.voteEnded ? false : 10000;
+      return state?.data?.tallied ? false : 10000;
     },
     refetchOnWindowFocus: true,
   });

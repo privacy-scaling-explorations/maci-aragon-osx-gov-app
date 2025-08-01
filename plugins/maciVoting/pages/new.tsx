@@ -104,7 +104,9 @@ export default function Create() {
 
   useEffect(() => {
     if (isScheduled) {
-      push("#/");
+      setTimeout(() => {
+        push("#/");
+      }, 1000 * 0.5);
     }
   }, [isScheduled, push]);
 

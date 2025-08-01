@@ -37,7 +37,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
   const [isRegistered, setIsRegistered] = useState<boolean>(false);
   const [maciKeypair, setMaciKeypair] = useState<Keypair | undefined>();
   const [stateIndex, setStateIndex] = useState<string | undefined>(undefined);
-  const [inclusionProof, setInclusionProof] = useState<any>(null);
+  const [inclusionProof, setInclusionProof] = useState<any | undefined>(undefined);
 
   // Artifacts
   const [artifacts, setArtifacts] = useState<
@@ -60,8 +60,14 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
   // Functions
   const deleteKeypair = useCallback(() => {
     localStorage.removeItem("maciPrivateKey");
-    setMaciKeypair(undefined);
+
     setIsRegistered(false);
+    setMaciKeypair(undefined);
+    setStateIndex(undefined);
+    setInclusionProof(undefined);
+
+    setArtifacts(undefined);
+
     setError(undefined);
   }, []);
 
@@ -345,6 +351,11 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         pollId: pollId.toString(),
         signer,
       });
+      console.log("isPollTallied", isPollTallied);
+      console.log("maciAddress", PUBLIC_MACI_ADDRESS);
+      console.log("pollId", pollId);
+      console.log("network", await signer.provider?.getNetwork().then((network) => network.name));
+
       return isPollTallied;
     },
     [signer]

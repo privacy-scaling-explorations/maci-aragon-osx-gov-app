@@ -1,6 +1,11 @@
 import { EMode } from "@maci-protocol/core";
 import { type ITallyData } from "@maci-protocol/sdk/browser";
-import { PUBLIC_CHAIN_NAME, PUBLIC_COORDINATOR_SERVICE_URL, PUBLIC_MACI_ADDRESS } from "@/constants";
+import {
+  PUBLIC_CHAIN_NAME,
+  PUBLIC_COORDINATOR_SERVICE_URL,
+  PUBLIC_MACI_ADDRESS,
+  PUBLIC_MACI_DEPLOYMENT_BLOCK,
+} from "@/constants";
 import { createContext, type ReactNode, useCallback, useMemo } from "react";
 import {
   type TCoordinatorServiceResult,
@@ -163,7 +168,7 @@ export const CoordinatorProvider = ({ children }: { children: ReactNode }) => {
           maciAddress: PUBLIC_MACI_ADDRESS,
           pollId: poll.pollId,
           chain: toBackendChainFormat(PUBLIC_CHAIN_NAME),
-          deploymentBlockNumber: poll.deploymentBlockNumber,
+          deploymentBlockNumber: PUBLIC_MACI_DEPLOYMENT_BLOCK,
           mode: EMode.FULL,
         })
       );

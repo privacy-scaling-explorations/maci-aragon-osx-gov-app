@@ -144,7 +144,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
           <div className="flex flex-row gap-x-1">
             <Button
               onClick={() => onClickVote(VoteOption.Yes)}
-              disabled={disabled}
+              disabled={disabled ?? isLoading}
               size="sm"
               variant={disabled ? "tertiary" : "success"}
             >
@@ -152,7 +152,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
             </Button>
             <Button
               onClick={() => onClickVote(VoteOption.No)}
-              disabled={disabled}
+              disabled={disabled ?? isLoading}
               size="sm"
               variant={disabled ? "tertiary" : "critical"}
             >
@@ -160,7 +160,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
             </Button>
             <Button
               onClick={() => onClickVote(VoteOption.Abstain)}
-              disabled={disabled}
+              disabled={disabled ?? isLoading}
               size="sm"
               variant={disabled ? "tertiary" : "warning"}
             >
