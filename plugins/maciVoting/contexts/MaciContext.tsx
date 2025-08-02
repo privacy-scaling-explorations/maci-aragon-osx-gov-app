@@ -351,10 +351,6 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         pollId: pollId.toString(),
         signer,
       });
-      console.log("isPollTallied", isPollTallied);
-      console.log("maciAddress", PUBLIC_MACI_ADDRESS);
-      console.log("pollId", pollId);
-      console.log("network", await signer.provider?.getNetwork().then((network) => network.name));
 
       return isPollTallied;
     },
