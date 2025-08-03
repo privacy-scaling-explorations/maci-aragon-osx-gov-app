@@ -90,7 +90,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
             </div>
           )}
           <p>The voting period has ended. Here are the results:</p>
-          <VoteResultCard pollId={pollId} />
+          <VoteResultCard results={results} />
         </Card>
       </div>
     );

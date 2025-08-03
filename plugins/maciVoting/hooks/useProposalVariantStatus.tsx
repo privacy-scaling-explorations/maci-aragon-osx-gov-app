@@ -27,7 +27,7 @@ export const useProposalVariantStatus = (proposal: Proposal) => {
 export const useProposalStatus = (proposal: Proposal) => {
   const [status, setStatus] = useState<ProposalStatus>();
   const { checkIsTallied } = useMaci();
-  const { data: { results } = {} } = useGetPollData(proposal ? proposal.pollId : undefined);
+  const { data: { results } = {} } = useGetPollData(proposal.pollId);
 
   useEffect(() => {
     (async () => {

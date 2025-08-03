@@ -3,16 +3,16 @@
 import { CheckCircle, XCircle, MinusCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import classNames from "classnames";
-import { useGetPollData } from "../hooks/useGetPollData";
+
+import { type IResult } from "@maci-protocol/sdk/browser";
 
 type WinnerType = "yes" | "no" | "abstain" | "tie";
 
 interface VoteResultCardProps {
-  pollId: bigint;
+  results?: IResult[];
 }
 
-export const VoteResultCard = ({ pollId }: VoteResultCardProps) => {
-  const { data: { results } = {} } = useGetPollData(pollId);
+export const VoteResultCard = ({ results }: VoteResultCardProps) => {
   const [isVisible, setIsVisible] = useState(false);
 
   const yes = results ? Number(results[0].value) : 0;

@@ -1,11 +1,9 @@
 import { type Query, useQuery } from "@tanstack/react-query";
-import { getPoll, getResults, type IResult } from "@maci-protocol/sdk/browser";
+import { getPoll, getResults, isTallied, type IResult } from "@maci-protocol/sdk/browser";
 import { PUBLIC_MACI_ADDRESS } from "@/constants";
 import { useEthersSigner } from "./useEthersSigner";
-import { useMaci } from "./useMaci";
 
 export const useGetPollData = (pollId?: string | bigint) => {
-  const { checkIsTallied } = useMaci();
   const signer = useEthersSigner();
 
   return useQuery({
@@ -33,10 +31,15 @@ export const useGetPollData = (pollId?: string | bigint) => {
       const voteEnded = voteEndDate < now;
       const disabled = voteEnded || voteStartDate > Math.round(Date.now() / 1000);
 
-      // fetch results only if the vote has ended
+      // fetch results only if the poll is tallied
       if (voteEnded && signer && pollId) {
         try {
-          tallied = await checkIsTallied(Number(pollId));
+          tallied = await isTallied({
+            maciAddress: PUBLIC_MACI_ADDRESS,
+            pollId: pollId.toString(),
+            signer,
+          });
+
           if (tallied) {
             results = await getResults({
               maciAddress: PUBLIC_MACI_ADDRESS,
@@ -48,6 +51,15 @@ export const useGetPollData = (pollId?: string | bigint) => {
           // eslint-disable-next-line no-console
           console.log(error);
         }
+
+        const blockNumber = await signer?.provider?.getBlockNumber();
+        console.log("🔍 Current block number:", blockNumber);
+
+        console.log("pollId", pollId);
+        console.log("voteEnded", voteEnded);
+        console.log("tallied", tallied);
+        console.log("results", results);
+        console.log("date", new Date());
       }
 
       return {
@@ -62,7 +74,7 @@ export const useGetPollData = (pollId?: string | bigint) => {
     },
     // refetch every 10 seconds if the vote is not ended
     refetchInterval: ({ state }: Query<any, any, any, any>) => {
-      return state?.data?.tallied ? false : 10000;
+      return state?.data?.tallied ? false : 10 * 1000;
     },
     refetchOnWindowFocus: true,
   });
