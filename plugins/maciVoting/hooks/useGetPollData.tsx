@@ -1,10 +1,12 @@
-import { type Query, useQuery } from "@tanstack/react-query";
+import { PUBLIC_CHAIN, PUBLIC_MACI_ADDRESS } from "@/constants";
 import { getPoll, getResults, isTallied, type IResult } from "@maci-protocol/sdk/browser";
-import { PUBLIC_MACI_ADDRESS } from "@/constants";
-import { useEthersSigner } from "./useEthersSigner";
+import { useQuery, type Query } from "@tanstack/react-query";
+import { usePublicClient } from "wagmi";
+import { clientToSigner, useEthersSigner } from "./useEthersSigner";
 
 export const useGetPollData = (pollId?: string | bigint) => {
   const signer = useEthersSigner();
+  const publicClient = usePublicClient({ chainId: PUBLIC_CHAIN.id });
 
   return useQuery({
     enabled: !!signer,
@@ -12,14 +14,18 @@ export const useGetPollData = (pollId?: string | bigint) => {
       "get-poll-data",
       {
         pollId: String(pollId),
-        signerAddress: signer?.address,
+        signerAddress: publicClient?.account,
       },
     ],
     queryFn: async () => {
+      if (!publicClient) return;
+
+      const publicSigner = clientToSigner(publicClient);
+
       const poll = await getPoll({
         maciAddress: PUBLIC_MACI_ADDRESS,
         pollId,
-        signer,
+        signer: publicSigner,
       });
 
       let tallied = false;
@@ -37,14 +43,14 @@ export const useGetPollData = (pollId?: string | bigint) => {
           tallied = await isTallied({
             maciAddress: PUBLIC_MACI_ADDRESS,
             pollId: pollId.toString(),
-            signer,
+            signer: publicSigner,
           });
 
           if (tallied) {
             results = await getResults({
               maciAddress: PUBLIC_MACI_ADDRESS,
               pollId: pollId.toString(),
-              signer,
+              signer: publicSigner,
             });
           }
         } catch (error) {
@@ -52,7 +58,7 @@ export const useGetPollData = (pollId?: string | bigint) => {
           console.log(error);
         }
 
-        const blockNumber = await signer?.provider?.getBlockNumber();
+        const blockNumber = await publicSigner.provider.getBlockNumber();
         console.log("🔍 Current block number:", blockNumber);
 
         console.log("pollId", pollId);

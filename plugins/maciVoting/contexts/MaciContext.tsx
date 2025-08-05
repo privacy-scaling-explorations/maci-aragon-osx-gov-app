@@ -1,26 +1,26 @@
-import { createContext, type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
-import { type IMaciContextType } from "./types";
+import { PUBLIC_MACI_ADDRESS, PUBLIC_MACI_DEPLOYMENT_BLOCK } from "@/constants";
+import { useAlerts } from "@/context/Alerts";
 import { Keypair, PrivateKey } from "@maci-protocol/domainobjs";
 import {
-  signup,
-  generateKeypair,
-  getJoinedUserData,
-  generateMaciStateTreeWithEndKey,
   downloadPollJoiningArtifactsBrowser,
-  joinPoll,
+  generateKeypair,
+  generateMaciStateTreeWithEndKey,
+  getJoinedUserData,
   getPoll,
-  publish,
   getSignedupUserData,
-  Poll__factory as PollFactory,
   isTallied,
+  joinPoll,
+  Poll__factory as PollFactory,
+  publish,
+  signup,
 } from "@maci-protocol/sdk/browser";
-import { PUBLIC_MACI_ADDRESS, PUBLIC_MACI_DEPLOYMENT_BLOCK } from "@/constants";
-import { useAccount, usePublicClient, useSignMessage } from "wagmi";
-import { useEthersSigner } from "../hooks/useEthersSigner";
+import { createContext, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { keccak256, stringToHex, type Hex } from "viem";
-import { VoteOption } from "../utils/types";
-import { useAlerts } from "@/context/Alerts";
+import { useAccount, usePublicClient, useSignMessage } from "wagmi";
+import { clientToSigner, useEthersSigner } from "../hooks/useEthersSigner";
 import { unixTimestampToDate } from "../utils/formatPollDate";
+import { VoteOption } from "../utils/types";
+import { type IMaciContextType } from "./types";
 
 export const DEFAULT_SG_DATA = "0x0000000000000000000000000000000000000000000000000000000000000000";
 export const DEFAULT_IVCP_DATA = "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -56,6 +56,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
   const { signMessageAsync } = useSignMessage();
   const signer = useEthersSigner();
   const publicClient = usePublicClient();
+  const publicSigner = publicClient ? clientToSigner(publicClient) : undefined;
 
   // Functions
   const deleteKeypair = useCallback(() => {
@@ -340,7 +341,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
 
   const checkIsTallied = useCallback(
     async (pollId: number) => {
-      if (!signer) {
+      if (!publicSigner) {
         // eslint-disable-next-line no-console
         console.log("No signer");
         return false;
@@ -349,12 +350,12 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       const isPollTallied = await isTallied({
         maciAddress: PUBLIC_MACI_ADDRESS,
         pollId: pollId.toString(),
-        signer,
+        signer: publicSigner,
       });
 
       return isPollTallied;
     },
-    [signer]
+    [publicSigner]
   );
 
   const checkMergeStatus = useCallback(
@@ -362,12 +363,12 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
       const { address: pollAddress } = await getPoll({
         maciAddress: PUBLIC_MACI_ADDRESS,
         pollId,
-        signer,
+        signer: publicSigner,
       });
-      const poll = PollFactory.connect(pollAddress, signer);
+      const poll = PollFactory.connect(pollAddress, publicSigner);
       return await poll.stateMerged();
     },
-    [signer]
+    [publicSigner]
   );
 
   // check if user is connected
