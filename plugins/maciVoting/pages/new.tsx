@@ -11,7 +11,12 @@ import { type Action } from "@/utils/types";
 import { useRouter } from "next/router";
 import { Else, ElseIf, If, Then } from "@/components/if";
 import { PleaseWaitSpinner } from "@/components/please-wait";
-import { NEXT_MINIMUM_START_DELAY_IN_SECONDS, PUBLIC_CHAIN, PUBLIC_MACI_VOTING_PLUGIN_ADDRESS } from "@/constants";
+import {
+  NAVIGATION_AFTER_SCHEDULE_DELAY_SECONDS,
+  NEXT_MINIMUM_START_DELAY_IN_SECONDS,
+  PUBLIC_CHAIN,
+  PUBLIC_MACI_VOTING_PLUGIN_ADDRESS,
+} from "@/constants";
 import { ActionCard } from "@/components/actions/action";
 import { useMutation } from "@tanstack/react-query";
 import classNames from "classnames";
@@ -106,7 +111,7 @@ export default function Create() {
     if (isScheduled) {
       setTimeout(() => {
         push("#/");
-      }, 1000 * 0.3);
+      }, 1000 * NAVIGATION_AFTER_SCHEDULE_DELAY_SECONDS);
     }
   }, [isScheduled, push]);
 

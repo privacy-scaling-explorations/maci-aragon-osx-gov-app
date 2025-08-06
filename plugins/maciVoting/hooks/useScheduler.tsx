@@ -138,7 +138,7 @@ export const useScheduler = () => {
       }).args;
 
       setProposalId(args.proposalId.toString());
-      setDeploymentBlockNumber(Number(receipt.blockNumber) ?? 0);
+      setDeploymentBlockNumber(Number(receipt.blockNumber));
     },
     [publicClient]
   );
