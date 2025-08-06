@@ -18,7 +18,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
   const [voteOption, setVoteOption] = useState<VoteOption | undefined>(undefined);
 
   const { data: { voteStartDate, tallied, voteEnded, disabled, results } = {} } = useGetPollData(pollId);
-  const { joinPollFunction, hasJoinedPoll, joinedPollData } = useJoinPoll(pollId);
+  const { joinPollFunction, hasJoinedPoll, joinedPollData, isLoading: isLoadingJoinedPoll } = useJoinPoll(pollId);
   const { voteFunction } = useVote();
 
   useEffect(() => {
@@ -56,7 +56,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
       const { pollStateIndex, voiceCredits } = joinedPollData;
 
       setVoteOption(option);
-      voteFunction(pollId, pollStateIndex, voiceCredits, option)
+      await voteFunction(pollId, pollStateIndex, voiceCredits, option)
         .catch((error) => {
           setError(error.message);
         })
@@ -69,6 +69,9 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
   );
 
   const buttonMessage = useMemo(() => {
+    if (isLoadingJoinedPoll) {
+      return <PleaseWaitSpinner fullMessage="Checking user status..." />;
+    }
     if (hasJoinedPoll) {
       return "Already joined poll";
     }
@@ -76,7 +79,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
       return <PleaseWaitSpinner fullMessage="Joining poll..." />;
     }
     return "Join poll";
-  }, [hasJoinedPoll, isLoading]);
+  }, [isLoadingJoinedPoll, hasJoinedPoll, isLoading]);
 
   if (voteEnded && !tallied)
     return (
@@ -140,7 +143,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
             In order to submit your vote you need to join the poll using your locally generated MACI public key and your
             authorized wallet.
           </p>
-          <Button onClick={onClickJoinPoll} disabled={hasJoinedPoll || isLoading}>
+          <Button onClick={onClickJoinPoll} disabled={hasJoinedPoll || isLoading || isLoadingJoinedPoll}>
             {buttonMessage}
           </Button>
         </div>
@@ -165,7 +168,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
           <div className="flex flex-row gap-x-1">
             <Button
               onClick={() => onClickVote(VoteOption.Yes)}
-              disabled={disabled ?? isLoading}
+              disabled={disabled ? disabled : isLoading}
               size="sm"
               variant={disabled ? "tertiary" : "success"}
             >
@@ -173,7 +176,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
             </Button>
             <Button
               onClick={() => onClickVote(VoteOption.No)}
-              disabled={disabled ?? isLoading}
+              disabled={disabled ? disabled : isLoading}
               size="sm"
               variant={disabled ? "tertiary" : "critical"}
             >
@@ -181,7 +184,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
             </Button>
             <Button
               onClick={() => onClickVote(VoteOption.Abstain)}
-              disabled={disabled ?? isLoading}
+              disabled={disabled ? disabled : isLoading}
               size="sm"
               variant={disabled ? "tertiary" : "warning"}
             >

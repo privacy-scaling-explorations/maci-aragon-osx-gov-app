@@ -87,7 +87,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
 
         setMaciKeypair(keypair);
       } catch (error) {
-        setError("Error creating keypair");
+        setError("Error creating keypair. Please go to MACI Voting and try again.");
         setIsLoading(false);
         return;
       }

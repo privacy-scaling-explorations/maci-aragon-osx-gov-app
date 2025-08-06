@@ -43,10 +43,11 @@ export const PUBLIC_IPFS_ENDPOINTS = process.env.NEXT_PUBLIC_IPFS_ENDPOINTS ?? "
 export const PUBLIC_PINATA_JWT = process.env.NEXT_PUBLIC_PINATA_JWT ?? "";
 
 // General
-export const PUBLIC_APP_NAME = "Aragonette";
+export const PUBLIC_APP_NAME = "Aragon - MACI Plugin";
 export const PUBLIC_APP_DESCRIPTION = "Simplified user interface for Aragon DAO's";
 
 export const PUBLIC_PROJECT_URL = process.env.NEXT_PUBLIC_PROJECT_URL ?? "https://aragon.org/";
 export const PUBLIC_WALLET_ICON = "https://avatars.githubusercontent.com/u/37784886";
 
-export const PUBLIC_DISCORD_URL = "https://discord.com/";
+export const PUBLIC_DISCORD_URL = "https://discord.com/invite/sF5CT5rzrR";
+export const PUBLIC_TWITTER_URL = "https://x.com/PrivacyEthereum";

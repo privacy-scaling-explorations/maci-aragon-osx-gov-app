@@ -56,16 +56,6 @@ export const useGetPollData = (pollId?: string | bigint) => {
           // eslint-disable-next-line no-console
           console.log(error);
         }
-
-        /*
-        const blockNumber = await publicSigner.provider.getBlockNumber();
-        console.log("🔍 Current block number:", blockNumber);
-        console.log("pollId", pollId);
-        console.log("voteEnded", voteEnded);
-        console.log("tallied", tallied);
-        console.log("results", results);
-        console.log("date", new Date());
-        */
       }
 
       return {
@@ -83,9 +73,7 @@ export const useGetPollData = (pollId?: string | bigint) => {
     refetchInterval: ({ state }: Query<any, any, any, any>) => {
       const { data } = state;
 
-      // if (data && data.voteNotStarted) return false;
-      // if (data && data.voteInProgress) return false;
-      if (data && data.tallied) return false;
+      if (data && data.tallied && data.results && data.results.length > 0) return false;
 
       return 15 * 1000;
     },
