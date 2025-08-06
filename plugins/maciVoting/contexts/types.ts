@@ -1,6 +1,5 @@
 import { type Keypair } from "@maci-protocol/domainobjs";
-import { type IProof, type ITallyData } from "@maci-protocol/sdk/browser";
-import { type VoteOption } from "../utils/types";
+import { type downloadPollJoiningArtifactsBrowser, type IProof, type ITallyData } from "@maci-protocol/sdk/browser";
 
 export interface IVoteArgs {
   voteOptionIndex: bigint;
@@ -30,28 +29,32 @@ export interface ISchedulePollFinalizationData {
   isScheduled: boolean;
 }
 
-export interface ICoordinatorContextType {
-  finalizeProposal: (args: IFinalizeProposalArgs) => Promise<void>;
-  schedulePollFinalization: (
-    poll: ISchedulePollArgs
-  ) => Promise<TCoordinatorServiceResult<ISchedulePollFinalizationData>>;
-}
-
 export interface IMaciContextType {
   isLoading: boolean;
   error?: string;
-  pollId?: bigint;
-  setPollId: (pollId: bigint) => void;
-  hasJoinedPoll: boolean;
-  initialVoiceCredits: number;
-  pollStateIndex?: string;
   isRegistered?: boolean;
   maciKeypair?: Keypair;
   stateIndex?: string;
+  artifacts?: Awaited<ReturnType<typeof downloadPollJoiningArtifactsBrowser>>;
   deleteKeypair: () => void;
   onSignup: () => Promise<void>;
-  onJoinPoll: (pollId: bigint) => Promise<void>;
-  onVote: (option: VoteOption) => Promise<void>;
-  checkIsTallied: (pollId: number) => Promise<boolean>;
-  checkMergeStatus: (pollId: number) => Promise<boolean>;
+}
+
+export interface IJoinPollData {
+  /**
+   * The poll state index of the joined user
+   */
+  pollStateIndex: string;
+  /**
+   * Voice credits balance
+   */
+  voiceCredits: string;
+  /**
+   * Private key nullifier
+   */
+  nullifier: string;
+  /**
+   * The join poll transaction hash
+   */
+  hash: string;
 }

@@ -1,9 +1,21 @@
 import { useCallback, useEffect, useState } from "react";
-import { useProposal } from "./useProposal";
-import { useCoordinator } from "./useCoordinator";
 import { usePublicClient } from "wagmi";
 import { decodeEventLog, type Hex } from "viem";
+import { EMode } from "@maci-protocol/core";
+import { useProposal } from "./useProposal";
 import { MaciVotingAbi } from "../artifacts/MaciVoting.sol";
+import {
+  type ISchedulePollArgs,
+  type ISchedulePollFinalizationData,
+  type TCoordinatorServiceResult,
+} from "../contexts/types";
+import {
+  PUBLIC_CHAIN_NAME,
+  PUBLIC_COORDINATOR_SERVICE_URL,
+  PUBLIC_MACI_ADDRESS,
+  PUBLIC_MACI_DEPLOYMENT_BLOCK,
+} from "@/constants";
+import { toBackendChainFormat } from "../utils/chains";
 
 export const useScheduler = () => {
   const [error, setError] = useState<string | null>(null);
@@ -14,7 +26,54 @@ export const useScheduler = () => {
 
   const publicClient = usePublicClient();
   const { proposal } = useProposal(proposalId);
-  const { schedulePollFinalization } = useCoordinator();
+
+  const makeCoordinatorServicePostRequest = useCallback(
+    async (url: string, body: string): Promise<TCoordinatorServiceResult<ISchedulePollFinalizationData>> => {
+      const type = url.split("/").pop() ?? "finalize";
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          const errorMessage = errorData.message
+            ? `${response.status} - ${response.statusText}. ${errorData.message}`
+            : `${response.status} - ${response.statusText}`;
+          return { success: false, error: new Error(`Failed to ${type} proofs: ${errorMessage}`) };
+        }
+
+        const data = await response.json();
+        return { success: true, data };
+      } catch (error) {
+        return {
+          success: false,
+          error: new Error(`Failed to ${type}: ${error}`),
+        };
+      }
+    },
+    []
+  );
+
+  const schedulePollFinalization = useCallback(
+    async (poll: ISchedulePollArgs) => {
+      return makeCoordinatorServicePostRequest(
+        `${PUBLIC_COORDINATOR_SERVICE_URL}/scheduler/register`,
+        JSON.stringify({
+          maciAddress: PUBLIC_MACI_ADDRESS,
+          pollId: poll.pollId,
+          chain: toBackendChainFormat(PUBLIC_CHAIN_NAME),
+          deploymentBlockNumber: PUBLIC_MACI_DEPLOYMENT_BLOCK,
+          mode: EMode.FULL,
+        })
+      );
+    },
+    [makeCoordinatorServicePostRequest]
+  );
 
   useEffect(() => {
     if (proposal && proposal.pollId) {

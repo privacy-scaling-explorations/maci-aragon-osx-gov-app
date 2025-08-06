@@ -106,7 +106,7 @@ export default function Create() {
     if (isScheduled) {
       setTimeout(() => {
         push("#/");
-      }, 1000 * 0.5);
+      }, 1000 * 0.3);
     }
   }, [isScheduled, push]);
 
@@ -232,7 +232,7 @@ export default function Create() {
   const inputWrapperClassName =
     "focus-within:!outline-none focus-within:!ring-0 focus-within:!border-transparent focus-within:!shadow-none focus-within:!ring-0 focus:border-[#000]";
 
-  const isDisabled = submitProposalMutation.isPending || isConfirming;
+  const isDisabled = submitProposalMutation.isPending || showLoading;
   return (
     <section className="container flex w-screen flex-col items-center pt-4 lg:pt-10">
       <Link className="mb-6 mr-auto flex cursor-pointer items-center gap-2" href="/plugins/maci-voting">
@@ -331,7 +331,8 @@ export default function Create() {
               className={classNames(
                 "flex cursor-pointer flex-col items-center rounded-xl border-2 border-solid bg-neutral-0 hover:bg-neutral-50",
                 actionType === ActionType.Signaling ? "border-primary-300" : "border-neutral-100",
-                submitProposalMutation.isPending ? "!border-neutral-100 !bg-neutral-100" : ""
+                submitProposalMutation.isPending ? "!border-neutral-100 !bg-neutral-100" : "",
+                showLoading ? "!border-neutral-100 !bg-neutral-100" : ""
               )}
             >
               <Icon
@@ -349,7 +350,8 @@ export default function Create() {
               className={classNames(
                 "flex cursor-pointer flex-col items-center rounded-xl border-2 border-solid bg-neutral-0 hover:bg-neutral-50",
                 actionType === ActionType.Withdrawal ? "border-primary-300" : "border-neutral-100",
-                submitProposalMutation.isPending ? "!border-neutral-100 !bg-neutral-100" : ""
+                submitProposalMutation.isPending ? "!border-neutral-100 !bg-neutral-100" : "",
+                showLoading ? "!border-neutral-100 !bg-neutral-100" : ""
               )}
             >
               <Icon
@@ -367,7 +369,8 @@ export default function Create() {
               className={classNames(
                 "flex cursor-pointer flex-col items-center rounded-xl border-2 border-solid bg-neutral-0 hover:bg-neutral-50",
                 actionType === ActionType.Custom ? "border-primary-300" : "border-neutral-100",
-                submitProposalMutation.isPending ? "!border-neutral-100 !bg-neutral-100" : ""
+                submitProposalMutation.isPending ? "!border-neutral-100 !bg-neutral-100" : "",
+                showLoading ? "!border-neutral-100 !bg-neutral-100" : ""
               )}
             >
               <Icon

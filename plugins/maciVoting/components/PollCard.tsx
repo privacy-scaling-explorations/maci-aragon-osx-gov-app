@@ -1,50 +1,71 @@
+import { PleaseWaitSpinner } from "@/components/please-wait";
 import { Button, Card, Heading } from "@aragon/ods";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useMaci } from "../hooks/useMaci";
-import { VoteOption } from "../utils/types";
-import { PleaseWaitSpinner } from "@/components/please-wait";
-import { unixTimestampToDate } from "../utils/formatPollDate";
+import { useJoinPoll } from "../hooks/poll/useJoinPoll";
+import { useVote } from "../hooks/poll/useVote";
 import { useGetPollData } from "../hooks/useGetPollData";
+import { useMaci } from "../hooks/useMaci";
+import { unixTimestampToDate } from "../utils/formatPollDate";
+import { VoteOption } from "../utils/types";
 import { VoteResultCard } from "./VoteResultCard";
 
 const PollCard = ({ pollId }: { pollId: bigint }) => {
   // check if the user joined the poll
-  const { setPollId, onJoinPoll, onVote, isRegistered, hasJoinedPoll, isLoading, error: maciError } = useMaci();
+  const { isRegistered, error: maciError } = useMaci();
 
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
   const [voteOption, setVoteOption] = useState<VoteOption | undefined>(undefined);
 
   const { data: { voteStartDate, tallied, voteEnded, disabled, results } = {} } = useGetPollData(pollId);
+  const { joinPollFunction, hasJoinedPoll, joinedPollData } = useJoinPoll(pollId);
+  const { voteFunction } = useVote();
 
   useEffect(() => {
     setError(maciError);
   }, [maciError]);
 
-  useEffect(() => {
-    setPollId(pollId);
-  }, [pollId, setPollId]);
-
   const onClickJoinPoll = useCallback(async () => {
+    setIsLoading(true);
     setError(undefined);
     if (!isRegistered) {
       setError("You need to sign up first");
+      setIsLoading(false);
       return;
     }
 
     if (hasJoinedPoll) {
       setError("You have already joined the poll");
+      setIsLoading(false);
       return;
     }
 
-    await onJoinPoll(pollId);
-  }, [hasJoinedPoll, isRegistered, onJoinPoll, pollId]);
+    await joinPollFunction();
+    setIsLoading(false);
+  }, [hasJoinedPoll, isRegistered, joinPollFunction]);
 
   const onClickVote = useCallback(
     async (option: VoteOption) => {
+      setIsLoading(true);
+      if (!joinedPollData) {
+        setError("You need to join the poll first");
+        setIsLoading(false);
+        return;
+      }
+
+      const { pollStateIndex, voiceCredits } = joinedPollData;
+
       setVoteOption(option);
-      await onVote(option).finally(() => setVoteOption(undefined));
+      voteFunction(pollId, pollStateIndex, voiceCredits, option)
+        .catch((error) => {
+          setError(error.message);
+        })
+        .finally(() => {
+          setVoteOption(undefined);
+          setIsLoading(false);
+        });
     },
-    [onVote]
+    [joinedPollData, pollId, voteFunction]
   );
 
   const buttonMessage = useMemo(() => {

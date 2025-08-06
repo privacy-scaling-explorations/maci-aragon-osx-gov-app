@@ -3,7 +3,6 @@ import { type ProposalStatus } from "@aragon/ods";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { useGetPollData } from "./useGetPollData";
-import { useMaci } from "./useMaci";
 
 export const useProposalVariantStatus = (proposal: Proposal) => {
   const [status, setStatus] = useState({ variant: "", label: "" });
@@ -26,8 +25,7 @@ export const useProposalVariantStatus = (proposal: Proposal) => {
 
 export const useProposalStatus = (proposal: Proposal) => {
   const [status, setStatus] = useState<ProposalStatus>();
-  const { checkIsTallied } = useMaci();
-  const { data: { results } = {} } = useGetPollData(proposal ? proposal.pollId : "");
+  const { data: { results, tallied } = {} } = useGetPollData(proposal ? proposal.pollId : "");
 
   useEffect(() => {
     (async () => {
@@ -36,15 +34,14 @@ export const useProposalStatus = (proposal: Proposal) => {
       const isExecuted = proposal.executed;
       const endDate = dayjs(Number(proposal.parameters.endDate) * 1000);
       const isActive = dayjs().isBefore(endDate);
-      const isTallied = await checkIsTallied(Number(proposal.pollId));
 
       if (isExecuted) {
         setStatus("executed");
       } else if (isActive) {
         setStatus("active");
-      } else if (!isTallied) {
+      } else if (!tallied) {
         setStatus("pending");
-      } else if (isTallied) {
+      } else if (tallied) {
         if (!results) {
           setStatus("pending");
           return;
@@ -67,7 +64,7 @@ export const useProposalStatus = (proposal: Proposal) => {
         }
       }
     })();
-  }, [proposal, checkIsTallied, results]);
+  }, [proposal, tallied, results]);
 
   return status;
 };
