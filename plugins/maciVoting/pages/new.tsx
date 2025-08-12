@@ -42,7 +42,7 @@ export default function Create() {
   const [endTime, setEndTime] = useState<string>("");
   const [actions, setActions] = useState<Action[]>([]);
   const { addAlert } = useAlerts();
-  const { setTxHash, isScheduled, error: schedulerError } = useScheduler();
+  const { setTxHash, isScheduled, isLoading: isLoadingScheduler, error: schedulerError } = useScheduler();
   const { writeContract: createProposalWrite, data: createTxHash, status, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: createTxHash });
   const [actionType, setActionType] = useState<ActionType>(ActionType.Signaling);
@@ -224,6 +224,8 @@ export default function Create() {
     },
   });
 
+  const isDisabled = submitProposalMutation.isPending || status === "pending" || isConfirming || isLoadingScheduler;
+
   const handleTitleInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(event?.target?.value);
   };
@@ -232,12 +234,9 @@ export default function Create() {
     setSummary(event?.target?.value);
   };
 
-  const showLoading = status === "pending" || isConfirming;
-
   const inputWrapperClassName =
     "focus-within:!outline-none focus-within:!ring-0 focus-within:!border-transparent focus-within:!shadow-none focus-within:!ring-0 focus:border-[#000]";
 
-  const isDisabled = submitProposalMutation.isPending || showLoading;
   return (
     <section className="container flex w-screen flex-col items-center pt-4 lg:pt-10">
       <Link className="mb-6 mr-auto flex cursor-pointer items-center gap-2" href="/plugins/maci-voting">
@@ -336,8 +335,7 @@ export default function Create() {
               className={classNames(
                 "flex cursor-pointer flex-col items-center rounded-xl border-2 border-solid bg-neutral-0 hover:bg-neutral-50",
                 actionType === ActionType.Signaling ? "border-primary-300" : "border-neutral-100",
-                submitProposalMutation.isPending ? "!border-neutral-100 !bg-neutral-100" : "",
-                showLoading ? "!border-neutral-100 !bg-neutral-100" : ""
+                isDisabled ? "!border-neutral-100 !bg-neutral-100" : ""
               )}
             >
               <Icon
@@ -355,8 +353,7 @@ export default function Create() {
               className={classNames(
                 "flex cursor-pointer flex-col items-center rounded-xl border-2 border-solid bg-neutral-0 hover:bg-neutral-50",
                 actionType === ActionType.Withdrawal ? "border-primary-300" : "border-neutral-100",
-                submitProposalMutation.isPending ? "!border-neutral-100 !bg-neutral-100" : "",
-                showLoading ? "!border-neutral-100 !bg-neutral-100" : ""
+                isDisabled ? "!border-neutral-100 !bg-neutral-100" : ""
               )}
             >
               <Icon
@@ -374,8 +371,7 @@ export default function Create() {
               className={classNames(
                 "flex cursor-pointer flex-col items-center rounded-xl border-2 border-solid bg-neutral-0 hover:bg-neutral-50",
                 actionType === ActionType.Custom ? "border-primary-300" : "border-neutral-100",
-                submitProposalMutation.isPending ? "!border-neutral-100 !bg-neutral-100" : "",
-                showLoading ? "!border-neutral-100 !bg-neutral-100" : ""
+                isDisabled ? "!border-neutral-100 !bg-neutral-100" : ""
               )}
             >
               <Icon
@@ -402,10 +398,10 @@ export default function Create() {
           ))}
         </div>
 
-        <If condition={showLoading}>
+        <If condition={isDisabled}>
           <Then>
             <div className="mb-6 mt-14">
-              <PleaseWaitSpinner fullMessage="Confirming transaction..." />
+              <PleaseWaitSpinner fullMessage="Creating proposal and confirming transaction..." />
             </div>
           </Then>
           <ElseIf condition={actionType !== ActionType.Custom}>

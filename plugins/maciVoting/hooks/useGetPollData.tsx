@@ -19,6 +19,7 @@ export const useGetPollData = (pollId?: string | bigint) => {
     queryFn: async () => {
       if (!publicClient) return;
 
+      // this is a read-only operation so we read using public client to avoid signer's cache
       const publicSigner = clientToSigner(publicClient);
 
       const { startDate, endDate, isMerged } = await getPoll({

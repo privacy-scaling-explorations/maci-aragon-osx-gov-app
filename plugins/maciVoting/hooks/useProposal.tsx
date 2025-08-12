@@ -53,7 +53,7 @@ export function useProposal(proposalId: string, autoRefresh = false) {
   // Creation event
   useEffect(() => {
     (async () => {
-      if (!proposalData || !publicClient) return;
+      if (!proposalData || !publicClient || proposalData.pollId === 0n) return;
 
       const snapshotBlock = BigInt(proposalData.parameters.snapshotBlock);
 
@@ -74,11 +74,8 @@ export function useProposal(proposalId: string, autoRefresh = false) {
         setProposalCreationEvent(log.args);
         setMetadata(fromHex(log.args.metadata as Hex, "string"));
       } catch (error) {
-        // we use proposalId = 0 for starting proposal creation
-        if (proposalId !== "0") {
-          // eslint-disable-next-line no-console
-          console.error("Could not fetch the proposal details", error);
-        }
+        // eslint-disable-next-line no-console
+        console.error("Could not fetch the proposal details:", error);
       }
     })();
   }, [proposalData, proposalId, publicClient]);

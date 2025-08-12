@@ -13,6 +13,8 @@ export function clientToSigner(client: Client<Transport, Chain, Account> | Publi
   };
 
   const provider = new BrowserProvider(transport, network);
+
+  // in some cases we need a signer from a public client (which could not necessarily have an account.address linked). That is why we use zeroAddress as a fallback
   const signer = new JsonRpcSigner(provider, account ? account.address : zeroAddress);
   return signer;
 }

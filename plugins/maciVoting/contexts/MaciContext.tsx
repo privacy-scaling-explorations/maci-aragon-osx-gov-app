@@ -1,4 +1,4 @@
-import { PUBLIC_MACI_ADDRESS } from "@/constants";
+import { PUBLIC_CHAIN, PUBLIC_MACI_ADDRESS } from "@/constants";
 import { useAlerts } from "@/context/Alerts";
 import { Keypair, PrivateKey } from "@maci-protocol/domainobjs";
 import {
@@ -9,9 +9,10 @@ import {
 } from "@maci-protocol/sdk/browser";
 import { createContext, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { keccak256, stringToHex } from "viem";
-import { useAccount, useSignMessage } from "wagmi";
-import { useEthersSigner } from "../hooks/useEthersSigner";
+import { useAccount, usePublicClient, useSignMessage } from "wagmi";
+import { clientToSigner, useEthersSigner } from "../hooks/useEthersSigner";
 import { type IMaciContextType } from "./types";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const DEFAULT_SG_DATA = "0x0000000000000000000000000000000000000000000000000000000000000000";
 export const DEFAULT_IVCP_DATA = "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -29,28 +30,38 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
   const [maciKeypair, setMaciKeypair] = useState<Keypair | undefined>();
   const [stateIndex, setStateIndex] = useState<string | undefined>(undefined);
 
-  // Artifacts
-  const [artifacts, setArtifacts] = useState<
-    Awaited<ReturnType<typeof downloadPollJoiningArtifactsBrowser>> | undefined
-  >();
-
   // Wallet variables
   const { isConnected } = useAccount();
+  const publicClient = usePublicClient({ chainId: PUBLIC_CHAIN.id });
+  const queryClient = useQueryClient();
   const { signMessageAsync } = useSignMessage();
   const signer = useEthersSigner();
 
+  const { data: artifacts } = useQuery({
+    queryKey: ["artifacts"],
+    queryFn: async () => {
+      return await downloadPollJoiningArtifactsBrowser({
+        testing: true,
+        stateTreeDepth: 10,
+      });
+    },
+    enabled: isConnected && !!signer && !!publicClient,
+    refetchOnWindowFocus: false,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+
   // Functions
-  const deleteKeypair = useCallback(() => {
+  const deleteKeypair = useCallback(async () => {
     localStorage.removeItem("maciPrivateKey");
 
     setIsRegistered(false);
     setMaciKeypair(undefined);
     setStateIndex(undefined);
-
-    setArtifacts(undefined);
-
     setError(undefined);
-  }, []);
+
+    await queryClient.invalidateQueries({ queryKey: ["artifacts"] });
+  }, [queryClient]);
 
   const onSignup = useCallback(async () => {
     setError(undefined);
@@ -154,17 +165,20 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
   // check if user is registered
   useEffect(() => {
     (async () => {
-      if (!isConnected || !signer || !maciKeypair) {
+      if (!isConnected || !publicClient || !maciKeypair) {
         setIsRegistered(false);
         setStateIndex(undefined);
         return;
       }
 
       try {
+        // this is a read-only operation so we read using public client to avoid signer's cache
+        const publicSigner = clientToSigner(publicClient);
+
         const { isRegistered: _isRegistered, stateIndex: _stateIndex } = await getSignedupUserData({
           maciAddress: PUBLIC_MACI_ADDRESS,
           maciPublicKey: maciKeypair.publicKey.serialize(),
-          signer,
+          signer: publicSigner,
         });
 
         setIsRegistered(_isRegistered);
@@ -175,18 +189,7 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
         setError("Error checking if user is registered and generating state tree");
       }
     })();
-  }, [isConnected, maciKeypair, signer, stateIndex]);
-
-  // download poll joining artifacts and store them in state
-  useEffect(() => {
-    (async () => {
-      const downloadedArtifacts = await downloadPollJoiningArtifactsBrowser({
-        testing: true,
-        stateTreeDepth: 10,
-      });
-      setArtifacts(downloadedArtifacts);
-    })();
-  }, []);
+  }, [isConnected, maciKeypair, publicClient, stateIndex]);
 
   const value = useMemo<IMaciContextType>(
     () => ({

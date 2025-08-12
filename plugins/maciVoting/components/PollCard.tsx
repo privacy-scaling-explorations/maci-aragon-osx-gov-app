@@ -17,7 +17,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
   const [error, setError] = useState<string | undefined>(undefined);
   const [voteOption, setVoteOption] = useState<VoteOption | undefined>(undefined);
 
-  const { data: { voteStartDate, tallied, voteEnded, disabled, results } = {} } = useGetPollData(pollId);
+  const { data: { voteStartDate, voteEndDate, tallied, voteEnded, disabled, results } = {} } = useGetPollData(pollId);
   const { joinPollFunction, hasJoinedPoll, joinedPollData, isLoading: isLoadingJoinedPoll } = useJoinPoll(pollId);
   const { voteFunction } = useVote();
 
@@ -58,14 +58,23 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
       setVoteOption(option);
       await voteFunction(pollId, pollStateIndex, voiceCredits, option)
         .catch((error) => {
-          setError(error.message);
+          let message: string | undefined;
+          if (error.message.includes("0xa47dcd48")) {
+            const endDate = voteEndDate;
+            message = `The voting period finished at ${unixTimestampToDate(endDate!)}. You can no longer submit a vote.`;
+          }
+          if (error.message.includes("0x256eadc8")) {
+            const startDate = voteStartDate;
+            message = `The voting period has not begun. It will start at ${unixTimestampToDate(startDate!)}`;
+          }
+          setError(message);
         })
         .finally(() => {
           setVoteOption(undefined);
           setIsLoading(false);
         });
     },
-    [joinedPollData, pollId, voteFunction]
+    [joinedPollData, pollId, voteEndDate, voteFunction, voteStartDate]
   );
 
   const buttonMessage = useMemo(() => {
@@ -159,8 +168,8 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
         </div>
         <div className="flex flex-col justify-between gap-y-2">
           <p>
-            Submit your vote anonymously to the poll using any wallet. Results will be tallied after the voting period
-            ends.
+            Submit your vote anonymously to the poll <b>using any wallet</b>. Results will be tallied after the voting
+            period ends.
           </p>
           {voteStartDate &&
             voteStartDate > Math.round(Date.now() / 1000) &&

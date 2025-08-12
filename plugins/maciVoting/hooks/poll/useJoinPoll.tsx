@@ -1,23 +1,20 @@
-import { PUBLIC_MACI_ADDRESS, PUBLIC_MACI_DEPLOYMENT_BLOCK } from "@/constants";
+import { PUBLIC_CHAIN, PUBLIC_MACI_ADDRESS, PUBLIC_MACI_DEPLOYMENT_BLOCK } from "@/constants";
 import { generateMaciStateTreeWithEndKey, getJoinedUserData, joinPoll } from "@maci-protocol/sdk/browser";
 import { useCallback, useMemo, useState } from "react";
 import { usePublicClient } from "wagmi";
 import { DEFAULT_IVCP_DATA, DEFAULT_SG_DATA } from "../../contexts/MaciContext";
 import { clientToSigner, useEthersSigner } from "../useEthersSigner";
 import { useMaci } from "../useMaci";
-import { type IJoinPollData } from "../../contexts/types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useJoinPoll = (pollId?: bigint) => {
   const signer = useEthersSigner();
-  const publicClient = usePublicClient();
+  const publicClient = usePublicClient({ chainId: PUBLIC_CHAIN.id });
   const queryClient = useQueryClient();
   const { maciKeypair, isRegistered, stateIndex, artifacts } = useMaci();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
-  // Keep track of newly joined poll data that will be returned when joining a poll
-  const [newlyJoinedPollData, setNewlyJoinedPollData] = useState<IJoinPollData | undefined>();
 
   // Query key for consistent cache access
   const joinedUserQueryKey = useMemo(
@@ -35,6 +32,7 @@ export const useJoinPoll = (pollId?: bigint) => {
 
       setIsLoading(true);
       try {
+        // this is a read-only operation so we read using public client to avoid signer's cache
         const publicSigner = clientToSigner(publicClient);
 
         const joinedUser = await getJoinedUserData({
@@ -72,10 +70,6 @@ export const useJoinPoll = (pollId?: bigint) => {
       return;
     }
 
-    if (joinedPollData) {
-      setNewlyJoinedPollData(joinedPollData);
-    }
-
     setIsLoading(true);
     setError(undefined);
 
@@ -103,9 +97,8 @@ export const useJoinPoll = (pollId?: bigint) => {
       });
 
       if (joinedData) {
-        setNewlyJoinedPollData(joinedData);
         // After successfully joining, manually invalidate the query to trigger a refetch
-        queryClient.invalidateQueries({ queryKey: joinedUserQueryKey });
+        await queryClient.invalidateQueries({ queryKey: joinedUserQueryKey });
       }
     } catch (error: any) {
       if (error.message?.includes("0xa3281672")) {
@@ -119,27 +112,13 @@ export const useJoinPoll = (pollId?: bigint) => {
     } finally {
       setIsLoading(false);
     }
-  }, [
-    pollId,
-    signer,
-    maciKeypair,
-    isRegistered,
-    artifacts,
-    joinedPollData,
-    stateIndex,
-    queryClient,
-    joinedUserQueryKey,
-  ]);
-
-  // Use the query data or the newly joined data if available
-  const effectiveJoinedPollData = newlyJoinedPollData ?? joinedPollData;
-  const effectiveHasJoinedPoll = Boolean(effectiveJoinedPollData);
+  }, [pollId, signer, maciKeypair, isRegistered, artifacts, stateIndex, queryClient, joinedUserQueryKey]);
 
   return {
     isLoading: isLoading || isLoadingQuery,
     error,
-    hasJoinedPoll: effectiveHasJoinedPoll,
-    joinedPollData: effectiveJoinedPollData,
+    hasJoinedPoll: Boolean(joinedPollData),
+    joinedPollData: joinedPollData,
     joinPollFunction,
   };
 };
