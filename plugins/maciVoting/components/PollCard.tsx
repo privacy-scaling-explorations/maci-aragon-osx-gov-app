@@ -1,53 +1,86 @@
+import { PleaseWaitSpinner } from "@/components/please-wait";
 import { Button, Card, Heading } from "@aragon/ods";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useMaci } from "../hooks/useMaci";
-import { VoteOption } from "../utils/types";
-import { PleaseWaitSpinner } from "@/components/please-wait";
-import { unixTimestampToDate } from "../utils/formatPollDate";
+import { useJoinPoll } from "../hooks/poll/useJoinPoll";
+import { useVote } from "../hooks/poll/useVote";
 import { useGetPollData } from "../hooks/useGetPollData";
+import { useMaci } from "../hooks/useMaci";
+import { unixTimestampToDate } from "../utils/formatPollDate";
+import { VoteOption } from "../utils/types";
 import { VoteResultCard } from "./VoteResultCard";
 
 const PollCard = ({ pollId }: { pollId: bigint }) => {
   // check if the user joined the poll
-  const { setPollId, onJoinPoll, onVote, isRegistered, hasJoinedPoll, isLoading, error: maciError } = useMaci();
+  const { isRegistered, error: maciError } = useMaci();
 
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
   const [voteOption, setVoteOption] = useState<VoteOption | undefined>(undefined);
 
-  const { data: { voteStartDate, tallied, voteEnded, disabled, results } = {} } = useGetPollData(pollId);
+  const { data: { voteStartDate, voteEndDate, tallied, voteEnded, disabled, results } = {} } = useGetPollData(pollId);
+  const { joinPollFunction, hasJoinedPoll, joinedPollData, isLoading: isLoadingJoinedPoll } = useJoinPoll(pollId);
+  const { voteFunction } = useVote();
 
   useEffect(() => {
     setError(maciError);
   }, [maciError]);
 
-  useEffect(() => {
-    setPollId(pollId);
-  }, [pollId, setPollId]);
-
   const onClickJoinPoll = useCallback(async () => {
+    setIsLoading(true);
     setError(undefined);
     if (!isRegistered) {
       setError("You need to sign up first");
+      setIsLoading(false);
       return;
     }
 
     if (hasJoinedPoll) {
       setError("You have already joined the poll");
+      setIsLoading(false);
       return;
     }
 
-    await onJoinPoll(pollId);
-  }, [hasJoinedPoll, isRegistered, onJoinPoll, pollId]);
+    await joinPollFunction();
+    setIsLoading(false);
+  }, [hasJoinedPoll, isRegistered, joinPollFunction]);
 
   const onClickVote = useCallback(
     async (option: VoteOption) => {
+      setIsLoading(true);
+      if (!joinedPollData) {
+        setError("You need to join the poll first");
+        setIsLoading(false);
+        return;
+      }
+
+      const { pollStateIndex, voiceCredits } = joinedPollData;
+
       setVoteOption(option);
-      await onVote(option).finally(() => setVoteOption(undefined));
+      await voteFunction(pollId, pollStateIndex, voiceCredits, option)
+        .catch((error) => {
+          let message: string | undefined;
+          if (error.message.includes("0xa47dcd48")) {
+            const endDate = voteEndDate;
+            message = `The voting period finished at ${unixTimestampToDate(endDate!)}. You can no longer submit a vote.`;
+          }
+          if (error.message.includes("0x256eadc8")) {
+            const startDate = voteStartDate;
+            message = `The voting period has not begun. It will start at ${unixTimestampToDate(startDate!)}`;
+          }
+          setError(message);
+        })
+        .finally(() => {
+          setVoteOption(undefined);
+          setIsLoading(false);
+        });
     },
-    [onVote]
+    [joinedPollData, pollId, voteEndDate, voteFunction, voteStartDate]
   );
 
   const buttonMessage = useMemo(() => {
+    if (isLoadingJoinedPoll) {
+      return <PleaseWaitSpinner fullMessage="Checking user status..." />;
+    }
     if (hasJoinedPoll) {
       return "Already joined poll";
     }
@@ -55,7 +88,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
       return <PleaseWaitSpinner fullMessage="Joining poll..." />;
     }
     return "Join poll";
-  }, [hasJoinedPoll, isLoading]);
+  }, [isLoadingJoinedPoll, hasJoinedPoll, isLoading]);
 
   if (voteEnded && !tallied)
     return (
@@ -90,7 +123,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
             </div>
           )}
           <p>The voting period has ended. Here are the results:</p>
-          <VoteResultCard pollId={pollId} />
+          <VoteResultCard results={results} />
         </Card>
       </div>
     );
@@ -119,7 +152,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
             In order to submit your vote you need to join the poll using your locally generated MACI public key and your
             authorized wallet.
           </p>
-          <Button onClick={onClickJoinPoll} disabled={hasJoinedPoll || isLoading}>
+          <Button onClick={onClickJoinPoll} disabled={hasJoinedPoll || isLoading || isLoadingJoinedPoll}>
             {buttonMessage}
           </Button>
         </div>
@@ -135,8 +168,8 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
         </div>
         <div className="flex flex-col justify-between gap-y-2">
           <p>
-            Submit your vote anonymously to the poll using any wallet. Results will be tallied after the voting period
-            ends.
+            Submit your vote anonymously to the poll <b>using any wallet</b>. Results will be tallied after the voting
+            period ends.
           </p>
           {voteStartDate &&
             voteStartDate > Math.round(Date.now() / 1000) &&
@@ -144,7 +177,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
           <div className="flex flex-row gap-x-1">
             <Button
               onClick={() => onClickVote(VoteOption.Yes)}
-              disabled={disabled}
+              disabled={disabled ? disabled : isLoading}
               size="sm"
               variant={disabled ? "tertiary" : "success"}
             >
@@ -152,7 +185,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
             </Button>
             <Button
               onClick={() => onClickVote(VoteOption.No)}
-              disabled={disabled}
+              disabled={disabled ? disabled : isLoading}
               size="sm"
               variant={disabled ? "tertiary" : "critical"}
             >
@@ -160,7 +193,7 @@ const PollCard = ({ pollId }: { pollId: bigint }) => {
             </Button>
             <Button
               onClick={() => onClickVote(VoteOption.Abstain)}
-              disabled={disabled}
+              disabled={disabled ? disabled : isLoading}
               size="sm"
               variant={disabled ? "tertiary" : "warning"}
             >

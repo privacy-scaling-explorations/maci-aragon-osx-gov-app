@@ -1,12 +1,11 @@
 import { NotFound } from "@/components/not-found";
-import ProposalCreate from "./pages/new";
-import ProposalList from "./pages/proposal-list";
-import ProposalDetail from "./pages/proposal";
+import { useSwitchToChain } from "@/hooks/useSwitchChain";
 import { useUrl } from "@/hooks/useUrl";
 import { useEffect, type ReactNode } from "react";
 import { MaciProvider } from "./contexts/MaciContext";
-import { CoordinatorProvider } from "./contexts/CoordinatorContext";
-import { useSwitchToChain } from "@/hooks/useSwitchChain";
+import ProposalCreate from "./pages/new";
+import ProposalDetail from "./pages/proposal";
+import ProposalList from "./pages/proposal-list";
 export default function PluginPage() {
   const { isCorrectChain, switchToChain } = useSwitchToChain();
   // Select the inner pages to display depending on the URL hash
@@ -29,9 +28,5 @@ export default function PluginPage() {
     // Default not found page
     content = <NotFound />;
   }
-  return (
-    <MaciProvider>
-      <CoordinatorProvider>{content}</CoordinatorProvider>
-    </MaciProvider>
-  );
+  return <MaciProvider>{content}</MaciProvider>;
 }

@@ -1,47 +1,56 @@
-import { type Query, useQuery } from "@tanstack/react-query";
-import { getPoll, getResults, type IResult } from "@maci-protocol/sdk/browser";
-import { PUBLIC_MACI_ADDRESS } from "@/constants";
-import { useEthersSigner } from "./useEthersSigner";
-import { useMaci } from "./useMaci";
+import { PUBLIC_CHAIN, PUBLIC_MACI_ADDRESS } from "@/constants";
+import { getPoll, getResults, isTallied, type IResult } from "@maci-protocol/sdk/browser";
+import { useQuery, type Query } from "@tanstack/react-query";
+import { usePublicClient } from "wagmi";
+import { clientToSigner } from "./useEthersSigner";
 
 export const useGetPollData = (pollId?: string | bigint) => {
-  const { checkIsTallied } = useMaci();
-  const signer = useEthersSigner();
+  const publicClient = usePublicClient({ chainId: PUBLIC_CHAIN.id });
 
   return useQuery({
-    enabled: !!signer,
+    enabled: !!publicClient,
     queryKey: [
       "get-poll-data",
       {
         pollId: String(pollId),
-        signerAddress: signer?.address,
+        signerAddress: publicClient?.account,
       },
     ],
     queryFn: async () => {
-      const poll = await getPoll({
+      if (!publicClient) return;
+
+      // this is a read-only operation so we read using public client to avoid signer's cache
+      const publicSigner = clientToSigner(publicClient);
+
+      const { startDate, endDate, isMerged } = await getPoll({
         maciAddress: PUBLIC_MACI_ADDRESS,
         pollId,
-        signer,
+        signer: publicSigner,
       });
 
       let tallied = false;
       let results: IResult[] | undefined = undefined;
 
-      const voteEndDate = Number(poll.endDate.toString());
-      const voteStartDate = Number(poll.startDate.toString());
+      const voteEndDate = Number(endDate.toString());
+      const voteStartDate = Number(startDate.toString());
       const now = Math.round(Date.now() / 1000);
       const voteEnded = voteEndDate < now;
-      const disabled = voteEnded || voteStartDate > Math.round(Date.now() / 1000);
+      const disabled = voteEnded || voteStartDate > now;
 
-      // fetch results only if the vote has ended
-      if (voteEnded && signer && pollId) {
+      // fetch results only if the poll is tallied
+      if (voteEnded && pollId) {
         try {
-          tallied = await checkIsTallied(Number(pollId));
+          tallied = await isTallied({
+            maciAddress: PUBLIC_MACI_ADDRESS,
+            pollId: pollId.toString(),
+            signer: publicSigner,
+          });
+
           if (tallied) {
             results = await getResults({
               maciAddress: PUBLIC_MACI_ADDRESS,
               pollId: pollId.toString(),
-              signer,
+              signer: publicSigner,
             });
           }
         } catch (error) {
@@ -56,13 +65,18 @@ export const useGetPollData = (pollId?: string | bigint) => {
         now,
         voteEnded,
         disabled,
+        isMerged,
         tallied,
         results,
       };
     },
-    // refetch every 10 seconds if the vote is not ended
+    // refetch every 15 seconds if the vote is not ended
     refetchInterval: ({ state }: Query<any, any, any, any>) => {
-      return state?.data?.voteEnded ? false : 10000;
+      const { data } = state;
+
+      if (data && data.tallied && data.results && data.results.length > 0) return false;
+
+      return 15 * 1000;
     },
     refetchOnWindowFocus: true,
   });

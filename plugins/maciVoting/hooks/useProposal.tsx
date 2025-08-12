@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { usePublicClient, useReadContract } from "wagmi";
-import { fromHex, getAbiItem, type Hex } from "viem";
+import { type Address, fromHex, getAbiItem, type Hex } from "viem";
 import { MaciVotingAbi } from "../artifacts/MaciVoting.sol";
 import { type Action } from "@/utils/types";
 import { type Proposal, type ProposalMetadata } from "@/plugins/maciVoting/utils/types";
@@ -10,7 +10,7 @@ import { useMetadata } from "@/hooks/useMetadata";
 export type ProposalCreatedLogResponse = {
   args: {
     proposalId: bigint;
-    creator: string;
+    creator: Address;
     endDate: bigint;
     startDate: bigint;
     metadata: string;
@@ -44,7 +44,7 @@ export function useProposal(proposalId: string, autoRefresh = false) {
     args: [BigInt(proposalId)],
     query: {
       refetchOnWindowFocus: true,
-      refetchInterval: (data) => {
+      refetchInterval: () => {
         return autoRefresh ? 10000 : false;
       },
     },
@@ -53,7 +53,7 @@ export function useProposal(proposalId: string, autoRefresh = false) {
   // Creation event
   useEffect(() => {
     (async () => {
-      if (!proposalData || !publicClient) return;
+      if (!proposalData || !publicClient || proposalData.pollId === 0n) return;
 
       const snapshotBlock = BigInt(proposalData.parameters.snapshotBlock);
 
@@ -75,7 +75,7 @@ export function useProposal(proposalId: string, autoRefresh = false) {
         setMetadata(fromHex(log.args.metadata as Hex, "string"));
       } catch (error) {
         // eslint-disable-next-line no-console
-        console.error("Could not fetch the proposal details", error);
+        console.error("Could not fetch the proposal details:", error);
       }
     })();
   }, [proposalData, proposalId, publicClient]);
@@ -108,6 +108,8 @@ export function useProposal(proposalId: string, autoRefresh = false) {
         targetConfig: proposal.targetConfig,
         pollId: proposal.pollId,
         pollAddress: proposal.pollAddress,
+        creator: creationEvent?.creator,
+        metadata: metadata,
       };
     },
     []

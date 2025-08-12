@@ -13,6 +13,7 @@ export const NEXT_PUBLIC_SECONDS_PER_BLOCK = Number(process.env.NEXT_PUBLIC_SECO
 
 // MACI Coordinator service
 export const PUBLIC_COORDINATOR_SERVICE_URL = process.env.NEXT_PUBLIC_COORDINATOR_SERVICE_URL ?? "";
+export const NAVIGATION_AFTER_SCHEDULE_DELAY_SECONDS = 0.2;
 
 // UX improvements
 export const NEXT_MINIMUM_START_DELAY_IN_SECONDS = Number(process.env.NEXT_MINIMUM_START_DELAY_IN_SECONDS ?? 30);
@@ -43,10 +44,11 @@ export const PUBLIC_IPFS_ENDPOINTS = process.env.NEXT_PUBLIC_IPFS_ENDPOINTS ?? "
 export const PUBLIC_PINATA_JWT = process.env.NEXT_PUBLIC_PINATA_JWT ?? "";
 
 // General
-export const PUBLIC_APP_NAME = "Aragonette";
+export const PUBLIC_APP_NAME = "Aragon - MACI Plugin";
 export const PUBLIC_APP_DESCRIPTION = "Simplified user interface for Aragon DAO's";
 
 export const PUBLIC_PROJECT_URL = process.env.NEXT_PUBLIC_PROJECT_URL ?? "https://aragon.org/";
 export const PUBLIC_WALLET_ICON = "https://avatars.githubusercontent.com/u/37784886";
 
-export const PUBLIC_DISCORD_URL = "https://discord.com/";
+export const PUBLIC_DISCORD_URL = "https://discord.com/invite/sF5CT5rzrR";
+export const PUBLIC_TWITTER_URL = "https://x.com/PrivacyEthereum";

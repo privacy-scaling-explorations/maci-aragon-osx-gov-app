@@ -6,15 +6,11 @@ import { ProposalAction } from "@/components/proposalAction/proposalAction";
 import { CardResources } from "@/components/proposal/cardResources";
 import { If } from "@/components/if";
 import PollCard from "../components/PollCard";
-import { FinalizeAction } from "../components/finalize/finalizeAction";
-import { useCanFinalize } from "../hooks/useCanFinalize";
 
 export default function ProposalDetail({ id: proposalId }: { id: string }) {
   const { proposal, proposalMetadata, creator, status } = useProposal(proposalId, true);
   const showProposalLoading = getShowProposalLoading(proposal, proposalMetadata, status);
   const hasAction = proposal?.actions?.length ?? 0 > 0;
-
-  const canFinalize = useCanFinalize(proposal?.pollId);
 
   const { executeProposal, canExecute, isConfirming: isConfirmingExecution } = useProposalExecute(proposalId);
 
@@ -52,9 +48,6 @@ export default function ProposalDetail({ id: proposalId }: { id: string }) {
         <div className="mg:gap-y-6 flex w-full flex-col gap-6 md:flex-row md:gap-x-12">
           <div className="flex flex-col gap-y-6 md:w-[63%] md:shrink-0">
             <BodySection body={proposalMetadata?.description || "No description was provided"} />
-            <If condition={canFinalize}>
-              <FinalizeAction pollId={Number(proposal.pollId)} />
-            </If>
             <If condition={hasAction}>
               <ProposalAction
                 onExecute={() => executeProposal()}

@@ -43,6 +43,8 @@ export type Proposal = {
   targetConfig: TargetConfig;
   pollId: bigint;
   pollAddress: Address;
+  creator: Address | undefined;
+  metadata: ProposalMetadata | undefined;
 };
 
 export type ProposalMetadata = {

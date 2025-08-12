@@ -1,23 +1,11 @@
-import { PUBLIC_WEB3_MAINNET_ENDPOINT } from "@/constants";
+import { config } from "@/context/Web3Modal";
 import { formatHexString } from "@/utils/evm";
 import { MemberAvatar } from "@aragon/ods";
 import { useWeb3Modal } from "@web3modal/wagmi/react";
 import classNames from "classnames";
-import { createClient, http } from "viem";
 import { normalize } from "viem/ens";
-import { createConfig, useAccount, useEnsAvatar, useEnsName } from "wagmi";
+import { useAccount, useEnsAvatar, useEnsName } from "wagmi";
 import { mainnet } from "wagmi/chains";
-
-const config = createConfig({
-  chains: [mainnet],
-  ssr: true,
-  client({ chain }) {
-    return createClient({
-      chain,
-      transport: http(PUBLIC_WEB3_MAINNET_ENDPOINT, { batch: true }),
-    });
-  },
-});
 
 // TODO: update with ODS wallet module - [https://linear.app/aragon/issue/RD-198/create-ods-walletmodule]
 const WalletContainer = () => {

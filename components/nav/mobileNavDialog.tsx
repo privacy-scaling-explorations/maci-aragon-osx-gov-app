@@ -26,7 +26,7 @@ export const MobileNavDialog: React.FC<IMobileNavDialogProps> = (props) => {
             >
               <span className="flex py-2 pl-3 pr-4">
                 Powered by <span className="mr-1 text-primary-400">&nbsp;Aragon</span>
-                <Image src="/logo.png" width="24" height="24" alt="Aragonette" />
+                <Image src="/logo.png" width="24" height="24" alt="Aragon - MACI Plugin" />
               </span>
             </Link>
           </div>

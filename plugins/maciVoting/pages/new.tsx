@@ -11,11 +11,17 @@ import { type Action } from "@/utils/types";
 import { useRouter } from "next/router";
 import { Else, ElseIf, If, Then } from "@/components/if";
 import { PleaseWaitSpinner } from "@/components/please-wait";
-import { NEXT_MINIMUM_START_DELAY_IN_SECONDS, PUBLIC_CHAIN, PUBLIC_MACI_VOTING_PLUGIN_ADDRESS } from "@/constants";
+import {
+  NAVIGATION_AFTER_SCHEDULE_DELAY_SECONDS,
+  NEXT_MINIMUM_START_DELAY_IN_SECONDS,
+  PUBLIC_CHAIN,
+  PUBLIC_MACI_VOTING_PLUGIN_ADDRESS,
+} from "@/constants";
 import { ActionCard } from "@/components/actions/action";
 import { useMutation } from "@tanstack/react-query";
 import classNames from "classnames";
 import Link from "next/link";
+import { useScheduler } from "../hooks/useScheduler";
 
 enum ActionType {
   Signaling,
@@ -36,6 +42,7 @@ export default function Create() {
   const [endTime, setEndTime] = useState<string>("");
   const [actions, setActions] = useState<Action[]>([]);
   const { addAlert } = useAlerts();
+  const { setTxHash, isScheduled, isLoading: isLoadingScheduler, error: schedulerError } = useScheduler();
   const { writeContract: createProposalWrite, data: createTxHash, status, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash: createTxHash });
   const [actionType, setActionType] = useState<ActionType>(ActionType.Signaling);
@@ -86,10 +93,27 @@ export default function Create() {
       txHash: createTxHash,
     });
 
-    push("#/");
+    setTxHash(createTxHash);
+
     // adding addAlert causes multiple re-renders of the toast messeage
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, createTxHash, isConfirming, isConfirmed, error, push]);
+  }, [status, createTxHash, isConfirming, isConfirmed, error, setTxHash]);
+
+  useEffect(() => {
+    if (!schedulerError) return;
+    addAlert("Could not schedule the poll finalization.", {
+      description: schedulerError,
+      type: "error",
+    });
+  }, [addAlert, schedulerError]);
+
+  useEffect(() => {
+    if (isScheduled) {
+      setTimeout(() => {
+        push("#/");
+      }, 1000 * NAVIGATION_AFTER_SCHEDULE_DELAY_SECONDS);
+    }
+  }, [isScheduled, push]);
 
   const submitProposal = async () => {
     let formErrors = {};
@@ -176,6 +200,7 @@ export default function Create() {
       }
 
       if (chainId !== PUBLIC_CHAIN.id) await switchChainAsync({ chainId: PUBLIC_CHAIN.id });
+
       createProposalWrite({
         chainId: PUBLIC_CHAIN.id,
         abi: MaciVotingAbi,
@@ -184,6 +209,7 @@ export default function Create() {
         // args: _metadata, _actions, _startDate, _endDate, _data
         args: [toHex(ipfsPin), actions, BigInt(startDateTime), BigInt(endDateTime), data],
       });
+
       return null;
     } catch {
       addAlert("Could not create the proposal. Please try again", { type: "error" });
@@ -198,6 +224,8 @@ export default function Create() {
     },
   });
 
+  const isDisabled = submitProposalMutation.isPending || status === "pending" || isConfirming || isLoadingScheduler;
+
   const handleTitleInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(event?.target?.value);
   };
@@ -206,12 +234,9 @@ export default function Create() {
     setSummary(event?.target?.value);
   };
 
-  const showLoading = status === "pending" || isConfirming;
-
   const inputWrapperClassName =
     "focus-within:!outline-none focus-within:!ring-0 focus-within:!border-transparent focus-within:!shadow-none focus-within:!ring-0 focus:border-[#000]";
 
-  const isDisabled = submitProposalMutation.isPending || isConfirming;
   return (
     <section className="container flex w-screen flex-col items-center pt-4 lg:pt-10">
       <Link className="mb-6 mr-auto flex cursor-pointer items-center gap-2" href="/plugins/maci-voting">
@@ -310,7 +335,7 @@ export default function Create() {
               className={classNames(
                 "flex cursor-pointer flex-col items-center rounded-xl border-2 border-solid bg-neutral-0 hover:bg-neutral-50",
                 actionType === ActionType.Signaling ? "border-primary-300" : "border-neutral-100",
-                submitProposalMutation.isPending ? "!border-neutral-100 !bg-neutral-100" : ""
+                isDisabled ? "!border-neutral-100 !bg-neutral-100" : ""
               )}
             >
               <Icon
@@ -328,7 +353,7 @@ export default function Create() {
               className={classNames(
                 "flex cursor-pointer flex-col items-center rounded-xl border-2 border-solid bg-neutral-0 hover:bg-neutral-50",
                 actionType === ActionType.Withdrawal ? "border-primary-300" : "border-neutral-100",
-                submitProposalMutation.isPending ? "!border-neutral-100 !bg-neutral-100" : ""
+                isDisabled ? "!border-neutral-100 !bg-neutral-100" : ""
               )}
             >
               <Icon
@@ -346,7 +371,7 @@ export default function Create() {
               className={classNames(
                 "flex cursor-pointer flex-col items-center rounded-xl border-2 border-solid bg-neutral-0 hover:bg-neutral-50",
                 actionType === ActionType.Custom ? "border-primary-300" : "border-neutral-100",
-                submitProposalMutation.isPending ? "!border-neutral-100 !bg-neutral-100" : ""
+                isDisabled ? "!border-neutral-100 !bg-neutral-100" : ""
               )}
             >
               <Icon
@@ -373,10 +398,10 @@ export default function Create() {
           ))}
         </div>
 
-        <If condition={showLoading}>
+        <If condition={isDisabled}>
           <Then>
             <div className="mb-6 mt-14">
-              <PleaseWaitSpinner fullMessage="Confirming transaction..." />
+              <PleaseWaitSpinner fullMessage="Creating proposal and confirming transaction..." />
             </div>
           </Then>
           <ElseIf condition={actionType !== ActionType.Custom}>
@@ -384,6 +409,7 @@ export default function Create() {
               className="mb-6 mt-14"
               size="lg"
               variant="primary"
+              disabled={isDisabled}
               onClick={async () => await submitProposalMutation.mutateAsync()}
             >
               Submit proposal
