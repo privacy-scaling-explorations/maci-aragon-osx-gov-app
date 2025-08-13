@@ -1,9 +1,9 @@
 import { AlertProvider } from "./Alerts";
-import { ReactNode } from "react";
+import { type ReactNode } from "react";
 import { QueryClient } from "@tanstack/react-query";
 import { config } from "@/context/Web3Modal";
 import { createWeb3Modal } from "@web3modal/wagmi/react";
-import { State, WagmiProvider, deserialize, serialize } from "wagmi";
+import { type State, WagmiProvider, deserialize, serialize } from "wagmi";
 import { PUBLIC_WALLET_CONNECT_PROJECT_ID } from "@/constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";

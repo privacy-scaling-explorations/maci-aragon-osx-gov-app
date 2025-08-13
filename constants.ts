@@ -16,6 +16,7 @@ export const PUBLIC_COORDINATOR_SERVICE_URL = process.env.NEXT_PUBLIC_COORDINATO
 
 // UX improvements
 export const NEXT_MINIMUM_START_DELAY_IN_SECONDS = Number(process.env.NEXT_MINIMUM_START_DELAY_IN_SECONDS ?? 30);
+export const NEXT_MACI_BLOCKS_PER_BATCH = Number(process.env.NEXT_MACI_BLOCKS_PER_BATCH ?? 1000);
 
 // Target chain
 export const PUBLIC_CHAIN_NAME = (process.env.NEXT_PUBLIC_CHAIN_NAME ?? "sepolia") as ChainName;
