@@ -114,10 +114,18 @@ export const MaciProvider = ({ children }: { children: ReactNode }) => {
 
       isUserRegistered = _isRegistered;
       setIsRegistered(_isRegistered);
-    } catch (error) {
-      setError("Error checking if user is registered");
-      setIsLoading(false);
-      return;
+    } catch (error: any) {
+      // 0xb2d14184 => UserNotSignedUp()
+      if (error.message?.includes("0xb2d14184")) {
+        isUserRegistered = false;
+      } else {
+        // eslint-disable-next-line no-console
+        console.error(error);
+
+        setError("Error checking if user is registered");
+        setIsLoading(false);
+        return;
+      }
     }
 
     if (isUserRegistered) {

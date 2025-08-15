@@ -13,10 +13,10 @@ export const NEXT_PUBLIC_SECONDS_PER_BLOCK = Number(process.env.NEXT_PUBLIC_SECO
 
 // MACI Coordinator service
 export const PUBLIC_COORDINATOR_SERVICE_URL = process.env.NEXT_PUBLIC_COORDINATOR_SERVICE_URL ?? "";
-export const NAVIGATION_AFTER_SCHEDULE_DELAY_SECONDS = 0.2;
 
 // UX improvements
 export const NEXT_MINIMUM_START_DELAY_IN_SECONDS = Number(process.env.NEXT_MINIMUM_START_DELAY_IN_SECONDS ?? 30);
+export const NEXT_MACI_BLOCKS_PER_BATCH = Number(process.env.NEXT_MACI_BLOCKS_PER_BATCH ?? 1000);
 
 // Target chain
 export const PUBLIC_CHAIN_NAME = (process.env.NEXT_PUBLIC_CHAIN_NAME ?? "sepolia") as ChainName;

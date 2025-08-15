@@ -1,4 +1,9 @@
-import { PUBLIC_CHAIN, PUBLIC_MACI_ADDRESS, PUBLIC_MACI_DEPLOYMENT_BLOCK } from "@/constants";
+import {
+  NEXT_MACI_BLOCKS_PER_BATCH,
+  PUBLIC_CHAIN,
+  PUBLIC_MACI_ADDRESS,
+  PUBLIC_MACI_DEPLOYMENT_BLOCK,
+} from "@/constants";
 import { generateMaciStateTreeWithEndKey, getJoinedUserData, joinPoll } from "@maci-protocol/sdk/browser";
 import { useCallback, useMemo, useState } from "react";
 import { usePublicClient } from "wagmi";
@@ -79,6 +84,7 @@ export const useJoinPoll = (pollId?: bigint) => {
         signer,
         userPublicKey: maciKeypair.publicKey,
         startBlock: PUBLIC_MACI_DEPLOYMENT_BLOCK,
+        blocksPerBatch: NEXT_MACI_BLOCKS_PER_BATCH,
       });
 
       const inclusionProof = stateTree.signUpTree.generateProof(Number(stateIndex));
@@ -93,7 +99,7 @@ export const useJoinPoll = (pollId?: bigint) => {
         pollWasm: artifacts.wasm as unknown as string,
         sgDataArg: DEFAULT_SG_DATA,
         ivcpDataArg: DEFAULT_IVCP_DATA,
-        blocksPerBatch: 1000,
+        blocksPerBatch: NEXT_MACI_BLOCKS_PER_BATCH,
       });
 
       if (joinedData) {
